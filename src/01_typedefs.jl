@@ -21,6 +21,14 @@ reusing operations that only work on arrays without any null values.
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     isnull::Array{Bool, N}
     values::Array{T, N}
+
+    function NullableArray(m::Array{Bool, N}, d::Array{T, N})
+        if size(d) != size(m)
+            msg = "values and missingness arrays must be the same size"
+            throw(ArgumentError(msg))
+        end
+        new{T, N}(m, d)
+    end
 end
 
 typealias NullableVector{T} NullableArray{T, 1}
