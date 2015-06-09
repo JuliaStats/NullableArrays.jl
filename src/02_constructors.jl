@@ -2,8 +2,8 @@
 # ----- Constructors -------------------------------------------------------- #
 
 # The following allows for construction of a NullableArray without explicit
-# specification of type parameters.
-# See docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
+# specification of type parameters;
+# see docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
 function NullableArray(m::AbstractArray, a::AbstractArray) # -> NullableArray
     return NullableArray{eltype(a), ndims(a)}(m, a)
 end
@@ -34,9 +34,6 @@ end
 # Constructs a NullableArray from an Array 'a' of values and an optional
 # Array{Bool, N} mask. If omitted, the mask will default to an array of
 # 'false's the size of 'a'.
-function NullableArray{T, N}(
-    a::AbstractArray{T, N},
-    m::Array{Bool,N} = fill(false, size(a))
-) # -> NullableArray
-    return NullableArray(m, a)
+function NullableArray{T, N}(a::AbstractArray{T, N}) # -> NullableArray
+    return NullableArray{T, N}(fill(false, size(a)), a)
 end
