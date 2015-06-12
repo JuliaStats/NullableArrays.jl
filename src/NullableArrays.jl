@@ -1,12 +1,17 @@
 module NullableArrays
+
+    using  Base.Cartesian
+
     export NullableArray,
            NullableVector,
            NullableMatrix,
 
            # Methods
+           nul,
            dropnull,
            anynull,
-           allnull
+           allnull,
+           levels
 
     include("01_typedefs.jl")
     include("02_constructors.jl")
