@@ -4,8 +4,8 @@
 # The following allows for construction of a NullableArray without explicit
 # specification of type parameters;
 # see docs.julialang.org/en/latest/manual/constructors/#parametric-constructors
-function NullableArray{T, N}(m::Array{Bool, N}, a::AbstractArray{T, N}) # -> NullableArray
-    return NullableArray{T, N}(m, a)
+function NullableArray{T, N}(A::AbstractArray{T, N}, m::Array{Bool, N}) # -> NullableArray
+    return NullableArray{T, N}(A, m)
 end
 
 # TODO: Uncomment this doc entry when Base Julia can parse it correctly.
@@ -21,7 +21,7 @@ end
 # `NullableArray` a null value by default.
 # """ ->
 function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray
-    return NullableArray(fill(true, dims), Array(T, dims))
+    return NullableArray(Array(T, dims), fill(true, dims))
 end
 
 # Constructs an empty NullableArray of type parameter T and number of dimensions
@@ -34,8 +34,8 @@ end
 # Constructs a NullableArray from an Array 'a' of values and an optional
 # Array{Bool, N} mask. If omitted, the mask will default to an array of
 # 'false's the size of 'a'.
-function NullableArray{T, N}(a::AbstractArray{T, N}) # -> NullableArray
-    return NullableArray{T, N}(fill(false, size(a)), a)
+function NullableArray{T, N}(A::AbstractArray{T, N}) # -> NullableArray
+    return NullableArray{T, N}(A, fill(false, size(A)))
 end
 
 # The following method constructs a NullableArray from an Array{Any} argument

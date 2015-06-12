@@ -20,7 +20,7 @@ macro nullable(vec)
             push!(e_array.args, arg)
         end
     end
-    push!(e_target.args, e_mask, e_array)
+    push!(e_target.args, e_array, e_mask)
     return e_target
 end
 

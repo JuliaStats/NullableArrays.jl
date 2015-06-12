@@ -19,15 +19,15 @@ It allows users to easily define operations on arrays with null values by
 reusing operations that only work on arrays without any null values.
 """ ->
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
-    isnull::Array{Bool, N}
     values::Array{T, N}
+    isnull::Array{Bool, N}
 
-    function NullableArray(m::Array{Bool, N}, d::AbstractArray{T, N})
+    function NullableArray(d::AbstractArray{T, N}, m::Array{Bool, N})
         if size(d) != size(m)
             msg = "values and missingness arrays must be the same size"
             throw(ArgumentError(msg))
         end
-        new(m, d)
+        new(d, m)
     end
 end
 

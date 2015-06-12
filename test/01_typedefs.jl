@@ -3,18 +3,18 @@ module TestTypeDefs
     using NullableArrays
 
     x = NullableArray(
-        [false, false, true],
         [1, 2, 3],
+        [false, false, true]
     )
 
     y = NullableArray(
         [
-            false false;
-            true false;
-        ],
-        [
             1 2;
             3 4;
+        ],
+        [
+            false false;
+            true false;
         ],
     )
 
