@@ -7,7 +7,6 @@ module NullableArrays
            NullableMatrix,
 
            # Methods
-           nul,
            dropnull,
            anynull,
            allnull,
