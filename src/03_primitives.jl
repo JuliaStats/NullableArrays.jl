@@ -253,7 +253,7 @@ end
 # Use ready-made method for AbstractArrays or implement method specific to
 # NullableArrays, possibly for performance purposes?
 
-# ----- levels ---------------------------------------------------------------#
-function levels(a::AbstractArray) # -> Vector{T}
-    return unique(a)
-end
+# ----- Base.reverse ---------------------------------------------------------#
+
+# Use ready-made method for AbstractArrays or implement method specific to
+# NullableArrays, possibly for performance purposes?
