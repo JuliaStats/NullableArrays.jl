@@ -151,8 +151,9 @@ end
 function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N}) # -> Array{S, N}
     if anynull(X)
-        err = "Cannot convert NullableArray with null values."
-        throw(NullException(err))
+        # err = "Cannot convert NullableArray with null values."
+        #TODO: Investigate constructors for NullException
+        throw(NullException())
     else
         return convert(Array{S, N}, X.values)
     end
@@ -175,6 +176,8 @@ function Base.convert{T, N}(::Type{Array},
                             X::NullableArray{T, N}) # -> Array{T, N}
     return convert(Array{T, N}, X)
 end
+
+# Conversions with replacements for handling null values
 
 function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N},
@@ -211,17 +214,17 @@ end
 
 function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
                                A::AbstractArray{T, N}) # -> NullableArray{S, N}
-    return NullableArray(convert(Array{S, N}, A), falses(size(A)))
+    return NullableArray(convert(Array{S, N}, A))
 end
 
-function Base.convert{S,T,N}(::Type{NullableArray{S}},
-                             A::AbstractArray{T,N}) # -> NullableArray{S, N}
-    return convert(NullableArray{S,N}, A)
+function Base.convert{S, T, N}(::Type{NullableArray{S}},
+                             A::AbstractArray{T, N}) # -> NullableArray{S, N}
+    return NullableArray(convert(Array{S, N}, A))
 end
 
-function Base.convert{T, N}(::Type{NullableArray},
-                            A::AbstractArray{T, N}) # -> NullableArray{T, N}
-    return convert(NullableArray{T,N}, A)
+function Base.convert(::Type{NullableArray},
+                            A::AbstractArray) # -> NullableArray
+    return NullableArray(A)
 end
 
 function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
@@ -229,12 +232,16 @@ function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
     return NullableArray(convert(Array{S}, A.values), A.isnull)
 end
 
+# The following methods are deprecated.
+# TODO: rewrite with proper nomenclature
+
 for f in (:(Base.int), :(Base.float), :(Base.bool))
     @eval begin
         function ($f)(X::NullableArray) # -> DataArray
             if anynull(X)
-                err = "Cannot convert NullableArray with null values to desired type"
-                throw(NullException(err))
+                # TODO: investigate NullException constructors
+                # err = "Cannot convert NullableArray with null values to desired type"
+                throw(NullException())
             else
                 ($f)(X.values)
             end
