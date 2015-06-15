@@ -1,6 +1,8 @@
 # NullableArray is dense and allows fast linear indexing.
 import Base: LinearFast
 
+#----- GENERAL INDEXING METHODS ----------------------------------------------#
+
 Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
 
 # Extract a scalar element from a `NullableArray`.
@@ -20,12 +22,59 @@ end
         X.isnull[I...] = false
         X.values[I...] = get(v)
     end
-    v
+    return v
 end
 
 # Insert a scalar element from a `NullableArray` from a non-Nullable value.
 @inline function Base.setindex!(X::NullableArray, v::Any, I::Int...)
     X.isnull[I...] = false
     X.values[I...] = v
-    v
+    return v
+end
+
+#----- UNSAFE INDEXING METHODS -----------------------------------------------#
+
+function unsafe_getindex_notnull(X::NullableArray, I::Int...)
+    return getindex(X, I...)
+end
+
+function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
+    return getindex(X.values, I...)
+end
+
+# ----- Base._checkbounds ----------------------------------------------------#
+
+function Base._checkbounds{T <: Real}(sz::Int, x::Nullable{T})
+    isnull(x) ? throw(NullException()) : _checkbounds(sz, get(x))
+end
+
+function Base._checkbounds(sz::Int, I::NullableVector{Bool})
+    length(I) == sz || throw(BoundsError())
+end
+
+function Base._checkbounds{T<:Real}(sz::Int, I::NullableArray{T})
+    anynull(I) && throw(NullException())
+    for i in 1:length(I)
+        @inbounds v = unsafe_getvalue_notnull(I, i)
+        checkbounds(sz, v)
+    end
+end
+
+# ----- Base.to_index --------------------------------------------------------#
+
+function Base.to_index(X::NullableArray)
+    anynull(X) && throw(NullException())
+    Base.to_index(X.values)
+end
+
+# ----- nullify --------------------------------------------------------------#
+
+function nullify(X::NullableArray, I::Int...)
+    X.isnull[I...] = true
+end
+
+function nullify{T <: Real}(X::NullableArray, rg::UnitRange{T})
+    for i in rg
+        nullify(X, i)
+    end
 end

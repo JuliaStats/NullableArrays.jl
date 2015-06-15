@@ -10,7 +10,7 @@ module NullableArrays
            dropnull,
            anynull,
            allnull,
-           levels
+           nullify
 
     include("01_typedefs.jl")
     include("02_constructors.jl")
