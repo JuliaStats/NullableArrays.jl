@@ -4,7 +4,7 @@ import Base: LinearFast
 Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
 
 # Extract a scalar element from a `NullableArray`.
-function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
+@inline function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
     if X.isnull[I...]
         Nullable{T}()
     else
@@ -13,7 +13,7 @@ function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
 end
 
 # Insert a scalar element from a `NullableArray` from a `Nullable` value.
-function Base.setindex!(X::NullableArray, v::Nullable, I::Int...)
+@inline function Base.setindex!(X::NullableArray, v::Nullable, I::Int...)
     if isnull(v)
         X.isnull[I...] = true
     else
@@ -24,7 +24,7 @@ function Base.setindex!(X::NullableArray, v::Nullable, I::Int...)
 end
 
 # Insert a scalar element from a `NullableArray` from a non-Nullable value.
-function Base.setindex!(X::NullableArray, v::Any, I::Int...)
+@inline function Base.setindex!(X::NullableArray, v::Any, I::Int...)
     X.isnull[I...] = false
     X.values[I...] = v
     v

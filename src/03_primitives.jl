@@ -262,5 +262,6 @@ end
 
 # ----- Base.reverse ---------------------------------------------------------#
 
-# Use ready-made method for AbstractArrays or implement method specific to
-# NullableArrays, possibly for performance purposes?
+function Base.reverse(X::NullableVector, s=1, n=length(X))
+    return(NullableArray(reverse(X.values, s, n), reverse(X.isnull, s, n)))
+end
