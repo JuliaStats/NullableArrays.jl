@@ -67,14 +67,8 @@ function Base.to_index(X::NullableArray)
     Base.to_index(X.values)
 end
 
-# ----- nullify --------------------------------------------------------------#
+# ----- nullify! --------------------------------------------------------------#
 
-function nullify(X::NullableArray, I::Int...)
-    X.isnull[I...] = true
-end
-
-function nullify{T <: Real}(X::NullableArray, rg::UnitRange{T})
-    for i in rg
-        nullify(X, i)
-    end
+function nullify!(X::NullableArray, I...)
+    setindex!(X, Nullable{eltype(X)}(), I...)
 end

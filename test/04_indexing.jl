@@ -74,6 +74,12 @@ module TestIndexing
         end
     end
 
+    # range indexing
+    Z_values = reshape(collect(1:125), (5,5,5))
+    Z = NullableArray(Z_values)
+
+    @test isequal(Z[1, 1:4, 1], NullableArray{Int, 2}([1 6 11 16]))
+
     # getindex with AbstractVector{Bool}
     b = bitrand(10, 10)
     rg = find(b)
@@ -86,8 +92,10 @@ module TestIndexing
         end
     end
 
-    # getindex with valuesVectors with missingness throws
+    # getindex with NullableVector with null entries throws error
     @test_throws NullException X[NullableArray([1, 2, 3, nothing], Int, Void)]
+
+#----- test setindex! --------------------------------------------------------#
 
     # setindex! with scalar indices
     _values = rand(10, 10)
@@ -102,10 +110,10 @@ module TestIndexing
     end
     @test isequal(X, NullableArray(_values))
 
-# ----- test nullify -----#
+# ----- test nullify! -----#
     _isnull = bitrand(10, 10)
     for i = 1:100
-        _isnull[i] && (nullify(X, i))
+        _isnull[i] && (nullify!(X, i))
     end
 
     # setindex! with scalar and vector indices
@@ -119,7 +127,7 @@ module TestIndexing
     # setindex! with NA and vector indices
     rg = 5:13
     _isnull[rg] = true
-    nullify(X, rg)
+    nullify!(X, rg)
     for i = 1:length(rg)
         @test isnull(X[rg[i]])
     end
