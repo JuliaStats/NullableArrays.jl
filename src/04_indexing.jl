@@ -44,7 +44,7 @@ end
 
 # ----- Base._checkbounds ----------------------------------------------------#
 
-function Base._checkbounds{T <: Real}(sz::Int, x::Nullable{T})
+function Base._checkbounds{T<:Real}(sz::Int, x::Nullable{T})
     isnull(x) ? throw(NullException()) : _checkbounds(sz, get(x))
 end
 

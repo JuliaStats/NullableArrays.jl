@@ -110,6 +110,13 @@ module TestIndexing
     end
     @test isequal(X, NullableArray(_values))
 
+    _values = rand(10, 10)
+    for i = 1:10, j = 1:10
+        X[i, j] = Nullable(_values[i, j])
+    end
+    @test isequal(X, NullableArray(_values))
+
+
 # ----- test nullify! -----#
     _isnull = bitrand(10, 10)
     for i = 1:100
