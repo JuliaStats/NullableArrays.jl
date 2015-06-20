@@ -3,48 +3,40 @@ using Base: ith_all
 
 #----- Base.map!/Base.map ----------------------------------------------------#
 
-# 1 arg
 function Base.map!{F}(f::F,
                       dest::NullableArray,
                       A::AbstractArray) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func
-        function func(dest, A)
-            for i in 1:length(dest)
-                dest[i] = ($_f)(A[i])
-            end
+    local func
+    function func(dest, A)
+        for i in 1:length(dest)
+            dest[i] = f(A[i])
         end
-        func($dest, $A)
-        $dest
     end
+    func(dest, A)
+    dest
 end
 
 function map_to!{T, F}(f::F,
                        offs,
                        dest::NullableArray{T},
                        A::AbstractArray) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func
-        function func{T}(offs, dest::NullableArray{T}, A)
-            @inbounds for i in offs:length(A)
-                el = $_f(A[i])
-                S = typeof(el)
-                if S === T || S <: T
-                    dest[i] = el::T
-                else
-                    R = typejoin(T, S)
-                    new = similar(dest, R)
-                    copy!(new, 1, dest, 1, i - 1)
-                    new[i] = el
-                    return func(i+1, new, A)
-                end
+    local func
+    function func{T}(offs, dest::NullableArray{T}, A)
+        @inbounds for i in offs:length(A)
+            el = f(A[i])
+            S = typeof(el)
+            if S !== T && !(S <: T)
+                R = typejoin(T, S)
+                new = similar(dest, R)
+                copy!(new, 1, dest, 1, i - 1)
+                new[i] = el
+                return func(i+1, new, A)
             end
-            return dest
+            dest[i] = el::T
         end
-        func($offs, $dest, $A)
+        return dest
     end
+    func(offs, dest, A)
 end
 
 function Base.map(f, X::NullableArray) # -> NullableArray{T, N}
@@ -63,45 +55,37 @@ function Base.map!{F}(f::F,
                       dest::NullableArray,
                       A::AbstractArray,
                       B::AbstractArray) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func =
-        function func(dest, A, B)
-            for i in 1:length(dest)
-                dest[i] = $_f(A[i], B[i])
-            end
+    local func
+    function func(dest, A, B)
+        for i in 1:length(dest)
+            dest[i] = f(A[i], B[i])
         end
-        func($dest, $A, $B)
-        $dest
     end
+    func(dest, A, B)
+    dest
 end
 
 function map_to!{T, F}(f::F, offs,
                        dest::NullableArray{T},
                        A::AbstractArray,
                        B::AbstractArray) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func
-        function func{T}(offs, dest::NullableArray{T}, A, B)
-            @inbounds for i in offs:length(A)
-                el = $_f(A[i], B[i])
-                # println(el)
-                S = typeof(el)
-                # println(S)
-                if S !== T && !(S <: T)
-                    R = typejoin(T, S)
-                    new = similar(dest, R)
-                    copy!(new, 1, dest, 1, i - 1)
-                    new[i] = el
-                    return func(i+1, new, A, B)
-                end
-                dest[i] = el::T
+    local func
+    function func{T}(offs, dest::NullableArray{T}, A, B)
+        @inbounds for i in offs:length(A)
+            el = f(A[i], B[i])
+            S = typeof(el)
+            if S !== T && !(S <: T)
+                R = typejoin(T, S)
+                new = similar(dest, R)
+                copy!(new, 1, dest, 1, i - 1)
+                new[i] = el
+                return func(i+1, new, A, B)
             end
-            return dest
+            dest[i] = el::T
         end
-        func($offs, $dest, $A, $B)
+        return dest
     end
+    func(offs, dest, A, B)
 end
 
 function Base.map(f, X::NullableArray, Y::NullableArray) # -> NullableArray{T, N}
@@ -120,17 +104,14 @@ end
 function map_n!{F}(f::F,
                       dest::NullableArray,
                       As) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func
-        function func(dest, As)
-            for i in 1:length(dest)
-                dest[i] = $_f(ith_all(i, As)...)
-            end
+    local func
+    function func(dest, As)
+        for i in 1:length(dest)
+            dest[i] = f(ith_all(i, As)...)
         end
-        func($dest, $As)
-        $dest
     end
+    func(dest, As)
+    dest
 end
 
 function Base.map!{F}(f::F, dest::NullableArray, As::AbstractArray...)
@@ -140,26 +121,23 @@ end
 function map_to_n!{T, F}(f::F, offs,
                        dest::NullableArray{T},
                        As) # -> NullableArray{T, N}
-    _f = Expr(:quote, f)
-    @eval begin
-        local func
-        function func{T}(offs, dest::NullableArray{T}, As)
-            @inbounds for i in offs:length(As[1])
-                el = $_f(ith_all(i, As)...)
-                S = typeof(el)
-                if S !== T && !(S <: T)
-                    R = typejoin(T, S)
-                    new = similar(dest, R)
-                    copy!(new, 1, dest, 1, i - 1)
-                    new[i] = el
-                    return func(i+1, new, As)
-                end
-                dest[i] = el::T
+    local func
+    function func{T}(offs, dest::NullableArray{T}, As)
+        @inbounds for i in offs:length(As[1])
+            el = f(ith_all(i, As)...)
+            S = typeof(el)
+            if S !== T && !(S <: T)
+                R = typejoin(T, S)
+                new = similar(dest, R)
+                copy!(new, 1, dest, 1, i - 1)
+                new[i] = el
+                return func(i+1, new, As)
             end
-            return dest
+            dest[i] = el::T
         end
-        func($offs, $dest, $As)
+        return dest
     end
+    func(offs, dest, As)
 end
 
 function Base.map(f, Xs::NullableArray...) # -> NullableArray{T, N}

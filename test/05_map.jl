@@ -16,29 +16,30 @@ module TestMap
         Nullable(x.value*y.value*z.value, x.isnull | y.isnull | z.isnull)
     end
 
+    @test isequal(map(f, Y), NullableArray([ 5*A[i] for i in 1:10 ]))
     @test isequal(map(f, X), NullableArray([ 5*i for i in 1:10 ]))
     @test isequal(map(f, X, A),
                   NullableArray([ X.values[i]*A[i] for i in 1:10 ])
-    )
+          )
     @test isequal(map(f, X, Y),
                   NullableArray([ X.values[i]*A[i] for i in 1:10])
-    )
+          )
     @test isequal(map(f, X, Z),
                   NullableArray([ X.values[i]*A[i] for i in 1:10],
                                 vcat(fill(true, 5), fill(false, 5))
                   )
-    )
+          )
     @test isequal(map(f, X, Y, Z),
                   NullableArray([ X.values[i]*A[i]*A[i] for i in 1:10 ],
                                 vcat(fill(true, 5), fill(false, 5))
                   )
-    )
+          )
 
     @test isequal(map!(f, similar(X), X), NullableArray([ 5*i for i in 1:10 ]))
     @test isequal(map!(f, NullableArray(Float64, 10), X, Y, Z),
                   NullableArray([ X.values[i]*A[i]*A[i] for i in 1:10 ],
                                 vcat(fill(true, 5), fill(false, 5))
                   )
-    )
+          )
 
 end
