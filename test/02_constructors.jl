@@ -2,6 +2,9 @@ module TestConstructors
     using Base.Test
     using NullableArrays
 
+    # test Inner Constructor
+    @test_throws ArgumentError NullableArray([1, 2, 3, 4], [true, false, true])
+
     # test Constructor #1
     v = [1, 2, 3, 4]
     dv = NullableArray(v, fill(false, size(v)))
