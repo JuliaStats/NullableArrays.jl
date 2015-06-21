@@ -1,5 +1,5 @@
 
-# ----- Outer Constructors ------------------------------------------------------------- #
+# ----- Outer Constructors -------------------------------------------------- #
 
 # ----- Constructor #1
 # The following provides an outer constructor whose argument signature matches
@@ -9,7 +9,7 @@ function NullableArray{T, N}(A::AbstractArray{T, N},
     return NullableArray{T, N}(A, m)
 end
 
-# ----- Constructor #2 ------------------------------------------------------------------#
+# ----- Constructor #2 -------------------------------------------------------#
 # Constructs a NullableArray from an Array 'a' of values and an optional
 # Array{Bool, N} mask. If omitted, the mask will default to an array of
 # 'false's the size of 'a'.
@@ -17,7 +17,7 @@ function NullableArray{T, N}(A::AbstractArray{T, N}) # -> NullableArray{T, N}
     return NullableArray{T, N}(A, fill(false, size(A)))
 end
 
-# ----- Constructor #3 ------------------------------------------------------------------#
+# ----- Constructor #3 -------------------------------------------------------#
 # TODO: Uncomment this doc entry when Base Julia can parse it correctly.
 # @doc """
 # Allow users to construct a quasi-uninitialized `NullableArray` object by
@@ -34,7 +34,7 @@ function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
     return NullableArray(Array(T, dims), fill(true, dims))
 end
 
-# ----- Constructor #4 ------------------------------------------------------------------#
+# ----- Constructor #4 -------------------------------------------------------#
 # Constructs an empty NullableArray of type parameter T and number of dimensions
 # equal to the number of arguments given in 'dims...', where the latter are
 # dimension lengths.
@@ -42,7 +42,7 @@ function NullableArray(T::Type, dims::Int...) # -> NullableArray
     return NullableArray(T, dims)
 end
 
-# ----- Constructor #5 ------------------------------------------------------------------#
+# ----- Constructor #5 -------------------------------------------------------#
 # The following method constructs a NullableArray from an Array{Any} argument
 # 'A' that contains some placeholder of type 'T' for null values.
 #
@@ -74,4 +74,13 @@ function NullableArray{T, U}(A::AbstractArray,
         !isnull && setindex!(_values, A[i], i)
     end
     return NullableArray(_values, _isnull)
+end
+
+#----- Constructor #6 --------------------------------------------------------#
+
+# The following method allows for the construction of zero-element
+# NullableArrays by calling the parametrized type on zero arguments.
+# TODO: add support for dimensions arguments?
+function Base.call{T, N}(::Type{NullableArray{T, N}})
+    NullableArray(T, ntuple(i->0, N))
 end

@@ -10,11 +10,14 @@ module NullableArrays
            dropnull,
            anynull,
            allnull,
-           nullify!
+           head,
+           nullify!,
+           tail
 
     include("01_typedefs.jl")
     include("02_constructors.jl")
     include("03_primitives.jl")
     include("04_indexing.jl")
     include("05_map.jl")
+    include("nullablevector.jl")
 end
