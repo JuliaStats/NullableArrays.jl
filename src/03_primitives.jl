@@ -123,6 +123,20 @@ end
 
 anynull(X::NullableArray) = any(X.isnull) # -> Bool
 
+# NOTE: the following currently short-circuits.
+function anynull(A::AbstractArray) # -> Bool
+    for a in A
+        if isa(a, Nullable)
+            a.isnull && (return true)
+        end
+    end
+    return false
+end
+
+function anynull(xs::NTuple) # -> Bool
+    return anynull(collect(xs))
+end
+
 # ----- allnull --------------------------------------------------------------#
 
 allnull(X::NullableArray) = all(X.isnull) # -> Bool

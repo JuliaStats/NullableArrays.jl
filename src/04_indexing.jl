@@ -5,6 +5,11 @@ import Base: LinearFast
 
 Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
 
+# resolve ambiguity created by the two definitions that follow.
+function Base.getindex{T, N}(X::NullableArray{T, N})
+    return X
+end
+
 # Extract a scalar element from a `NullableArray`.
 @inline function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
     if X.isnull[I...]
@@ -12,6 +17,13 @@ Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
     else
         Nullable{T}(X.values[I...])
     end
+end
+
+@inline function Base.getindex{T, N}(X::NullableArray{T, N},
+                                     I::Nullable{Int}...)
+    anynull(I) && throw(NullException())
+    values = [ get(i) for i in I ]
+    return getindex(X, values)
 end
 
 # Insert a scalar element from a `NullableArray` from a `Nullable` value.
@@ -35,7 +47,7 @@ end
 #----- UNSAFE INDEXING METHODS -----------------------------------------------#
 
 function unsafe_getindex_notnull(X::NullableArray, I::Int...)
-    return getindex(X, I...)
+    return Nullable(getindex(X.values, I...))
 end
 
 function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
@@ -45,7 +57,7 @@ end
 # ----- Base._checkbounds ----------------------------------------------------#
 
 function Base._checkbounds{T<:Real}(sz::Int, x::Nullable{T})
-    isnull(x) ? throw(NullException()) : _checkbounds(sz, get(x))
+    isnull(x) ? throw(NullException()) : Base._checkbounds(sz, get(x))
 end
 
 function Base._checkbounds(sz::Int, I::NullableVector{Bool})
@@ -53,11 +65,13 @@ function Base._checkbounds(sz::Int, I::NullableVector{Bool})
 end
 
 function Base._checkbounds{T<:Real}(sz::Int, I::NullableArray{T})
+    inbounds = true
     anynull(I) && throw(NullException())
     for i in 1:length(I)
         @inbounds v = unsafe_getvalue_notnull(I, i)
-        checkbounds(sz, v)
+        inbounds &= Base._checkbounds(sz, v)
     end
+    return inbounds
 end
 
 # ----- Base.to_index --------------------------------------------------------#
