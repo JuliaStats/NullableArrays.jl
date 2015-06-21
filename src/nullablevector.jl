@@ -8,6 +8,7 @@ tail(X::NullableArray) = X[max(1, length(X) - 5):length(X)]
 function Base.push!{T, V}(X::NullableVector{T}, v::V)
     push!(X.values, v)
     push!(X.isnull, false)
+    return X
 end
 
 function Base.push!{T, V}(X::NullableVector{T}, v::Nullable{V})
@@ -18,6 +19,7 @@ function Base.push!{T, V}(X::NullableVector{T}, v::Nullable{V})
         push!(X.values, v.value)
         push!(X.isnull, false)
     end
+    return X
 end
 
 #----- Base.pop! -------------------------------------------------------------#
