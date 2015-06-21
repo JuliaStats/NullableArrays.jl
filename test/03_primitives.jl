@@ -161,9 +161,21 @@ module TestPrimitives
 
 # ----- test anynull ---------------------------------------------------------#
 
+    # anynull(X::NullableArray)
     @test anynull(z) == false
     z = NullableArray(Int, 10)
     @test anynull(z) == true
+
+    # anynull(A::AbstractArray)
+    A2 = [Nullable(1), Nullable(2), Nullable(3)]
+    @test anynull(A2) == false
+    push!(A2, Nullable{Int}())
+    @test anynull(A2) == true
+
+    # anynull(xs::NTuple)
+    @test anynull((Nullable(1), Nullable(2))) == false
+    @test anynull((Nullable{Int}(), Nullable(1), 3, 6)) == true
+
 
 # ----- test allnull ---------------------------------------------------------#
 
