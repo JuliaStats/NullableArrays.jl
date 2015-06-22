@@ -92,31 +92,34 @@ module TestPrimitives
 
 # ----- test Base.fill! ------------------------------------------------------#
 
-    x = NullableArray(Int, 10, 2)
-    fill!(x, Nullable(10))
-    y = NullableArray(Float64, 10)
-    fill!(y, rand(Float64))
+    X = NullableArray(Int, 10, 2)
+    fill!(X, Nullable(10))
+    Y = NullableArray(Float64, 10)
+    fill!(Y, rand(Float64))
 
-    @test x.values == fill(10, 10, 2)
-    @test isequal(x.isnull, fill(false, 10, 2))
-    @test isequal(y.isnull, fill(false, 10))
+    @test X.values == fill(10, 10, 2)
+    @test isequal(X.isnull, fill(false, 10, 2))
+    @test isequal(Y.isnull, fill(false, 10))
+
+    fill!(X, Nullable())
+    @test isequal(X.isnull, fill(true, 10, 2))
 
 # ----- test Base.deepcopy ---------------------------------------------------#
 
-    y1 = deepcopy(y)
-    @test isequal(y1, y)
-    @assert !(y === y1)
+    Y1 = deepcopy(Y)
+    @test isequal(Y1, Y)
+    @assert !(Y === Y1)
 
 # ----- test Base.resize! ----------------------------------------------------#
 
-    resize!(y1, 20)
-    @test y1.values[1:10] == y.values[1:10]
-    @test y1.isnull[1:10] == y.isnull[1:10]
-    @test y1.isnull[11:20] == fill(true, 10)
+    resize!(Y1, 20)
+    @test Y1.values[1:10] == Y.values[1:10]
+    @test Y1.isnull[1:10] == Y.isnull[1:10]
+    @test Y1.isnull[11:20] == fill(true, 10)
 
-    resize!(y1, 5)
-    @test y1.values[1:5] == y.values[1:5]
-    @test y1.isnull[1:5] == y.isnull[1:5]
+    resize!(Y1, 5)
+    @test Y1.values[1:5] == Y.values[1:5]
+    @test Y1.isnull[1:5] == Y.isnull[1:5]
 
 # ----- test Base.ndims ------------------------------------------------------#
 
@@ -244,6 +247,23 @@ module TestPrimitives
     @test isa(g, NullableArray{Int, 2})
     @test isa(h, NullableArray{Float64, 2})
 
+    # Base.convert{T}(::Type{Vector}, X::NullableVector{T})
+    X = NullableArray([1, 2, 3, 4, 5])
+    @test convert(Vector, X) == [1, 2, 3, 4, 5]
+    push!(X, Nullable())
+    @test_throws NullException convert(Vector, X)
+
+    # Base.convert{T}(::Type{Matrix}, X::NullableMatrix{T})
+    Y = NullableArray([1 2; 3 4; 5 6; 7 8; 9 10])
+    @test convert(Matrix, Y) == [1 2; 3 4; 5 6; 7 8; 9 10]
+    Z = NullableArray([1 2; 3 4; 5 6; 7 8; 9 nothing], Int, Void)
+    @test_throws NullException convert(Matrix, Z)
+
+    # Base.convert{S, T, N}(::Type{NullableArray{S, N}},
+    #                       A::NullableArray{T, N})
+    @test isequal(convert(NullableArray{Float64, 2}, Y),
+                          NullableArray(Float64[1 2; 3 4; 5 6; 7 8; 9 10]))
+
     # The following tests concern methods that are deprecated.
     # TODO: rewrite tests once source methods have proper nomenclature
 
@@ -265,18 +285,12 @@ module TestPrimitives
     # TODO: reinstate testing once decision whether or not to implement
     # NullableArray-specific hash method is reached.
 
-# ----- test unique (julia/base/set.jl:107), reverse (julia/base/array.jl:639)
+# ----- test unique (julia/base/set.jl:107) ----------------------------------#
+
     x = NullableArray([1, nothing, -2, 1, nothing, 4], Int, Void)
     @assert isequal(unique(x), NullableArray([1, nothing, -2, 4], Int, Void))
     @assert isequal(unique(reverse(x)),
                     NullableArray([4, nothing, 1, -2], Int, Void))
 
-    y = NullableArray([nothing, 2, 3, 4, nothing, 6], Int, Void)
-    @assert isequal(reverse(y),
-                    NullableArray([6, nothing, 4, 3, 2, nothing], Int, Void))
-
-    # check case where only nothing occurs in final position
-    @assert isequal(unique(NullableArray([1, 2, 1, nothing], Int, Void)),
-                    NullableArray([1, 2, nothing], Int, Void))
 
 end
