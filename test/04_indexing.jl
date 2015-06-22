@@ -31,6 +31,14 @@ module TestIndexing
     _isnull = rand(Bool, 10, 10)
     X = NullableArray(_values, _isnull)
 
+    # Base.getindex{T, N}(X::NullableArray{T, N})
+    @test isequal(getindex(X), X)
+    @test getindex(X) === X
+
+    # Base.getindex{T, N}(X::NullableArray{T, N}, I::Nullable{Int}...)
+    @test_throws NullException getindex(X, Nullable{Int}(), Nullable{Int}())
+    @test isequal(getindex(X, Nullable(1)), Nullable(_values[1], _isnull[1]))
+
     # Scalar getindex
     for i = 1:100
         if _isnull[i]
@@ -170,7 +178,7 @@ module TestIndexing
     # Base._checkbounds{T<:Real}(sz::Int, x::Nullable{T})
     @test_throws NullException _checkbounds(1, Nullable(1, true))
     @test _checkbounds(10, Nullable(1)) == true
-    @test isequal(X[Nullable(1)], [Nullable(1)])
+    @test isequal(X[Nullable(1)], Nullable(1))
 
     # Base._checkbounds(sz::Int, X::NullableVector{Bool})
     @test _checkbounds(5, NullableArray([true, false, true, false, true]))
