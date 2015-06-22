@@ -23,7 +23,7 @@ end
                                      I::Nullable{Int}...)
     anynull(I) && throw(NullException())
     values = [ get(i) for i in I ]
-    return getindex(X, values)
+    return getindex(X, values...)
 end
 
 # Insert a scalar element from a `NullableArray` from a `Nullable` value.
