@@ -64,3 +64,35 @@ function Base.shift!{T}(X::NullableVector{T})
 end
 
 #----- Base.splice! ----------------------------------------------------------#
+
+
+# ----- Base.reverse/Base.reverse! -------------------------------------------#
+
+function Base.reverse!(X::NullableVector, s=1, n=length(X))
+    if isbits(eltype(X)) || !anynull(X)
+        reverse!(X.values, s, n)
+        reverse!(X.isnull, s, n)
+    else
+        r = n
+        for i in s:div(s+n-1, 2)
+            if !X.isnull[i]
+                if !X.isnull[r]
+                    X.values[i], X.values[r] = X.values[r], X.values[i]
+                else
+                    X.values[r] = X.values[i]
+                end
+            else
+                if !X.isnull[r]
+                    X.values[i] = X.values[r]
+                end
+            end
+            r -= 1
+        end
+        reverse!(X.isnull, s, n)
+    end
+    return X
+end
+
+function Base.reverse(X::NullableVector, s=1, n=length(X))
+    return reverse!(copy(X))
+end
