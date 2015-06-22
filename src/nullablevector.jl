@@ -54,7 +54,7 @@ end
 
 #----- Base.shift! -----------------------------------------------------------#
 
-function Base.shift!{T}(X::NullableVector{T})
+function Base.shift!{T}(X::NullableVector{T}) # -> Nullable{T}
     val, isnull = shift!(X.values), shift!(X.isnull)
     if isnull
         return Nullable{T}()
@@ -65,8 +65,106 @@ end
 
 #----- Base.splice! ----------------------------------------------------------#
 
+const _default_splice = []
 
-# ----- Base.reverse/Base.reverse! -------------------------------------------#
+function Base.splice!(X::NullableVector, i::Integer, ins=_default_splice)
+    v = X[i]
+    m = length(ins)
+    if m == 0
+        deleteat!(X.values, i)
+        deleteat!(X.isnull, i)
+    elseif m == 1
+        X[i] = ins
+    else
+        Base._growat!(X.values, i, m-1)
+        Base._growat!(X.isnull, i, m-1)
+        for k = 1:endof(ins)
+            X[i + k - 1] = ins[k]
+        end
+    end
+    return v
+end
+
+function Base.splice!{T<:Integer}(X::NullableVector,
+                                  rng::UnitRange{T},
+                                  ins=_default_splice) # ->
+    vs = X[rng]
+    m = length(ins)
+    if m == 0
+        deleteat!(X.values, rng)
+        deleteat!(X.isnull, rng)
+        return vs
+    end
+
+    n = length(X)
+    d = length(rng)
+    f = first(rng)
+    l = last(rng)
+
+    if m < d # insert is shorter than range
+        delta = d - m
+        if f - 1 < n - l
+            Base._deleteat_beg!(X.values, f, delta)
+            Base._deleteat_beg!(X.isnull, f, delta)
+        else
+            Base._deleteat_end!(X.values, l - delta + 1, delta)
+            Base._deleteat_end!(X.isnull, l - delta + 1, delta)
+        end
+    elseif m > d # insert is longer than range
+        delta = m - d
+        if f -  1 < n - l
+            Base._growat_beg!(X.values, f, delta)
+            Base._growat_beg!(X.isnull, f, delta)
+        else
+            Base._growat_end!(X.values, l + 1, delta)
+            Base._growat_end!(X.isnull, l + 1, delta)
+        end
+    end
+
+    for k = 1:endof(ins)
+        X[f + k - 1] = ins[k]
+    end
+    return vs
+end
+
+#----- Base.deleteat! ---------------------------------------------------------#
+
+function Base.deleteat!(X::NullableVector, inds)
+    deleteat!(X.values, inds)
+    deleteat!(X.isnull, inds)
+    return X
+end
+
+#----- Base.append! ----------------------------------------------------------#
+
+function Base.append!(X::NullableVector, items::AbstractVector)
+    old_length = length(X)
+    nitems = length(items)
+    resize!(X, old_length + nitems)
+    X[old_length + 1:end] = items[1:nitems]
+    return X
+end
+
+#----- Base.sizehint! --------------------------------------------------------#
+
+function Base.sizehint!(X::NullableVector, newsz::Integer)
+    sizehint!(X.values, newsz)
+    sizehint!(X.isnull, newsz)
+end
+
+#----- padnull!/padnull ------------------------------------------------------#
+
+function padnull!{T}(X::NullableVector{T}, front::Integer, back::Integer)
+    unshift!(X, fill(Nullable{T}(), front)...)
+    append!(X, fill(Nullable{T}(), back))
+    return X
+end
+
+function padnull(X::NullableVector, front::Integer, back::Integer)
+    return padnull!(copy(X), front, back)
+end
+
+#----- Base.reverse/Base.reverse! --------------------------------------------#
 
 function Base.reverse!(X::NullableVector, s=1, n=length(X))
     if isbits(eltype(X)) || !anynull(X)

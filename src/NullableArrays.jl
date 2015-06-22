@@ -12,6 +12,8 @@ module NullableArrays
            allnull,
            head,
            nullify!,
+           padnull!,
+           padnull,
            tail
 
     include("01_typedefs.jl")

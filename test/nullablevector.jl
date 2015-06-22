@@ -46,25 +46,81 @@ module TestNullableVector
 
     # Base.shift!{T}(X::NullableVector{T})
     Z = NullableArray([1:10...])
+
     @test isequal(shift!(Z), Nullable(1))
     @test isequal(Z, NullableArray([2:10...]))
+
     unshift!(Z, Nullable{Int}())
+
     @test isequal(shift!(Z), Nullable{Int}())
 
     #----- test Base.splice! -----#
 
+    # Base.splice!(X::NullableVector, i::Integer, ins=_default_splice)
+    X = NullableArray([1:5...])
+
+    splice!(X, 2)
+    @test isequal(X, NullableArray([1, 3, 4, 5]))
+
+    splice!(X, 2, 4)
+    @test isequal(X, NullableArray([1, 4, 4, 5]))
+
+    splice!(X, 2, [2, 3])
+    @test isequal(X, NullableArray([1:5...]))
+
+    splice!(X, 5, [5, 6, 7])
+    @test isequal(X, NullableArray([1:7...]))
+
+    # Base.splice!{T<:Integer}(X::NullableVector,
+    #                          rng::UnitRange{T},
+    #                          ins=_default_splice)
+
+    splice!(X, 1:2)
+    @test isequal(X, NullableArray([3:7...]))
+
+    splice!(X, 1:2, 4)
+    @test isequal(X, NullableArray([4:7...]))
+
+    splice!(X, 1:3, [5, 6])
+    @test isequal(X, NullableArray([5, 6, 7]))
+
+    splice!(X, 2:3, [6, 7, 8, 9, 10])
+    @test isequal(X, NullableArray([5:10...]))
 
     #----- test Base.deleteat! -----#
 
+    # Base.deleteat!(X::NullableArray, inds)
+    X = NullableArray([1:10...])
+    @test isequal(deleteat!(X, 1), NullableArray([2:10...]))
 
     #----- test Base.append! -----#
 
+    # Base.append!(X::NullableVector, items::AbstractVector)
+    @test isequal(append!(X, [11, 12]),
+                  NullableArray([2:12...]))
+    @test isequal(append!(X, [Nullable(13), Nullable(14)]),
+                  NullableArray([2:14...]))
+    @test isequal(append!(X, [Nullable(15), Nullable()]),
+                  NullableArray([2:16...], vcat(fill(false, 14), true)))
 
     #----- test Base.sizehint! -----#
 
+    # Base.sizehint!(X::NullableVector, newsz::Integer)
+    sizehint!(X, 20)
 
     #----- test padnull! -----#
 
+    # padnull!{T}(X::NullableVector{T}, front::Integer, back::Integer)
+    X = NullableArray([1:5...])
+    padnull!(X, 2, 3)
+    @test length(X.values) == 10
+    @test X.isnull == vcat(true, true, fill(false, 5), true, true, true)
+
+    # padnull(X::NullableVector, front::Integer, back::Integer)
+    X = NullableArray([1:5...])
+    Y = padnull(X, 2, 3)
+    @test length(Y.values) == 10
+    @test Y.isnull == vcat(true, true, fill(false, 5), true, true, true)
 
     #----- test Base.reverse!/Base.reverse -----#
 
