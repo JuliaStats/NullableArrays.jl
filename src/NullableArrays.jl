@@ -6,6 +6,9 @@ module NullableArrays
            NullableVector,
            NullableMatrix,
 
+           # Macros
+           @^,
+
            # Methods
            dropnull,
            anynull,
@@ -22,4 +25,5 @@ module NullableArrays
     include("04_indexing.jl")
     include("05_map.jl")
     include("nullablevector.jl")
+    include("lift.jl")
 end
