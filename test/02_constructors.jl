@@ -30,7 +30,7 @@ module TestConstructors
     y = NullableArray([1, 2, 3, 4, 5, 6])
     @test isa(y, NullableVector{Int})
 
-    #test Constructor #3
+    # test Constructor #3
     u1 = NullableArray(Int, (5, ))
     u2 = NullableArray(Int, (2, 2))
     u3 = NullableArray(Int, (2, 2, 2))
@@ -38,7 +38,7 @@ module TestConstructors
     @test isa(u2, NullableMatrix{Int})
     @test isa(u3, NullableArray{Int, 3})
 
-    #test Constructor #4
+    # test Constructor #4
     x1 = NullableArray(Int, 2)
     x2 = NullableArray(Int, 2, 2)
     x3 = NullableArray(Int, 2, 2, 2)
@@ -46,9 +46,24 @@ module TestConstructors
     @test isa(x2, NullableMatrix{Int})
     @test isa(x3, NullableArray{Int, 3})
 
-    #test Constructor #5
+    # test Constructor #5
     z = NullableArray([1, nothing, 2, nothing, 3], Int, Void)
     @test isa(z, NullableVector{Int})
     @test z.isnull[2]
     @test z.isnull[4]
+
+    # test Constructor #6
+    Z = NullableArray([1, "na", 2, 3, 4, 5, "na"], Int, "na")
+    @test isa(Z, NullableVector{Int})
+    @test Z.isnull == [false, true, false, false, false, false, true]
+
+    Y = NullableArray([1, "na", 2, 3, 4, 5, "na"], Int, ASCIIString)
+    @test isequal(Y, Z)
+
+    # test Constructor #7
+    @test isequal(NullableVector{Int}(), NullableArray{Int, 1}([]))
+    @test isequal(NullableArray{Bool, 2}(),
+                  NullableArray{Bool, 2}(Array(Bool, 0, 0)))
+
+
 end
