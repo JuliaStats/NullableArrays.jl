@@ -46,13 +46,13 @@ end
 # The following method constructs a NullableArray from an Array{Any} argument
 # 'A' that contains some placeholder of type 'T' for null values.
 #
-# e.g.: julia> NullableArray([1, nothing, 2], Void)
+# e.g.: julia> NullableArray([1, nothing, 2], Int, Void)
 #       3-element NullableArrays.NullableArray{Int64,1}:
 #       Nullable(1)
 #       Nullable{Int64}()
 #       Nullable(2)
 #
-#       julia> NullableArray([1, "notdefined", 2], ASCIIString)
+#       julia> NullableArray([1, "notdefined", 2], Int, ASCIIString)
 #       3-element NullableArrays.NullableArray{Int64,1}:
 #       Nullable(1)
 #       Nullable{Int64}()
@@ -63,20 +63,39 @@ end
 # NullableArray construction
 function NullableArray{T, U}(A::AbstractArray,
                              ::Type{T}, ::Type{U}) # -> NullableArray{T, N}
-    _isnull = fill(true, size(A))
-    _values = Array(T, size(A))
-    @inbounds for (i, value) in enumerate(A)
-        if !isa(value, U)
-            setindex!(_isnull, false, i)
+    res = NullableArray(T, size(A))
+    for i in 1:length(A)
+        if !isa(A[i], U)
+            @inbounds setindex!(res, A[i], i)
         end
     end
-    @inbounds for (i, isnull) in enumerate(_isnull)
-        !isnull && setindex!(_values, A[i], i)
-    end
-    return NullableArray(_values, _isnull)
+    return res
 end
 
-#----- Constructor #6 --------------------------------------------------------#
+# ----- Constructor #6 -------------------------------------------------------#
+# The following method constructs a NullableArray from an Array{Any} argument
+# `A` that contains some placeholder value `na` for null values.
+#
+# e.g.: julia> NullableArray(Any[1, "na", 2], Int, "na")
+#       3-element NullableArrays.NullableArray{Int64,1}:
+#       Nullable(1)
+#       Nullable{Int64}()
+#       Nullable(2)
+#
+function NullableArray{T}(A::AbstractArray,
+                             ::Type{T},
+                             na::Any;
+                             conversion::Base.Callable=Base.convert) # -> NullableArray{T, N}
+    res = NullableArray(T, size(A))
+    for i in 1:length(A)
+        if !isequal(A[i], na)
+            @inbounds setindex!(res, A[i], i)
+        end
+    end
+    return res
+end
+
+#----- Constructor #7 --------------------------------------------------------#
 
 # The following method allows for the construction of zero-element
 # NullableArrays by calling the parametrized type on zero arguments.

@@ -1,6 +1,4 @@
 
-using Base: ith_all
-
 #----- Base.map!/Base.map ----------------------------------------------------#
 
 function Base.map!{F}(f::F,
@@ -107,7 +105,7 @@ function map_n!{F}(f::F,
     local func
     function func(dest, As)
         for i in 1:length(dest)
-            dest[i] = f(ith_all(i, As)...)
+            dest[i] = f(Base.ith_all(i, As)...)
         end
     end
     func(dest, As)
@@ -124,7 +122,7 @@ function map_to_n!{T, F}(f::F, offs,
     local func
     function func{T}(offs, dest::NullableArray{T}, As)
         @inbounds for i in offs:length(As[1])
-            el = f(ith_all(i, As)...)
+            el = f(Base.ith_all(i, As)...)
             S = typeof(el)
             if S !== T && !(S <: T)
                 R = typejoin(T, S)
@@ -145,7 +143,7 @@ function Base.map(f, Xs::NullableArray...) # -> NullableArray{T, N}
     if prod(shape) == 0
         return similar(X[1], promote_type(Xs...), shape)
     else
-        first = f(ith_all(1, Xs)...)
+        first = f(Base.ith_all(1, Xs)...)
         dest = similar(Xs[1], typeof(first), shape)
         dest[1] = first
         return map_to_n!(f, 1, dest, Xs)
