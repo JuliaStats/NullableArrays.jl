@@ -43,7 +43,7 @@ module TestPrimitives
     function nonbits(dv)
         ret = similar(dv, Integer)
         for i = 1:length(dv)
-            if !isnull(dv, i)
+            if !dv.isnull[i]
                 ret[i] = dv[i]
             end
         end
@@ -151,21 +151,11 @@ module TestPrimitives
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test dropnull(z) == [1, 2, 3, 5, 7]
 
-# ----- test Base.isnull -----------------------------------------------------#
-
-    @test isnull(z) == [false, false, false, true, false, true, false, true]
-    @test isnull(z, 1) == false
-    @test isnull(z, 4) == true
-    z = NullableArray([1 nothing; nothing 4], Int, Void)
-    @test isnull(z, 1, 1) == false
-    @test isnull(z, 1, 2) == true
-    z = NullableArray(fill(Int, 3, 3, 3))
-    @test isnull(z, 1, 3, 2) == false
-
 # ----- test anynull ---------------------------------------------------------#
 
     # anynull(X::NullableArray)
-    @test anynull(z) == false
+    @test anynull(z) == true
+    @test anynull(dropnull(z)) == false
     z = NullableArray(Int, 10)
     @test anynull(z) == true
 
