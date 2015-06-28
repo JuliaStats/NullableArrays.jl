@@ -12,10 +12,14 @@ end
 
 # Extract a scalar element from a `NullableArray`.
 @inline function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
-    if X.isnull[I...]
-        Nullable{T}()
+    if isbits(T)
+        Nullable{T}(X.values[I...], X.isnull[I...])
     else
-        Nullable{T}(X.values[I...])
+        if X.isnull[I...]
+            Nullable{T}()
+        else
+            Nullable{T}(X.values[I...])
+        end
     end
 end
 
