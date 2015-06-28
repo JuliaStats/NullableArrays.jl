@@ -108,17 +108,6 @@ end
 
 dropnull(X::NullableVector) = copy(X.values[!X.isnull]) # -> Vector{T}
 
-# ----- Base.isnull ----------------------------------------------------------#
-
-Base.isnull(X::NullableArray) = copy(X.isnull) # -> Array{Bool, N}
-
-Base.isnull(X::NullableArray, i::Integer) = X.isnull[i] # -> Bool
-
-# Ought we to implement non-varargs methods for I of length 1, 2, 3, 4?
-function Base.isnull(X::NullableArray, I::Any...) # -> Bool
-    getindex(X.isnull, I...)
-end
-
 # ----- anynull --------------------------------------------------------------#
 
 anynull(X::NullableArray) = any(X.isnull) # -> Bool

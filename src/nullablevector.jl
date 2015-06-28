@@ -192,5 +192,5 @@ function Base.reverse!(X::NullableVector, s=1, n=length(X))
 end
 
 function Base.reverse(X::NullableVector, s=1, n=length(X))
-    return reverse!(copy(X))
+    return reverse!(copy(X), s, n)
 end
