@@ -7,9 +7,7 @@ macro ^(call, T...)
         throw(ArgumentError("@^: argument must be a function call"))
     end
 
-    if length(T) == 0
-        e_type = :(Union{})
-    elseif length(T) == 1
+    if length(T) == 1
         e_type = T[1]
     else
         throw(ArgumentError("@^: wrong number of arguments"))
