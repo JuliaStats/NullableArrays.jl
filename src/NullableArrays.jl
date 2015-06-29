@@ -25,5 +25,6 @@ module NullableArrays
     include("04_indexing.jl")
     include("05_map.jl")
     include("nullablevector.jl")
+    include("io.jl")
     include("lift.jl")
 end
