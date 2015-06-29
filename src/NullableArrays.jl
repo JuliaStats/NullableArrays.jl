@@ -13,6 +13,8 @@ module NullableArrays
            dropnull,
            anynull,
            allnull,
+           findnull,
+           global_mean,
            head,
            nullify!,
            padnull!,
@@ -24,7 +26,8 @@ module NullableArrays
     include("03_primitives.jl")
     include("04_indexing.jl")
     include("05_map.jl")
-    include("nullablevector.jl")
     include("io.jl")
     include("lift.jl")
+    include("linearalgebra.jl")
+    include("nullablevector.jl")
 end

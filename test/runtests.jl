@@ -12,8 +12,9 @@ my_tests = [
     "05_map.jl",
     "broadcast.jl",
     "lift.jl",
-    "nullablevector.jl",
-    "nullablematrix.jl"
+    "linearalgebra.jl",
+    "nullablematrix.jl",
+    "nullablevector.jl"
 ]
 
 println("Running tests:")

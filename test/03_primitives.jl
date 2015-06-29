@@ -176,6 +176,17 @@ module TestPrimitives
     setindex!(z, 10, 1)
     @test allnull(z) == false
 
+
+# ----- test findnull --------------------------------------------------------#
+
+    # findnull{T, N}(X::NullableArray{T, N})
+    M = rand(Bool, 10, 10)
+    _M = find(M)
+    A = rand(Float64, 10, 10)
+    X = NullableArray(A, M)
+    @test _M == [ Base.sub2ind(size(X), ind...) for ind in findnull(X) ]
+
+
 # ----- test Base.isnan ------------------------------------------------------#
 
     x = NullableArray([1, 2, NaN, 4, 5, NaN, Inf, nothing], Float64, Void)
