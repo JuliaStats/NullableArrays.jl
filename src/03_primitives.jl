@@ -130,27 +130,6 @@ end
 
 allnull(X::NullableArray) = all(X.isnull) # -> Bool
 
-# ----- findnull -------------------------------------------------------------#
-
-@generated function findnull{T, N}(X::NullableArray{T, N})
-    if N == 1
-        e_res = :(res = Int[])
-        e_push! = :(push!(res, i_1))
-    else
-        e_res = :(res = NTuple{$N, Int}[])
-        e_push! = :(push!(res, @ntuple $N i))
-    end
-    return quote
-        $e_res
-        @nloops $N i X begin
-            if (@nref $N X i).isnull
-                $e_push!
-            end
-        end
-        return res
-    end
-end
-
 # ----- Base.isnan -----------------------------------------------------------#
 
 function Base.isnan(X::NullableArray) # -> NullableArray{Bool}
