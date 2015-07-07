@@ -38,8 +38,9 @@ I2 = DataArray(C2, M2)
 
 f(x, y) = x * y
 
-function test_broadcast()
+function profile_broadcast()
 
+    println("f(x, y) := x * y")
     println("Method: broadcast!(f, dest, A1, A2) (no empty entries):")
     broadcast!(f, L, A1, A2)
     print("  For Array{Float64}:          ")
@@ -65,7 +66,7 @@ function test_broadcast()
     nothing
 end
 
-function test_ops1()
+function profile_ops1()
     for op in (
         :(.+),
         :(.-),
@@ -125,7 +126,7 @@ function test_ops1()
     nothing
 end
 
-function test_ops2()
+function profile_ops2()
     for op in (
         :(.+),
         :(.-),

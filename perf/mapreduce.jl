@@ -15,7 +15,7 @@ f{T<:Number}(x::Nullable{T}) = Nullable(5 * x.value, x.isnull)
 
 #-----------------------------------------------------------------------------#
 
-function test_mapreduce(A, X, D)
+function profile_mapreduce(A, X, D)
     mapreduce(f, Base.(:+), A)
     mapreduce(f, Base.(:+), X)
     mapreduce(f, Base.(:+), D)
@@ -28,7 +28,7 @@ function test_mapreduce(A, X, D)
     @time(mapreduce(f, Base.(:+), D))
 end
 
-function test_reduce(A, X, D)
+function profile_reduce(A, X, D)
     reduce(Base.(:+), A)
     reduce(Base.(:+), X)
     reduce(Base.(:+), D)
@@ -41,7 +41,7 @@ function test_reduce(A, X, D)
     @time(reduce(Base.(:+), D))
 end
 
-function test_sum1(A, X, D)
+function profile_sum1(A, X, D)
     sum(A)
     sum(X)
     sum(D)
@@ -54,7 +54,7 @@ function test_sum1(A, X, D)
     @time(sum(D))
 end
 
-function test_sum2(A, X, D)
+function profile_sum2(A, X, D)
     sum(f, A)
     sum(f, X)
     sum(f, D)
@@ -67,7 +67,7 @@ function test_sum2(A, X, D)
     @time(sum(f, D))
 end
 
-function test_prod1(A, X, D)
+function profile_prod1(A, X, D)
     prod(A)
     prod(X)
     prod(D)
@@ -80,7 +80,7 @@ function test_prod1(A, X, D)
     @time(prod(D))
 end
 
-function test_prod2(A, X, D)
+function profile_prod2(A, X, D)
     prod(f, A)
     prod(f, X)
     prod(f, D)
@@ -93,7 +93,7 @@ function test_prod2(A, X, D)
     @time(prod(f, D))
 end
 
-function test_minimum1(A, X, D)
+function profile_minimum1(A, X, D)
     minimum(A)
     minimum(X)
     minimum(D)
@@ -106,7 +106,7 @@ function test_minimum1(A, X, D)
     @time(minimum(D))
 end
 
-function test_minimum2(A, X, D)
+function profile_minimum2(A, X, D)
     minimum(f, A)
     minimum(f, X)
     minimum(f, D)
@@ -119,7 +119,7 @@ function test_minimum2(A, X, D)
     @time(minimum(f, D))
 end
 
-function test_maximum1(A, X, D)
+function profile_maximum1(A, X, D)
     maximum(A)
     maximum(X)
     maximum(D)
@@ -132,7 +132,7 @@ function test_maximum1(A, X, D)
     @time(maximum(D))
 end
 
-function test_maximum2(A, X, D)
+function profile_maximum2(A, X, D)
     maximum(f, A)
     maximum(f, X)
     maximum(f, D)
@@ -145,7 +145,7 @@ function test_maximum2(A, X, D)
     @time(maximum(f, D))
 end
 
-function test_sumabs(A, X, D)
+function profile_sumabs(A, X, D)
     sumabs(A)
     sumabs(X)
     sumabs(D)
@@ -158,7 +158,7 @@ function test_sumabs(A, X, D)
     @time(sumabs(D))
 end
 
-function test_sumabs2(A, X, D)
+function profile_sumabs2(A, X, D)
     sumabs2(A)
     sumabs2(X)
     sumabs2(D)
@@ -171,7 +171,7 @@ function test_sumabs2(A, X, D)
     @time(sumabs2(D))
 end
 
-function test_mean1(A::AbstractArray, X::NullableArray)
+function profile_mean1(A::AbstractArray, X::NullableArray)
     mean(A)
     mean(X)
     println("Method: mean(A)")
@@ -181,7 +181,7 @@ function test_mean1(A::AbstractArray, X::NullableArray)
     @time(mean(X))
 end
 
-function test_varm1(A::AbstractArray, X::NullableArray)
+function profile_varm1(A::AbstractArray, X::NullableArray)
     varm(A, mu_A)
     varm(X, mu_A)
     println("Method: varm(A, m)")
@@ -191,7 +191,7 @@ function test_varm1(A::AbstractArray, X::NullableArray)
     @time(varm(X, mu_A))
 end
 
-function test_varm2(X::NullableArray)
+function profile_varm2(X::NullableArray)
     # varm(A, mu_A)
     varm(X, Nullable(mu_A))
     println("Method: varm(A, m::Nullable)")
@@ -201,7 +201,7 @@ function test_varm2(X::NullableArray)
     @time(varm(X, Nullable(mu_A)))
 end
 
-function test_varzm(A::AbstractArray, X::NullableArray)
+function profile_varzm(A::AbstractArray, X::NullableArray)
     varzm(A)
     varzm(X)
     println("Method: varzm(A)")
@@ -211,7 +211,7 @@ function test_varzm(A::AbstractArray, X::NullableArray)
     @time(varzm(X))
 end
 
-function test_var(A::AbstractArray, X::NullableArray)
+function profile_var(A::AbstractArray, X::NullableArray)
     var(A)
     var(X)
     println("Method: var(A)")
@@ -221,7 +221,7 @@ function test_var(A::AbstractArray, X::NullableArray)
     @time(var(X))
 end
 
-function test_stdm(A::AbstractArray, X::NullableArray)
+function profile_stdm(A::AbstractArray, X::NullableArray)
     stdm(A, mu_A)
     stdm(X, mu_A)
     println("Method: stdm(A, m)")
@@ -231,7 +231,7 @@ function test_stdm(A::AbstractArray, X::NullableArray)
     @time(stdm(X, mu_A))
 end
 
-function test_std(A::AbstractArray, X::NullableArray)
+function profile_std(A::AbstractArray, X::NullableArray)
     std(A, mu_A)
     std(X, mu_A)
     println("Method: std(A, m)")
@@ -241,30 +241,30 @@ function test_std(A::AbstractArray, X::NullableArray)
     @time(std(X, mu_A))
 end
 
-function testall()
-    test_mapreduce(A, X, D)
-    test_reduce(A, X, D)
-    test_sum1(A, X, D)
-    test_sum2(A, X, D)
-    test_prod1(A, X, D)
-    test_prod2(A, X, D)
-    test_minimum1(A, X, D)
-    test_minimum2(A, X, D)
-    test_maximum1(A, X, D)
-    test_maximum2(A, X, D)
-    test_sumabs(A, X, D)
-    test_sumabs2(A, X, D)
-    # test_mean1(A, X)
-    # test_varm1(A, X)
-    # test_varm2(X)
-    # test_varmz(A, X)
-    # test_var(A, X)
-    # test_stdm(A, X)
-    # test_std(A, X)
+function profil_eall()
+    profile_mapreduce(A, X, D)
+    profile_reduce(A, X, D)
+    profile_sum1(A, X, D)
+    profile_sum2(A, X, D)
+    profile_prod1(A, X, D)
+    profile_prod2(A, X, D)
+    profile_minimum1(A, X, D)
+    profile_minimum2(A, X, D)
+    profile_maximum1(A, X, D)
+    profile_maximum2(A, X, D)
+    profile_sumabs(A, X, D)
+    profile_sumabs2(A, X, D)
+    # profile_mean1(A, X)
+    # profile_varm1(A, X)
+    # profile_varm2(X)
+    # profile_varmz(A, X)
+    # profile_var(A, X)
+    # profile_stdm(A, X)
+    # profile_std(A, X)
     return nothing
 end
 
-testall()
+profile_all()
 
 # # NullableArray vs. DataArray comparison
 # println("NullableArray vs. DataArray comparison")
