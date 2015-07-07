@@ -10,7 +10,7 @@ Z = NullableArray(A, B)
 
 f{T}(x::Nullable{T}) = return Nullable(5*x.value, x.isnull)
 
-function test_map()
+function profile_map()
     map!(f, X, Y)
     map!(f, X, Z)
     # map!(f, X, Y)

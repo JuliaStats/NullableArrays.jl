@@ -19,13 +19,13 @@ function tracedot(X, Y)
     return res
 end
 
-function test_no_nulls()
+function profile_no_nulls()
     tracedot(X, Y)
     # tracedot(X, Y)
     @time(tracedot(X, Y))
 end
 
-function test_half_nulls()
+function profile_half_nulls()
     tracedot(Xn, Yn)
     # tracedot(Xn, Yn)
     @time(tracedot(Xn, Yn))
