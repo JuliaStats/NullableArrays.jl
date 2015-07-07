@@ -1,0 +1,308 @@
+using NullableArrays
+using DataArrays
+
+A = rand(5_000_000)
+B = rand(Bool, 5_000_000)
+mu_A = mean(A)
+X = NullableArray(A)
+Y = NullableArray(A, B)
+D = DataArray(A)
+E = DataArray(A, B)
+
+f(x) = 5 * x
+f{T<:Number}(x::Nullable{T}) = Nullable(5 * x.value, x.isnull)
+
+#-----------------------------------------------------------------------------#
+
+function test_mapreduce(A::AbstractArray, X::NullableArray)
+    mapreduce(f, Base.(:+), A)
+    mapreduce(f, Base.(:+), X)
+    mapreduce(f, Base.(:+), D)
+    println("Method: mapreduce(f, op, A)")
+    print("  for Array{Float64}:          ")
+    @time(mapreduce(f, Base.(:+), A))
+    print("  for NullableArray{Float64}:  ")
+    @time(mapreduce(f, Base.(:+), X))
+    print("  for DataArray{Float64}:      ")
+    @time(mapreduce(f, Base.(:+), D))
+end
+
+function test_reduce(A::AbstractArray, X::NullableArray)
+    reduce(Base.(:+), A)
+    reduce(Base.(:+), X)
+    reduce(Base.(:+), D)
+    println("Method: reduce(op, A)")
+    print("  for Array{Float64}:          ")
+    @time(reduce(Base.(:+), A))
+    print("  for NullableArray{Float64}:  ")
+    @time(reduce(Base.(:+), X))
+    print("  for DataArray{Float64}:      ")
+    @time(reduce(Base.(:+), D))
+end
+
+function test_sum1(A::AbstractArray, X::NullableArray)
+    sum(A)
+    sum(X)
+    sum(D)
+    println("Method: sum(A)")
+    print("  for Array{Float64}:          ")
+    @time(sum(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(sum(X))
+    print("  for DataArray{Float64}:      ")
+    @time(sum(D))
+end
+
+function test_sum2(A::AbstractArray, X::NullableArray)
+    sum(f, A)
+    sum(f, X)
+    sum(f, D)
+    println("Method: sum(f, A)")
+    print("  for Array{Float64}:          ")
+    @time(sum(f, A))
+    print("  for NullableArray{Float64}:  ")
+    @time(sum(f, X))
+    print("  for DataArray{Float64}:      ")
+    @time(sum(f, D))
+end
+
+function test_prod1(A::AbstractArray, X::NullableArray)
+    prod(A)
+    prod(X)
+    prod(D)
+    println("Method: prod(A)")
+    print("  for Array{Float64}:          ")
+    @time(prod(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(prod(X))
+    print("  for DataArray{Float64}:      ")
+    @time(prod(D))
+end
+
+function test_prod2(A::AbstractArray, X::NullableArray)
+    prod(f, A)
+    prod(f, X)
+    prod(f, D)
+    println("Method: prod(f, A)")
+    print("  for Array{Float64}:          ")
+    @time(prod(f, A))
+    print("  for NullableArray{Float64}:  ")
+    @time(prod(f, X))
+    print("  for DataArray{Float64}:      ")
+    @time(prod(f, D))
+end
+
+function test_minimum1(A::AbstractArray, X::NullableArray)
+    minimum(A)
+    minimum(X)
+    minimum(D)
+    println("Method: minimum(A)")
+    print("  for Array{Float64}:          ")
+    @time(minimum(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(minimum(X))
+    print("  for DataArray{Float64}:      ")
+    @time(minimum(D))
+end
+
+function test_minimum2(A::AbstractArray, X::NullableArray)
+    minimum(f, A)
+    minimum(f, X)
+    minimum(f, D)
+    println("Method: minimum(f, A)")
+    print("  for Array{Float64}:          ")
+    @time(minimum(f, A))
+    print("  for NullableArray{Float64}:  ")
+    @time(minimum(f, X))
+    print("  for DataArray{Float64}:      ")
+    @time(minimum(f, D))
+end
+
+function test_maximum1(A::AbstractArray, X::NullableArray)
+    maximum(A)
+    maximum(X)
+    maximum(D)
+    println("Method: maximum(A)")
+    print("  for Array{Float64}:          ")
+    @time(maximum(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(maximum(X))
+    print("  for DataArray{Float64}:      ")
+    @time(maximum(D))
+end
+
+function test_maximum2(A::AbstractArray, X::NullableArray)
+    maximum(f, A)
+    maximum(f, X)
+    maximum(f, D)
+    println("Method: maximum(f, A)")
+    print("  for Array{Float64}:          ")
+    @time(maximum(f, A))
+    print("  for NullableArray{Float64}:  ")
+    @time(maximum(f, X))
+    print("  for DataArray{Float64}:      ")
+    @time(maximum(f, D))
+end
+
+function test_sumabs(A::AbstractArray, X::NullableArray)
+    sumabs(A)
+    sumabs(X)
+    sumabs(D)
+    println("Method: sumabs(A)")
+    print("  for Array{Float64}:          ")
+    @time(sumabs(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(sumabs(X))
+    print("  for DataArray{Float64}:      ")
+    @time(sumabs(D))
+end
+
+function test_sumabs2(A::AbstractArray, X::NullableArray)
+    sumabs2(A)
+    sumabs2(X)
+    sumabs2(D)
+    println("Method: sumabs2(A)")
+    print("  for Array{Float64}:          ")
+    @time(sumabs2(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(sumabs2(X))
+    print("  for DataArray{Float64}:      ")
+    @time(sumabs2(D))
+end
+
+function test_mean1(A::AbstractArray, X::NullableArray)
+    mean(A)
+    mean(X)
+    println("Method: mean(A)")
+    print("  for Array{Float64}:          ")
+    @time(mean(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(mean(X))
+end
+
+function test_varm1(A::AbstractArray, X::NullableArray)
+    varm(A, mu_A)
+    varm(X, mu_A)
+    println("Method: varm(A, m)")
+    print("  for Array{Float64}:          ")
+    @time(varm(A, mu_A))
+    print("  for NullableArray{Float64}:  ")
+    @time(varm(X, mu_A))
+end
+
+function test_varm2(X::NullableArray)
+    # varm(A, mu_A)
+    varm(X, Nullable(mu_A))
+    println("Method: varm(A, m::Nullable)")
+    print("  for Array{Float64}:           NA")
+    # @time(varm(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(varm(X, Nullable(mu_A)))
+end
+
+function test_varzm(A::AbstractArray, X::NullableArray)
+    varzm(A)
+    varzm(X)
+    println("Method: varzm(A)")
+    print("  for Array{Float64}:          ")
+    @time(varzm(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(varzm(X))
+end
+
+function test_var(A::AbstractArray, X::NullableArray)
+    var(A)
+    var(X)
+    println("Method: var(A)")
+    print("  for Array{Float64}:          ")
+    @time(var(A))
+    print("  for NullableArray{Float64}:  ")
+    @time(var(X))
+end
+
+function test_stdm(A::AbstractArray, X::NullableArray)
+    stdm(A, mu_A)
+    stdm(X, mu_A)
+    println("Method: stdm(A, m)")
+    print("  for Array{Float64}:          ")
+    @time(stdm(A, mu_A))
+    print("  for NullableArray{Float64}:  ")
+    @time(stdm(X, mu_A))
+end
+
+function test_std(A::AbstractArray, X::NullableArray)
+    std(A, mu_A)
+    std(X, mu_A)
+    println("Method: std(A, m)")
+    print("  for Array{Float64}:          ")
+    @time(std(A, mu_A))
+    print("  for NullableArray{Float64}:  ")
+    @time(std(X, mu_A))
+end
+
+function testall()
+    test_mapreduce(A, X)
+    test_reduce(A, X)
+    test_sum1(A, X)
+    test_sum2(A, X)
+    test_prod1(A, X)
+    test_prod2(A, X)
+    test_minimum1(A, X)
+    test_minimum2(A, X)
+    test_maximum1(A, X)
+    test_maximum2(A, X)
+    test_sumabs(A, X)
+    test_sumabs2(A, X)
+    # test_mean1(A, X)
+    # test_varm1(A, X)
+    # test_varm2(X)
+    # test_varmz(A, X)
+    # test_var(A, X)
+    # test_stdm(A, X)
+    # test_std(A, X)
+    return nothing
+end
+
+testall()
+#
+# function sumabs1(X)
+#     res = Nullable(0.0)
+#     for i in 1:length(X)
+#         res += abs(X[i])
+#     end
+#     return res
+# end
+#
+# sumabs1(X)
+# @time(sumabs1(X))
+
+
+# # NullableArray vs. DataArray comparison
+# println("NullableArray vs. DataArray comparison")
+# println()
+# println("skipnull implementation for f = IdFun(), op = AddFun()")
+# # NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X)
+# mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=false)
+# print("  for NullableArray{Float64} (0 null entries, skipnull=false): ")
+# # @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X))
+# @time(mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=false))
+#
+# # DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D)
+# mapreduce(Base.IdFun(), +, D, skipna=false)
+# print("  for DataArray{Float64} (0 null entries, skipnull=false):     ")
+# # @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D))
+# @time(mapreduce(Base.IdFun(), +, D, skipna=false))
+#
+# # reduce(Base.AddFun(), Y, skipnull=true)
+# # NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y)
+# mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=true)
+# print("  for NullableArray{Float64} (approx. half null entries, skipnull=true): ")
+# # @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y))
+# # @time(reduce(Base.AddFun(), Y, skipnull=true))
+# @time(mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=true))
+#
+# reduce(Base.AddFun(), E, skipna=true)
+# # DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E)
+# print("  for DataArray{Float64} (approx. half null entries, skipnull=true):     ")
+# # @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E))
+# @time(reduce(Base.AddFun(), E, skipna=true))

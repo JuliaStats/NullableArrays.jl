@@ -28,4 +28,5 @@ module NullableArrays
     include("io.jl")
     include("lift.jl")
     include("operators.jl")
+    include("mapreduce.jl")
 end
