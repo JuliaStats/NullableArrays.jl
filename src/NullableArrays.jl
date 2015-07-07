@@ -27,4 +27,5 @@ module NullableArrays
     include("nullablevector.jl")
     include("io.jl")
     include("lift.jl")
+    include("operators.jl")
 end
