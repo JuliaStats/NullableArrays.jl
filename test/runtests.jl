@@ -5,15 +5,15 @@ quiet = length(ARGS) > 0 && ARGS[1] == "-q"
 anyerrors = false
 
 my_tests = [
-    # "typedefs.jl",
-    # "constructors.jl",
-    # "primitives.jl",
-    # "indexing.jl",
-    # "map.jl",
+    "typedefs.jl",
+    "constructors.jl",
+    "primitives.jl",
+    "indexing.jl",
+    "map.jl",
     "broadcast.jl",
-    # "lift.jl",
-    # "nullablevector.jl",
-    # "nullablematrix.jl"
+    "lift.jl",
+    "nullablevector.jl",
+    "nullablematrix.jl"
 ]
 
 println("Running tests:")
