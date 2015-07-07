@@ -25,8 +25,8 @@ module NullableArrays
     include("indexing.jl")
     include("map.jl")
     include("nullablevector.jl")
-    include("io.jl")
     include("lift.jl")
     include("operators.jl")
+    include("broadcast.jl")
     include("mapreduce.jl")
 end
