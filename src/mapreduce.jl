@@ -110,16 +110,6 @@ for (fn, f, op) in ((:(Base.sumabs), Base.AbsFun(), Base.AddFun()),
         mapreduce($f, $op, X; skipnull=skipnull)
 end
 
-#----- Base.sumabs -----------------------------------------------------------#
-
-# function Base.sumabs{T}(X::NullableArray{T}; skipnull::Bool = false)
-#     anynull(X) && return Nullable{T}()
-#     return Nullable(sumabs(X.values))
-# end
-
-#----- Base.sumabs2 ----------------------------------------------------------#
-
-
 #----- Base.minimum / Base.maximum -------------------------------------------#
 
 # internal methods
