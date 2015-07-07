@@ -19,11 +19,11 @@ module NullableArrays
            padnull,
            tail
 
-    include("01_typedefs.jl")
-    include("02_constructors.jl")
-    include("03_primitives.jl")
-    include("04_indexing.jl")
-    include("05_map.jl")
+    include("typedefs.jl")
+    include("constructors.jl")
+    include("primitives.jl")
+    include("indexing.jl")
+    include("map.jl")
     include("nullablevector.jl")
     include("io.jl")
     include("lift.jl")
