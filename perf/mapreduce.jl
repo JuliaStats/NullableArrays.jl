@@ -241,7 +241,7 @@ function profile_std(A::AbstractArray, X::NullableArray)
     @time(std(X, mu_A))
 end
 
-function profil_eall()
+function profile_all()
     profile_mapreduce(A, X, D)
     profile_reduce(A, X, D)
     profile_sum1(A, X, D)
@@ -264,34 +264,72 @@ function profil_eall()
     return nothing
 end
 
-profile_all()
-
 # # NullableArray vs. DataArray comparison
-# println("NullableArray vs. DataArray comparison")
-# println()
-# println("skipnull implementation for f = IdFun(), op = AddFun()")
-# # NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X)
-# mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=false)
-# print("  for NullableArray{Float64} (0 null entries, skipnull=false): ")
-# # @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X))
-# @time(mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=false))
-#
-# # DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D)
-# mapreduce(Base.IdFun(), +, D, skipna=false)
-# print("  for DataArray{Float64} (0 null entries, skipnull=false):     ")
-# # @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D))
-# @time(mapreduce(Base.IdFun(), +, D, skipna=false))
-#
-# # reduce(Base.AddFun(), Y, skipnull=true)
-# # NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y)
-# mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=true)
-# print("  for NullableArray{Float64} (approx. half null entries, skipnull=true): ")
-# # @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y))
-# # @time(reduce(Base.AddFun(), Y, skipnull=true))
-# @time(mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=true))
-#
-# reduce(Base.AddFun(), E, skipna=true)
-# # DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E)
-# print("  for DataArray{Float64} (approx. half null entries, skipnull=true):     ")
-# # @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E))
-# @time(reduce(Base.AddFun(), E, skipna=true))
+function profile_skip(skip::Bool)
+    println("Comparison of skipnull/skipNA methods")
+    println()
+    println("f := IdFun(), op := AddFun()")
+    println("mapreduce(f, op, X; skipnull/skipNA=$skip) (0 missing entries)")
+
+    mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=skip)
+    print("  for NullableArray{Float64}:  ")
+    @time(mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=skip))
+
+    mapreduce(Base.IdFun(), Base.AddFun(), D, skipna=skip)
+    print("  for DataArray{Float64}:      ")
+    @time(mapreduce(Base.IdFun(), Base.AddFun(), D, skipna=skip))
+
+    println()
+    println("reduce(op, X; skipnull/skipNA=$skip) (0 missing entries)")
+    reduce(Base.AddFun(), X, skipnull=skip)
+    print("  for NullableArray{Float64}:  ")
+    @time(reduce(Base.AddFun(), X, skipnull=skip))
+
+    reduce(Base.AddFun(), D, skipna=skip)
+    print("  for DataArray{Float64}:      ")
+    @time(reduce(Base.AddFun(), D, skipna=skip))
+
+    println()
+    println("mapreduce(f, op, X; skipnull/skipNA=$skip) (~half missing entries)")
+    mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=skip)
+    print("  for NullableArray{Float64}:  ")
+    @time(mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=skip))
+
+    mapreduce(Base.IdFun(), Base.AddFun(), E, skipna=skip)
+    print("  for DataArray{Float64}:      ")
+    @time(mapreduce(Base.IdFun(), Base.AddFun(), E, skipna=skip))
+
+    println()
+    println("reduce(op, X; skipnull/skipNA=$skip) (~half missing entries)")
+    reduce(Base.AddFun(), Y, skipnull=skip)
+    print("  for NullableArray{Float64}:  ")
+    @time(reduce(Base.AddFun(), Y, skipnull=skip))
+
+    reduce(Base.AddFun(), E, skipna=true)
+    print("  for DataArray{Float64}:      ")
+    @time(reduce(Base.AddFun(), E, skipna=true))
+    nothing
+end
+
+function profile_skip_impl()
+    println("Comparison of internal skip methods:")
+    println("mapreduce_impl_skipnull(f, op, X) (0 missing entries)")
+    NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X)
+    print("  for NullableArray{Float64}:  ")
+    @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X))
+
+    DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D)
+    print("  for DataArray{Float64}:      ")
+    @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D))
+
+    println()
+    println("mapreduce_impl_skipnull(f, op, X) (~half missing entries)")
+    NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y)
+    print("  for NullableArray{Float64}:  ")
+    @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y))
+
+    DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E)
+    print("  for DataArray{Float64}:      ")
+    @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E))
+    nothing
+end
