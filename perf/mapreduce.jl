@@ -24,9 +24,7 @@ function profile_reduce_methods()
     E = DataArray(A, B)
 
     profile_mapreduce(A, X, Y, D, E)
-    println()
     profile_reduce(A, X, Y, D, E)
-    println()
 
     for method in (
         sum,
@@ -44,6 +42,7 @@ function profile_reduce_methods()
         @time((method)(X))
         print("  for DataArray{Float64}:      ")
         @time((method)(D))
+        println()
 
         (method)(f, A)
         (method)(f, X)
@@ -55,8 +54,8 @@ function profile_reduce_methods()
         @time((method)(f, X))
         print("  for DataArray{Float64}:      ")
         @time((method)(f, D))
+        println()
     end
-    println()
 
     for method in (
         sum,
@@ -71,6 +70,7 @@ function profile_reduce_methods()
         (method)(E)
         print("  for DataArray{Float64}:      ")
         @time((method)(E))
+        println()
 
         (method)(f, Y)
         println("Method: $method(f, A) (~half missing entries, skip=false)")
@@ -83,8 +83,8 @@ function profile_reduce_methods()
         else
             println("  $method(f, A::DataArray) currently incurs error")
         end
+        println()
     end
-    println()
 
     for method in (
         sum,
@@ -99,6 +99,7 @@ function profile_reduce_methods()
         (method)(E, skipna=true)
         print("  for DataArray{Float64}:      ")
         @time((method)(E, skipna=true))
+        println()
 
         (method)(f, Y, skipnull=true)
         println("Method: $method(f, A) (~half missing entries, skip=true)")
@@ -107,8 +108,8 @@ function profile_reduce_methods()
         (method)(f, E, skipna=true)
         print("  for DataArray{Float64}:      ")
         @time((method)(f, E, skipna=true))
+        println()
     end
-    println()
 
     for method in (
         sumabs,
@@ -124,44 +125,35 @@ function profile_reduce_methods()
         @time((method)(X))
         print("  for DataArray{Float64}:      ")
         @time((method)(D))
-
-        (method)(f, A)
-        (method)(f, X)
-        (method)(f, D)
-        println("Method: $method(f, A) (0 missing entries)")
-        print("  for Array{Float64}:          ")
-        @time((method)(f, A))
-        print("  for NullableArray{Float64}:  ")
-        @time((method)(f, X))
-        print("  for DataArray{Float64}:      ")
-        @time((method)(f, D))
+        println()
     end
 
     for method in (
-        mean,
-        var,
+        sumabs,
+        sumabs2
     )
-        (method)(A)
-        (method)(X)
-        (method)(D)
-        println("Method: $method(A) (0 missing entries)")
-        print("  for Array{Float64}:          ")
-        @time((method)(A))
+        (method)(Y)
+        println("Method: $method(A) (~half missing entries, skip=false)")
         print("  for NullableArray{Float64}:  ")
-        @time((method)(X))
+        @time((method)(Y))
+        (method)(E)
         print("  for DataArray{Float64}:      ")
-        @time((method)(D))
+        @time((method)(E))
+        println()
+    end
 
-        (method)(f, A)
-        (method)(f, X)
-        (method)(f, D)
-        println("Method: $method(f, A) (0 missing entries)")
-        print("  for Array{Float64}:          ")
-        @time((method)(f, A))
+    for method in (
+        sumabs,
+        sumabs2
+    )
+        (method)(Y, skipnull=true)
+        println("Method: $method(A) (~half missing entries, skip=true)")
         print("  for NullableArray{Float64}:  ")
-        @time((method)(f, X))
+        @time((method)(Y, skipnull=true))
+        (method)(E, skipna=true)
         print("  for DataArray{Float64}:      ")
-        @time((method)(f, D))
+        @time((method)(E, skipna=true))
+        println()
     end
 end
 
@@ -177,6 +169,7 @@ function profile_mapreduce(A, X, Y, D, E)
     mapreduce(f, Base.(:+), D)
     print("  for DataArray{Float64}:      ")
     @time(mapreduce(f, Base.(:+), D))
+    println()
 
     println("Method: mapreduce(f, op, A) (~half missing entries, skip=false)")
     mapreduce(f, Base.(:+), Y)
@@ -185,6 +178,7 @@ function profile_mapreduce(A, X, Y, D, E)
     mapreduce(f, Base.(:+), E)
     print("  for DataArray{Float64}:      ")
     @time(mapreduce(f, Base.(:+), E))
+    println()
 
     println("Method: mapreduce(f, op, A) (~half missing entries, skip=true)")
     mapreduce(f, Base.(:+), Y, skipnull=true)
@@ -193,6 +187,7 @@ function profile_mapreduce(A, X, Y, D, E)
     mapreduce(f, Base.(:+), E, skipna=true)
     print("  for DataArray{Float64}:      ")
     @time(mapreduce(f, Base.(:+), E, skipna=true))
+    println()
 end
 
 function profile_reduce(A, X, Y, D, E)
@@ -206,6 +201,7 @@ function profile_reduce(A, X, Y, D, E)
     reduce(Base.(:+), D)
     print("  for DataArray{Float64}:      ")
     @time(reduce(Base.(:+), D))
+    println()
 
     println("Method: reduce(f, op, A) (~half missing entries, skip=false)")
     reduce(Base.(:+), Y)
@@ -214,6 +210,7 @@ function profile_reduce(A, X, Y, D, E)
     reduce(Base.(:+), E)
     print("  for DataArray{Float64}:      ")
     @time(reduce(Base.(:+), E))
+    println()
 
     println("Method: reduce(f, op, A) (~half missing entries, skip=true)")
     reduce(Base.(:+), Y, skipnull=true)
@@ -222,229 +219,7 @@ function profile_reduce(A, X, Y, D, E)
     reduce(Base.(:+), E, skipna=true)
     print("  for DataArray{Float64}:      ")
     @time(reduce(Base.(:+), E, skipna=true))
-end
-
-function profile_sum1(A, X, D)
-    sum(A)
-    sum(X)
-    sum(D)
-    println("Method: sum(A)")
-    print("  for Array{Float64}:          ")
-    @time(sum(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(sum(X))
-    print("  for DataArray{Float64}:      ")
-    @time(sum(D))
-end
-
-function profile_sum2(A, X, D)
-    sum(f, A)
-    sum(f, X)
-    sum(f, D)
-    println("Method: sum(f, A)")
-    print("  for Array{Float64}:          ")
-    @time(sum(f, A))
-    print("  for NullableArray{Float64}:  ")
-    @time(sum(f, X))
-    print("  for DataArray{Float64}:      ")
-    @time(sum(f, D))
-end
-
-function profile_prod1(A, X, D)
-    prod(A)
-    prod(X)
-    prod(D)
-    println("Method: prod(A)")
-    print("  for Array{Float64}:          ")
-    @time(prod(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(prod(X))
-    print("  for DataArray{Float64}:      ")
-    @time(prod(D))
-end
-
-function profile_prod2(A, X, D)
-    prod(f, A)
-    prod(f, X)
-    prod(f, D)
-    println("Method: prod(f, A)")
-    print("  for Array{Float64}:          ")
-    @time(prod(f, A))
-    print("  for NullableArray{Float64}:  ")
-    @time(prod(f, X))
-    print("  for DataArray{Float64}:      ")
-    @time(prod(f, D))
-end
-
-function profile_minimum1(A, X, D)
-    minimum(A)
-    minimum(X)
-    minimum(D)
-    println("Method: minimum(A)")
-    print("  for Array{Float64}:          ")
-    @time(minimum(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(minimum(X))
-    print("  for DataArray{Float64}:      ")
-    @time(minimum(D))
-end
-
-function profile_minimum2(A, X, D)
-    minimum(f, A)
-    minimum(f, X)
-    minimum(f, D)
-    println("Method: minimum(f, A)")
-    print("  for Array{Float64}:          ")
-    @time(minimum(f, A))
-    print("  for NullableArray{Float64}:  ")
-    @time(minimum(f, X))
-    print("  for DataArray{Float64}:      ")
-    @time(minimum(f, D))
-end
-
-function profile_maximum1(A, X, D)
-    maximum(A)
-    maximum(X)
-    maximum(D)
-    println("Method: maximum(A)")
-    print("  for Array{Float64}:          ")
-    @time(maximum(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(maximum(X))
-    print("  for DataArray{Float64}:      ")
-    @time(maximum(D))
-end
-
-function profile_maximum2(A, X, D)
-    maximum(f, A)
-    maximum(f, X)
-    maximum(f, D)
-    println("Method: maximum(f, A)")
-    print("  for Array{Float64}:          ")
-    @time(maximum(f, A))
-    print("  for NullableArray{Float64}:  ")
-    @time(maximum(f, X))
-    print("  for DataArray{Float64}:      ")
-    @time(maximum(f, D))
-end
-
-function profile_sumabs(A, X, D)
-    sumabs(A)
-    sumabs(X)
-    sumabs(D)
-    println("Method: sumabs(A)")
-    print("  for Array{Float64}:          ")
-    @time(sumabs(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(sumabs(X))
-    print("  for DataArray{Float64}:      ")
-    @time(sumabs(D))
-end
-
-function profile_sumabs2(A, X, D)
-    sumabs2(A)
-    sumabs2(X)
-    sumabs2(D)
-    println("Method: sumabs2(A)")
-    print("  for Array{Float64}:          ")
-    @time(sumabs2(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(sumabs2(X))
-    print("  for DataArray{Float64}:      ")
-    @time(sumabs2(D))
-end
-
-function profile_mean1(A::AbstractArray, X::NullableArray)
-    mean(A)
-    mean(X)
-    println("Method: mean(A)")
-    print("  for Array{Float64}:          ")
-    @time(mean(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(mean(X))
-end
-
-function profile_varm1(A::AbstractArray, X::NullableArray)
-    varm(A, mu_A)
-    varm(X, mu_A)
-    println("Method: varm(A, m)")
-    print("  for Array{Float64}:          ")
-    @time(varm(A, mu_A))
-    print("  for NullableArray{Float64}:  ")
-    @time(varm(X, mu_A))
-end
-
-function profile_varm2(X::NullableArray)
-    # varm(A, mu_A)
-    varm(X, Nullable(mu_A))
-    println("Method: varm(A, m::Nullable)")
-    print("  for Array{Float64}:           NA")
-    # @time(varm(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(varm(X, Nullable(mu_A)))
-end
-
-function profile_varzm(A::AbstractArray, X::NullableArray)
-    varzm(A)
-    varzm(X)
-    println("Method: varzm(A)")
-    print("  for Array{Float64}:          ")
-    @time(varzm(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(varzm(X))
-end
-
-function profile_var(A::AbstractArray, X::NullableArray)
-    var(A)
-    var(X)
-    println("Method: var(A)")
-    print("  for Array{Float64}:          ")
-    @time(var(A))
-    print("  for NullableArray{Float64}:  ")
-    @time(var(X))
-end
-
-function profile_stdm(A::AbstractArray, X::NullableArray)
-    stdm(A, mu_A)
-    stdm(X, mu_A)
-    println("Method: stdm(A, m)")
-    print("  for Array{Float64}:          ")
-    @time(stdm(A, mu_A))
-    print("  for NullableArray{Float64}:  ")
-    @time(stdm(X, mu_A))
-end
-
-function profile_std(A::AbstractArray, X::NullableArray)
-    std(A, mu_A)
-    std(X, mu_A)
-    println("Method: std(A, m)")
-    print("  for Array{Float64}:          ")
-    @time(std(A, mu_A))
-    print("  for NullableArray{Float64}:  ")
-    @time(std(X, mu_A))
-end
-
-function profile_all()
-    profile_mapreduce(A, X, D)
-    profile_reduce(A, X, D)
-    profile_sum1(A, X, D)
-    profile_sum2(A, X, D)
-    profile_prod1(A, X, D)
-    profile_prod2(A, X, D)
-    profile_minimum1(A, X, D)
-    profile_minimum2(A, X, D)
-    profile_maximum1(A, X, D)
-    profile_maximum2(A, X, D)
-    profile_sumabs(A, X, D)
-    profile_sumabs2(A, X, D)
-    # profile_mean1(A, X)
-    # profile_varm1(A, X)
-    # profile_varm2(X)
-    # profile_varmz(A, X)
-    # profile_var(A, X)
-    # profile_stdm(A, X)
-    # profile_std(A, X)
-    return nothing
+    println()
 end
 
 # # NullableArray vs. DataArray comparison
