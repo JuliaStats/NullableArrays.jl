@@ -27,4 +27,5 @@ module NullableArrays
     include("operators.jl")
     include("broadcast.jl")
     include("mapreduce.jl")
+    include("statistics.jl")
 end
