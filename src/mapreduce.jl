@@ -27,7 +27,7 @@ function mapreduce_seq_impl_skipnull(f, op, X::NullableArray,
         @inbounds entry = X.values[i]
         v = op(v, f(entry))
     end
-    return v
+    return Nullable(v)
 end
 
 # pairwise map-reduce
@@ -36,11 +36,11 @@ function mapreduce_pairwise_impl_skipnull{T}(f, op, X::NullableArray{T},
                                             #  n_notnull::Int, blksize::Int)
                                             blksize::Int)
     if ifirst + blksize > ilast
-        # # fall back to Base implementation if no nulls in block
-        # if ilast - ifirst + 1 == n_notnull
-        #     return Base.mapreduce_seq_impl(f, op, X, ifirst, ilast)
+        # fall back to Base implementation if no nulls in block
+        # if anynull(slice(X, ifirst:ilast))
+            return mapreduce_seq_impl_skipnull(f, op, X, ifirst, ilast)
         # else
-            mapreduce_seq_impl_skipnull(f, op, X, ifirst, ilast)
+            # Nullable(Base.mapreduce_seq_impl(f, op, X.values, ifirst, ilast))
         # end
     else
         imid = (ifirst + ilast) >>> 1
@@ -55,35 +55,49 @@ function mapreduce_pairwise_impl_skipnull{T}(f, op, X::NullableArray{T},
 end
 
 mapreduce_impl_skipnull{T}(f, op, X::NullableArray{T}) =
-    mapreduce_seq_impl_skipnull(f, op, T, X, 1, length(X.values))
+    mapreduce_seq_impl_skipnull(f, op, X, 1, length(X.values))
 mapreduce_impl_skipnull(f, op::Base.AddFun, X::NullableArray) =
     mapreduce_pairwise_impl_skipnull(f, op, X, 1, length(X.values),
                                    max(128, Base.sum_pairwise_blocksize(f)))
 
 ## general mapreduce interface
 
-function _mapreduce_skipnull{T}(f, op, X::NullableArray{T})
+function _mapreduce_skipnull{T}(f, op, X::NullableArray{T}, missingdata::Bool)
     n = length(X)
+    !missingdata && return Nullable(Base.mapreduce_impl(f, op, X.values, 1, n))
 
     nnull = countnz(X.isnull)
     nnull == n && return Base.mr_empty(f, op, T)
     nnull == n - 1 && return Base.r_promote(op, f(X.values[findnext(x -> x == false), X, 1]))
-    nnull == 0 && return Base.mapreduce_impl(f, op, X, 1, n)
+    # nnull == 0 && return Base.mapreduce_impl(f, op, X, 1, n)
 
     return mapreduce_impl_skipnull(f, op, X)
 end
 
+function Base._mapreduce(f, op, X::NullableArray, missingdata)
+    missingdata && return Base._mapreduce(f, op, X)
+    Nullable(Base._mapreduce(f, op, X.values))
+end
+
 function Base.mapreduce(f, op::Function, X::NullableArray;
                         skipnull::Bool = false)
+    missingdata = anynull(X)
     if skipnull
-        return _mapreduce_skipnull(f, Base.specialized_binary(op), X)
+        return _mapreduce_skipnull(f, Base.specialized_binary(op),
+                                   X, missingdata)
     else
-        return Base._mapreduce(f, Base.specialized_binary(op), X)
+        return Base._mapreduce(f, Base.specialized_binary(op), X, missingdata)
     end
 end
 
-Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false) =
-    skipnull ? _mapreduce_skipnull(f, op, X) : Base._mapreduce(f, op, X)
+function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
+    missingdata = anynull(X)
+    if skipnull
+        return _mapreduce_skipnull(f, op, X, missingdata)
+    else
+        return Base._mapreduce(f, op, X, missingdata)
+    end
+end
 
 Base.reduce(op, X::NullableArray; skipnull::Bool = false) =
     mapreduce(Base.IdFun(), op, X; skipnull = skipnull)
@@ -113,8 +127,18 @@ end
 #----- Base.minimum / Base.maximum -------------------------------------------#
 
 # internal methods
+for Op in (:(Base.MinFun), :(Base.MaxFun))
+    @eval begin
+        function Base._mapreduce{T}(::Base.IdFun, ::$Op,
+                                    X::NullableArray{T}, missingdata)
+            missingdata && return Nullable{T}()
+            Nullable(Base._mapreduce(Base.IdFun(), $Op(), X.values))
+        end
+    end
+end
 
-function Base.mapreduce_impl{T}(f, op::Base.MinFun, X::NullableArray{T}, first::Int, last::Int)
+function Base.mapreduce_impl{T}(f, op::Base.MinFun, X::NullableArray{T},
+                                first::Int, last::Int)
     # locate the first non-null entry
     i = first
     while X.isnull[i] && i <= last
@@ -135,7 +159,8 @@ function Base.mapreduce_impl{T}(f, op::Base.MinFun, X::NullableArray{T}, first::
     return v
 end
 
-function Base.mapreduce_impl{T}(f, op::Base.MaxFun, X::NullableArray{T}, first::Int, last::Int)
+function Base.mapreduce_impl{T}(f, op::Base.MaxFun, X::NullableArray{T},
+                                first::Int, last::Int)
     # locate the first non-null entry
     i = first
     while X.isnull[i] && i <= last
@@ -155,9 +180,3 @@ function Base.mapreduce_impl{T}(f, op::Base.MaxFun, X::NullableArray{T}, first::
     end
     return v
 end
-
-#----- Base.mean -------------------------------------------------------------#
-
-Base.mean(X::NullableArray; skipnull::Bool = false) =
-    sum(X; skipnull = skipnull) /
-        Nullable(length(X.isnull) - (skipnull * countnz(X.isnull)))

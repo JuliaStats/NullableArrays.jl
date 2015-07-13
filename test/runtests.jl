@@ -11,7 +11,6 @@ my_tests = [
     "indexing.jl",
     "map.jl",
     "broadcast.jl",
-    "lift.jl",
     "nullablevector.jl",
     "nullablematrix.jl"
 ]

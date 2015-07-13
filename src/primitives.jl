@@ -126,6 +126,16 @@ function anynull(xs::NTuple) # -> Bool
     return anynull(collect(xs))
 end
 
+@generated function anynull{T, N, U<:NullableArray}(S::SubArray{T, N, U})
+    return quote
+        isnull = slice(S.parent.isnull, S.indexes...)
+        @nloops $N i S begin
+            (@nref $N isnull i) && (return true)
+        end
+        return false
+    end
+end
+
 # ----- allnull --------------------------------------------------------------#
 
 allnull(X::NullableArray) = all(X.isnull) # -> Bool
