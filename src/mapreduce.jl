@@ -1,14 +1,14 @@
 #----- Base.mapreduce interface for skipping null entries --------------------#
 
-function skipnull_init(f, op, isnull::Array, values::Array,
+function skipnull_init(f, op, X::NullableArray,
                        ifirst::Int, ilast::Int)
     # Get first non-null element
-    ifirst = Base.findnext(x -> x == false, isnull, ifirst)
-    @inbounds v1 = values[ifirst]
+    ifirst = Base.findnext(x -> x == false, X.isnull, ifirst)
+    @inbounds v1 = X.values[ifirst]
 
     # Get next non-null element
-    ifirst = Base.findnext(x -> x == false, isnull, ifirst + 1)
-    @inbounds v2 = values[ifirst]
+    ifirst = Base.findnext(x -> x == false, X.isnull, ifirst + 1)
+    @inbounds v2 = X.values[ifirst]
 
     # Reduce first two elements
     return op(f(v1), f(v2)), ifirst
@@ -18,7 +18,7 @@ end
 function mapreduce_seq_impl_skipnull(f, op, X::NullableArray,
                                      ifirst::Int, ilast::Int)
     # initialize first reduction
-    v, i = skipnull_init(f, op, X.isnull, X.values, ifirst, ilast)
+    v, i = skipnull_init(f, op, X, ifirst, ilast)
 
     while i < ilast
         i += 1
@@ -139,20 +139,15 @@ end
 
 function Base.mapreduce_impl{T}(f, op::Base.MinFun, X::NullableArray{T},
                                 first::Int, last::Int)
-    # locate the first non-null entry
     i = first
-    while X.isnull[i] && i <= last
-        i += 1
-    end
-    @inbounds v = f(X[i])
+    v = f(X[i])
     i += 1
-    # find min
     while i <= last
-        if !X.isnull[i]
-            @inbounds x = f(X[i])
-            if (x < v).value
-                v = x
-            end
+        @inbounds x = f(X[i])
+        if x.isnull || v.isnull
+            return Nullable{eltype(x)}()
+        elseif x.value < v.value
+            v = x
         end
         i += 1
     end
@@ -161,20 +156,15 @@ end
 
 function Base.mapreduce_impl{T}(f, op::Base.MaxFun, X::NullableArray{T},
                                 first::Int, last::Int)
-    # locate the first non-null entry
     i = first
-    while X.isnull[i] && i <= last
-        i += 1
-    end
-    @inbounds v = f(X[i])
+    v = f(X[i])
     i += 1
-    # find min
     while i <= last
-        if !X.isnull[i]
-            @inbounds x = f(X[i])
-            if (x > v).value
-                v = x
-            end
+        @inbounds x = f(X[i])
+        if x.isnull || v.isnull
+            return Nullable{eltype(x)}()
+        elseif x.value > v.value
+            v = x
         end
         i += 1
     end
