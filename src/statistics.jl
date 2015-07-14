@@ -63,29 +63,38 @@ function Base.varzm{T}(X::NullableArray{T}; corrected::Bool=true,
     n = length(X)
     nnull = skipnull ? countnz(X.isnull) : 0
     (n == 0 || n == nnull) && return Nullable(convert(Base.momenttype(T), NaN))
-    return sumabs2(X; skipnull=skipnull) / (n - nnull - Int(corrected))
+    return sumabs2(X; skipnull=skipnull) /
+           Nullable((n - nnull - Int(corrected)))
 end
 
 function Base.var(X::NullableArray; corrected::Bool=true, mean=nothing,
          skipnull::Bool=false)
+
+    (anynull(X) & !skipnull) && return Nullable{eltype(X)}()
+
     if mean == 0 || (isa(mean, Nullable) && get(mean == Nullable(0)))
-        return Base.varzm(X; corrected=corrected, skipnull=skupnull)
+        return Base.varzm(X; corrected=corrected, skipnull=skipnull)
     elseif mean == nothing
-        return varm(X, Base.mean(X; skipnull=skupnull); corrected=corrected,
+        return varm(X, Base.mean(X; skipnull=skipnull); corrected=corrected,
              skipnull=skipnull)
-    elseif isa(mean, Union{Number, Nullable{Number}})
+    elseif isa(mean, Union{Number, Nullable})
         return varm(X, mean; corrected=corrected, skipnull=skipnull)
     else
         error()
     end
 end
 
-function Base.stdm{T<:Number}(X::NullableArray, m::Union{T, Nullable{T}};
-                              corrected::Bool=true, skipnull::Bool=true)
+function Base.stdm(X::NullableArray, m::Number;
+                   corrected::Bool=true, skipnull::Bool=false)
     return sqrt(varm(X, m; corrected=corrected, skipnull=skipnull))
 end
 
-function Base.stdm(X::NullableArray; corrected::Bool=true,
-                              mean=nothing, skipnull::Bool=true)
-    return sqrt(varm(X; corrected=corrected, mean=mean, skipnull=skipnull))
+function Base.stdm{T<:Number}(X::NullableArray, m::Nullable{T};
+                              corrected::Bool=true, skipnull::Bool=false)
+    return sqrt(varm(X, m; corrected=corrected, skipnull=skipnull))
+end
+
+function Base.std(X::NullableArray; corrected::Bool=true,
+                              mean=nothing, skipnull::Bool=false)
+    return sqrt(var(X; corrected=corrected, mean=mean, skipnull=skipnull))
 end
