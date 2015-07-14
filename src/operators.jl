@@ -93,3 +93,29 @@ function Base.abs2{T}(x::Nullable{T})
         error()
     end
 end
+
+function Base.sqrt{T}(x::Nullable{T})
+    if isbits(T)
+        return Nullable(sqrt(x.value), x.isnull)
+    else
+        error()
+    end
+end
+
+## Lifted functors
+
+function Base.call{S1, S2}(::Base.MinFun, x::Nullable{S1}, y::Nullable{S2})
+    if isbits(S1) & isbits(S2)
+        return Nullable(Base.scalarmin(x.value, y.value), x.isnull | y.isnull)
+    else
+        error()
+    end
+end
+
+function Base.call{S1, S2}(::Base.MaxFun, x::Nullable{S1}, y::Nullable{S2})
+    if isbits(S1) & isbits(S2)
+        return Nullable(Base.scalarmax(x.value, y.value), x.isnull | y.isnull)
+    else
+        error()
+    end
+end
