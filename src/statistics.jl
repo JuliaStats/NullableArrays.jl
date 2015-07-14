@@ -41,7 +41,7 @@ function Base.varm{T}(X::NullableArray{T}, m::Number; corrected::Bool=true,
                     abs2(X.values[Base.findnextnot(X.isnull, 1)] - m)/(1 - Int(corrected))
             )
         )
-        /(nnull == 0 ? Base.centralize_sumabs2(X.values, m, 1, n) :
+        /(nnull == 0 ? Nullable(Base.centralize_sumabs2(X.values, m, 1, n)) :
                        mapreduce_impl_skipnull(Base.CentralizedAbs2Fun(m),
                                                Base.AddFun(), X),
           Nullable(n - nnull - Int(corrected))
