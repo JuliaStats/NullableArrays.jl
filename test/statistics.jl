@@ -33,39 +33,21 @@ module TestStatistics
         J = find(i -> (!M[i] & !R[i]), [1:N...])
 
         # Test mean methods
-        @test isequal(mean(X), Nullable(mean(A)))
-        @test isequal(mean(Y), Nullable{Float64}())
+        v = mean(X)
+        @test_approx_eq v.value mean(A)
+        @test !v.isnull
+        v = mean(Y)
+        @test isequal(v, Nullable{Float64}())
         v = mean(Y, skipnull=true)
         @test_approx_eq v.value mean(B)
         @test !v.isnull
-        @test isequal(mean(X, V), Nullable(mean(A, V)))
+        v = mean(X, V)
+        @test_approx_eq v.value mean(A, V)
+        @test !v.isnull
         # Following tests need to wait until WeightVec constructor is implemented
         # for NullableArray argument
         # @test isequal(mean(X, W), Nullable{Float64}())
         # @test isequal(mean(X, W, skipnull=true), Nullable(mean(A[J], WeightVec(C[J]))))
-
-        # Test varm methods
-        @test isequal(varm(X, mu_A), Nullable(varm(A, mu_A)))
-        @test isequal(varm(X, mu_A, corrected=false),
-                      Nullable(varm(A, mu_A, corrected=false)))
-        @test isequal(varm(Y, mu_B), Nullable{Float64}())
-        @test isequal(varm(Y, mu_B, corrected=false), Nullable{Float64}())
-        @test isequal(varm(Y, mu_B, skipnull=true),
-                      Nullable(varm(B, mu_B)))
-        @test isequal(varm(Y, mu_B, corrected=false, skipnull=true),
-                      Nullable(varm(B, mu_B, corrected=false)))
-
-        @test isequal(varm(X, nmu_A), Nullable(varm(A, mu_A)))
-        @test isequal(varm(X, nmu_A, corrected=false),
-                      Nullable(varm(A, mu_A, corrected=false)))
-        @test isequal(varm(Y, nmu_B), Nullable{Float64}())
-        @test isequal(varm(Y, nmu_B, corrected=false), Nullable{Float64}())
-        @test isequal(varm(Y, nmu_B, skipnull=true),
-                      Nullable(varm(B, mu_B)))
-        @test isequal(varm(Y, nmu_B, corrected=false, skipnull=true),
-                      Nullable(varm(B, mu_B, corrected=false)))
-
-        @test_throws NullException varm(Y, Nullable{Float64}())
 
         # Test Base.varzm
         D1 = rand(round(Int, N / 2))
@@ -81,99 +63,62 @@ module TestStatistics
         U = NullableArray(D, [S; S])
         E = [D[find(x->!x, S)]; D[find(x->!x, S)]]
 
-        @test isequal(Base.varzm(Q), Nullable(Base.varzm(D)))
-        @test isequal(Base.varzm(Q, corrected=false),
-                      Nullable(Base.varzm(D, corrected=false)))
-        @test isequal(Base.varzm(U), Nullable{Float64}())
-        @test isequal(Base.varzm(U, corrected=false), Nullable{Float64}())
-        @test isequal(Base.varzm(U, skipnull=true),
-                      Nullable(Base.varzm(E)))
-        @test isequal(Base.varzm(U, corrected=false, skipnull=true),
-                      Nullable(Base.varzm(E, corrected=false)))
+        v = Base.varzm(Q)
+        @test_approx_eq v.value Base.varzm(D)
+        @test !v.isnull
+        v = Base.varzm(Q, corrected=false)
+        @test_approx_eq v.value Base.varzm(D, corrected=false)
+        @test !v.isnull
+        v = Base.varzm(U)
+        @test isequal(v, Nullable{Float64}())
+        v = Base.varzm(U, corrected=false)
+        @test isequal(v, Nullable{Float64}())
+        v = Base.varzm(U, skipnull=true)
+        @test_approx_eq v.value Base.varzm(E)
+        @test !v.isnull
+        v = Base.varzm(U, corrected=false, skipnull=true)
+        @test_approx_eq v.value Base.varzm(E, corrected=false)
 
-        # Test var
-        @test isequal(var(X), Nullable(var(A)))
-        @test isequal(var(X, corrected=false), Nullable(var(A, corrected=false)))
-        @test isequal(var(X, mean=mu_A), Nullable(var(A, mean=mu_A)))
-        @test isequal(var(X, mean=nmu_A), Nullable(var(A, mean=mu_A)))
-        @test isequal(var(X, mean=mu_A, corrected=false),
-                      Nullable(var(A, mean=mu_A, corrected=false)))
-        @test isequal(var(X, mean=nmu_A, corrected=false),
-                      Nullable(var(A, mean=mu_A, corrected=false)))
+        @test_throws NullException varm(Y, Nullable{Float64}())
 
-        @test isequal(var(Y), Nullable{Float64}())
-        @test isequal(var(Y, corrected=false), Nullable{Float64}())
-        @test isequal(var(Y, mean=mu_B), Nullable{Float64}())
-        @test isequal(var(Y, mean=nmu_B), Nullable{Float64}())
-        @test isequal(var(Y, mean=mu_B, corrected=false),
-                      Nullable{Float64}())
-        @test isequal(var(Y, mean=nmu_B, corrected=false),
-                      Nullable{Float64}())
+        for corr in (true, false), skip in (true, false)
+            # Test varm, stdm
+            for method in (varm, stdm)
+                for mu in (mu_A, nmu_A)
+                    v = method(X, mu, corrected=corr, skipnull=skip)
+                    @test_approx_eq v.value method(A, mu_A, corrected=corr)
+                    @test !v.isnull
+                end
 
-        @test isequal(var(Y, skipnull=true),
-                      Nullable(var(B)))
-        @test isequal(var(Y, corrected=false, skipnull=true),
-                      Nullable(var(B, corrected=false)))
-        @test isequal(var(Y, mean=mu_B, skipnull=true),
-                      Nullable(var(B, mean=mu_B)))
-        @test isequal(var(Y, mean=nmu_B, skipnull=true),
-                      Nullable(var(B, mean=mu_B)))
-        @test isequal(var(Y, mean=mu_B, corrected=false, skipnull=true),
-                      Nullable(var(B, mean=mu_B, corrected=false)))
-        @test isequal(var(Y, mean=nmu_B, corrected=false, skipnull=true),
-                      Nullable(var(B, mean=mu_B, corrected=false)))
+                for mu in (mu_B, nmu_B)
+                    v = method(Y, mu, corrected=corr, skipnull=skip)
+                    if skip == false
+                        @test isequal(v, Nullable{Float64}())
+                    else
+                        @test_approx_eq v.value method(B, mu_B, corrected=corr)
+                        @test !v.isnull
+                    end
+                end
+            end
 
-        # Test stdm
-        @test isequal(stdm(X, mu_A), Nullable(stdm(A, mu_A)))
-        @test isequal(stdm(X, mu_A, corrected=false),
-                      Nullable(stdm(A, mu_A, corrected=false)))
-        @test isequal(stdm(Y, mu_B), Nullable{Float64}())
-        @test isequal(stdm(Y, mu_B, corrected=false), Nullable{Float64}())
-        @test isequal(stdm(Y, mu_B, skipnull=true),
-                      Nullable(stdm(B, mu_B)))
-        @test isequal(stdm(Y, mu_B, corrected=false, skipnull=true),
-                      Nullable(stdm(B, mu_B, corrected=false)))
+            # Test var, std
+            for method in (var, std)
+                for mu in (nothing, mu_A, nmu_A)
+                    v = method(X, mean=mu, corrected=corr, skipnull=skip)
+                    @test_approx_eq v.value method(A, mean=mu_A, corrected=corr)
+                    @test !v.isnull
+                end
 
-        @test isequal(stdm(X, nmu_A), Nullable(stdm(A, mu_A)))
-        @test isequal(stdm(X, nmu_A, corrected=false),
-                      Nullable(stdm(A, mu_A, corrected=false)))
-        @test isequal(stdm(Y, nmu_B), Nullable{Float64}())
-        @test isequal(stdm(Y, nmu_B, corrected=false), Nullable{Float64}())
-        @test isequal(stdm(Y, nmu_B, skipnull=true),
-                      Nullable(stdm(B, mu_B)))
-        @test isequal(stdm(Y, nmu_B, corrected=false, skipnull=true),
-                      Nullable(stdm(B, mu_B, corrected=false)))
-
-        # Test std
-        @test isequal(std(X), Nullable(std(A)))
-        @test isequal(std(X, corrected=false), Nullable(std(A, corrected=false)))
-        @test isequal(std(X, mean=mu_A), Nullable(std(A, mean=mu_A)))
-        @test isequal(std(X, mean=nmu_A), Nullable(std(A, mean=mu_A)))
-        @test isequal(std(X, mean=mu_A, corrected=false),
-                      Nullable(std(A, mean=mu_A, corrected=false)))
-        @test isequal(std(X, mean=nmu_A, corrected=false),
-                      Nullable(std(A, mean=mu_A, corrected=false)))
-
-        @test isequal(std(Y), Nullable{Float64}())
-        @test isequal(std(Y, corrected=false), Nullable{Float64}())
-        @test isequal(std(Y, mean=mu_B), Nullable{Float64}())
-        @test isequal(std(Y, mean=nmu_B), Nullable{Float64}())
-        @test isequal(std(Y, mean=mu_B, corrected=false),
-                      Nullable{Float64}())
-        @test isequal(std(Y, mean=nmu_B, corrected=false),
-                      Nullable{Float64}())
-
-        @test isequal(std(Y, skipnull=true),
-                      Nullable(std(B)))
-        @test isequal(std(Y, corrected=false, skipnull=true),
-                      Nullable(std(B, corrected=false)))
-        @test isequal(std(Y, mean=mu_B, skipnull=true),
-                      Nullable(std(B, mean=mu_B)))
-        @test isequal(std(Y, mean=nmu_B, skipnull=true),
-                      Nullable(std(B, mean=mu_B)))
-        @test isequal(std(Y, mean=mu_B, corrected=false, skipnull=true),
-                      Nullable(std(B, mean=mu_B, corrected=false)))
-        @test isequal(std(Y, mean=nmu_B, corrected=false, skipnull=true),
-                      Nullable(std(B, mean=mu_B, corrected=false)))
+                for mu in (nothing, mu_B, nmu_B)
+                    v = method(Y, mean=mu, corrected=corr, skipnull=skip)
+                    if skip == false
+                        @test isequal(v, Nullable{Float64}())
+                    else
+                        @test_approx_eq v.value method(B, mean=mu_B, corrected=corr)
+                        @test !v.isnull
+                    end
+                end
+            end
+        end
     end
 end
