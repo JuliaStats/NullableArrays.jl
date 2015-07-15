@@ -19,7 +19,8 @@ module TestStatistics
         M[j] = false
         X = NullableArray(A)
         Y = NullableArray(A, M)
-        B = A[find(x->!x, M)]
+        J = find(x -> !x, M)
+        B = A[J]
         mu_B = mean(B)
         nmu_B = Nullable(mu_B)
 
@@ -30,26 +31,10 @@ module TestStatistics
         R[j] = false
         # W = WeightVec(NullableArray(C, R))
 
-        J = find(i -> (!M[i] & !R[i]), [1:N...])
+        K = find(x -> !x, R)
+        L = find(i -> (!M[i] & !R[i]), [1:N...])
 
-        # Test mean methods
-        v = mean(X)
-        @test_approx_eq v.value mean(A)
-        @test !v.isnull
-        v = mean(Y)
-        @test isequal(v, Nullable{Float64}())
-        v = mean(Y, skipnull=true)
-        @test_approx_eq v.value mean(B)
-        @test !v.isnull
-        v = mean(X, V)
-        @test_approx_eq v.value mean(A, V)
-        @test !v.isnull
-        # Following tests need to wait until WeightVec constructor is implemented
-        # for NullableArray argument
-        # @test isequal(mean(X, W), Nullable{Float64}())
-        # @test isequal(mean(X, W, skipnull=true), Nullable(mean(A[J], WeightVec(C[J]))))
-
-        # Test Base.varzm
+        # For testing Base.varzm
         D1 = rand(round(Int, N / 2))
         D2 = -1 .* D1
         D = [D1; D2]
@@ -63,25 +48,67 @@ module TestStatistics
         U = NullableArray(D, [S; S])
         E = [D[find(x->!x, S)]; D[find(x->!x, S)]]
 
-        v = Base.varzm(Q)
-        @test_approx_eq v.value Base.varzm(D)
-        @test !v.isnull
-        v = Base.varzm(Q, corrected=false)
-        @test_approx_eq v.value Base.varzm(D, corrected=false)
-        @test !v.isnull
-        v = Base.varzm(U)
-        @test isequal(v, Nullable{Float64}())
-        v = Base.varzm(U, corrected=false)
-        @test isequal(v, Nullable{Float64}())
-        v = Base.varzm(U, skipnull=true)
-        @test_approx_eq v.value Base.varzm(E)
-        @test !v.isnull
-        v = Base.varzm(U, corrected=false, skipnull=true)
-        @test_approx_eq v.value Base.varzm(E, corrected=false)
-
         @test_throws NullException varm(Y, Nullable{Float64}())
 
+        # Test mean
+        for skip in (true, false)
+            v = mean(X, skipnull=skip)
+            @test_approx_eq v.value mean(A)
+            @test !v.isnull
+
+            v = mean(Y, skipnull=skip)
+            if skip == false
+                @test isequal(v, Nullable{Float64}())
+            else
+                @test_approx_eq v.value mean(B)
+                @test !v.isnull
+            end
+
+            v = mean(X, V, skipnull=skip)
+            @test_approx_eq v.value mean(A, V)
+            @test !v.isnull
+
+            v = mean(Y, V, skipnull=skip)
+            if skip == false
+                @test isequal(v, Nullable{Float64}())
+            else
+                @test_approx_eq v.value mean(B, WeightVec(C[J]))
+                @test !v.isnull
+            end
+
+            # Following tests need to wait until WeightVec constructor is
+            # implemented for NullableArray argument
+            #
+            # v = mean(X, W, skipnull=skip)
+            # if skip == false
+            #     @test isequal(v, Nullable{Float64}())
+            # else
+            #     @test_approx_eq v.value mean(A[K], WeightVec(C[K]))
+            #     @test !v.isnull
+            # end
+            # v = mean(Y, W, skipnull=skip)
+            # if skip == false
+            #     @test isequal(v, Nullable{Float64}())
+            # else
+            #     @test_approx_eq v.value mean(A[L], WeightVec(C[L]))
+            #     @test !v.isnull
+            # end
+        end
+
         for corr in (true, false), skip in (true, false)
+            # Test Base.varzm
+            v = Base.varzm(Q, corrected=corr, skipnull=skip)
+            @test_approx_eq v.value Base.varzm(D, corrected=corr)
+            @test !v.isnull
+
+            v = Base.varzm(U, corrected=corr, skipnull=skip)
+            if skip == false
+                @test isequal(v, Nullable{Float64}())
+            else
+                @test_approx_eq v.value Base.varzm(E, corrected=corr)
+                @test !v.isnull
+            end
+
             # Test varm, stdm
             for method in (varm, stdm)
                 for mu in (mu_A, nmu_A)
