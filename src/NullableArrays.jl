@@ -22,7 +22,6 @@ module NullableArrays
     include("constructors.jl")
     include("primitives.jl")
     include("indexing.jl")
-    include("map.jl")
     include("nullablevector.jl")
     include("operators.jl")
     include("broadcast.jl")
