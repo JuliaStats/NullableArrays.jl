@@ -43,8 +43,8 @@ end
 
 # Insert a scalar element from a `NullableArray` from a non-Nullable value.
 @inline function Base.setindex!(X::NullableArray, v::Any, I::Int...)
-    X.isnull[I...] = false
     X.values[I...] = v
+    X.isnull[I...] = false
     return v
 end
 
