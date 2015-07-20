@@ -1,151 +1,158 @@
+using Base.Cartesian
 
-#----- Base.map!/Base.map ----------------------------------------------------#
+# utilities
 
-function Base.map!{F}(f::F,
-                      dest::NullableArray,
-                      A::AbstractArray) # -> NullableArray{T, N}
-    local func
-    function func(dest, A)
-        for i in 1:length(dest)
-            dest[i] = f(A[i])
-        end
+function gen_nullcheck(narrays::Int)
+    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    e_nullcheck = :($(As[1]).isnull[i])
+    for i = 2:narrays
+        e_nullcheck = Expr(:||, e_nullcheck, :($(As[i]).isnull[i]))
     end
-    func(dest, A)
-    dest
+    return e_nullcheck
 end
 
-function map_to!{T, F}(f::F,
-                       offs,
-                       dest::NullableArray{T},
-                       A::AbstractArray) # -> NullableArray{T, N}
-    local func
-    function func{T}(offs, dest::NullableArray{T}, A)
-        @inbounds for i in offs:length(A)
-            el = f(A[i])
-            S = typeof(el)
+function gen_map!_body{F}(narrays::Int, lift::Bool, f::F)
+    _f = Expr(:quote, f)
+    e_nullcheck = gen_nullcheck(narrays)
+    if lift
+        return quote
+            for i in 1:length(dest)
+                if $e_nullcheck
+                    dest.isnull[i] = true
+                else
+                    dest[i] = $_f((@ntuple $narrays j->A_j.values[i])...)
+                end
+            end
+        end
+    else
+        return quote
+            for i in 1:length(dest)
+                dest[i] = $_f((@ntuple $narrays j->A_j[i])...)
+            end
+        end
+    end
+end
+
+function gen_map_to!_body{F}(_map_to!::Symbol, narrays::Int, f::F)
+    _f = Expr(:quote, f)
+    e_nullcheck = gen_nullcheck(narrays)
+    return quote
+        @inbounds for i in offs:length(A_1)
+            if lift
+                if $e_nullcheck
+                    # we don't need to compute anything if A.isnull[i], since
+                    # the return type is specified by T and by the algorithm in
+                    # 'body'
+                    dest.isnull[i] = true
+                    continue
+                else
+                    v = $_f((@ntuple $narrays j->A_j.values[i])...)
+                end
+            else
+                v = $_f((@ntuple $narrays j->A_j[i])...)
+            end
+            S = typeof(v)
             if S !== T && !(S <: T)
                 R = typejoin(T, S)
                 new = similar(dest, R)
                 copy!(new, 1, dest, 1, i - 1)
-                new[i] = el
-                return func(i+1, new, A)
+                new[i] = v
+                return $(_map_to!)(new, i + 1, (@ntuple $narrays j->A_j)...; lift=lift)
             end
-            dest[i] = el::T
+            dest[i] = v::T
         end
         return dest
     end
-    func(offs, dest, A)
 end
 
-function Base.map(f, X::NullableArray) # -> NullableArray{T, N}
-    if isempty(X)
-        return isa(f, Type) ? similar(X, f) : similar(X)
+function gen_map_body{F}(_map_to!::Symbol, narrays::Int, f::F)
+    _f = Expr(:quote, f)
+    e_nullcheck = gen_nullcheck(narrays)
+    if narrays == 1
+        pre = quote
+            isempty(A_1) && return isa(f, Type) ? similar(A_1, f) : similar(A_1)
+        end
     else
-        first = f(X[1])
-        dest = similar(X, typeof(first))
-        dest[1] = first
-        return map_to!(f, 2, dest, X)
-    end
-end
-
-# 2 arg
-function Base.map!{F}(f::F,
-                      dest::NullableArray,
-                      A::AbstractArray,
-                      B::AbstractArray) # -> NullableArray{T, N}
-    local func
-    function func(dest, A, B)
-        for i in 1:length(dest)
-            dest[i] = f(A[i], B[i])
+        pre = quote
+            shape = mapreduce(size, promote_shape, (@ntuple $narrays j->A_j))
+            prod(shape) == 0 && return similar(A_1, promote_type((@ntuple $narrays j->A_j)...), shape)
         end
     end
-    func(dest, A, B)
-    dest
-end
-
-function map_to!{T, F}(f::F, offs,
-                       dest::NullableArray{T},
-                       A::AbstractArray,
-                       B::AbstractArray) # -> NullableArray{T, N}
-    local func
-    function func{T}(offs, dest::NullableArray{T}, A, B)
-        @inbounds for i in offs:length(A)
-            el = f(A[i], B[i])
-            S = typeof(el)
-            if S !== T && !(S <: T)
-                R = typejoin(T, S)
-                new = similar(dest, R)
-                copy!(new, 1, dest, 1, i - 1)
-                new[i] = el
-                return func(i+1, new, A, B)
+    return quote
+        $pre
+        i = 1
+        # find first non-null entry in A_1, ... A_narrays
+        if lift == true
+            emptyel = $e_nullcheck
+            while (emptyel && i < length(A))
+                i += 1
+                emptyel &= $e_nullcheck
             end
-            dest[i] = el::T
+            # if all entries are null, return a similar
+            i == length(A_1) && return isa(f, Type) ? similar(A_1, f) : similar(A_1)
+            v = $_f((@ntuple $narrays j->A_j.values[i])...)
+        else
+            v = $_f((@ntuple $narrays j->A_j[i])...)
         end
+        dest = similar(A_1, typeof(v))
+        dest[i] = v
+        return $(_map_to!)(dest, i + 1, (@ntuple $narrays j->A_j)...; lift=lift)
+    end
+end
+
+function gen_map!_function{F}(narrays::Int, lift::Bool, f::F)
+    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    body = gen_map!_body(narrays, lift, f)
+    @eval let
+        local _F_
+        function _F_(dest, $(As...))
+            $body
+        end
+        _F_
+    end
+end
+
+function gen_map_function{F}(_map_to!::Symbol, narrays::Int, f::F)
+    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    body_map_to! = gen_map_to!_body(_map_to!, narrays, f)
+    body_map = gen_map_body(_map_to!, narrays, f)
+
+    @eval let $_map_to! # create a closure for subsequent calls to $_map_to!
+        function $(_map_to!){T}(dest::NullableArray{T}, offs, $(As...); lift::Bool=false)
+            $body_map_to!
+        end
+        local _F_
+        function _F_($(As...); lift::Bool=false)
+            $body_map
+        end
+        return _F_
+    end # let $_map_to!
+end
+
+# Base.map!
+@eval let cache = Dict{Bool, Dict{Int, Dict{Base.Callable, Function}}}()
+    function Base.map!{F}(f::F, dest::NullableArray, As::AbstractArray...;
+                          lift::Bool=false)
+        narrays = length(As)
+
+        cache_lift  = Base.@get!  cache         lift    Dict{Int, Dict{Base.Callable, Function}}()
+        cache_f     = Base.@get!  cache_lift    narrays Dict{Base.Callable, Function}()
+        func        = Base.@get!  cache_f       f       gen_map!_function(narrays, lift, f)
+
+        func(dest, As...)
         return dest
     end
-    func(offs, dest, A, B)
 end
 
-function Base.map(f, X::NullableArray, Y::NullableArray) # -> NullableArray{T, N}
-    shape = promote_shape(size(X), size(Y))
-    if prod(shape) == 0
-        return similar(X, promote_type(eltype(X), eltype(Y)), shape)
-    else
-        first = f(X[1], f(Y[1]))
-        dest = similar(X, typeof(first))
-        # dest[1] = first
-        return map_to!(f, 1, dest, X, Y)
-    end
-end
+# Base.map
+@eval let cache = Dict{Int, Dict{Base.Callable, Function}}()
+    function Base.map{F}(f::F, As::NullableArray...; lift::Bool=false)
+        narrays = length(As)
+        _map_to! = gensym()
 
-# N-args
-function map_n!{F}(f::F,
-                      dest::NullableArray,
-                      As) # -> NullableArray{T, N}
-    local func
-    function func(dest, As)
-        for i in 1:length(dest)
-            dest[i] = f(Base.ith_all(i, As)...)
-        end
-    end
-    func(dest, As)
-    dest
-end
+        cache_fs    = Base.@get!  cache     narrays  Dict{Base.Callable, Function}()
+        _map        = Base.@get!  cache_fs  f        gen_map_function(_map_to!, narrays, f)
 
-function Base.map!{F}(f::F, dest::NullableArray, As::AbstractArray...)
-    return map_n!(f, dest, As)
-end
-
-function map_to_n!{T, F}(f::F, offs,
-                       dest::NullableArray{T},
-                       As) # -> NullableArray{T, N}
-    local func
-    function func{T}(offs, dest::NullableArray{T}, As)
-        @inbounds for i in offs:length(As[1])
-            el = f(Base.ith_all(i, As)...)
-            S = typeof(el)
-            if S !== T && !(S <: T)
-                R = typejoin(T, S)
-                new = similar(dest, R)
-                copy!(new, 1, dest, 1, i - 1)
-                new[i] = el
-                return func(i+1, new, As)
-            end
-            dest[i] = el::T
-        end
-        return dest
-    end
-    func(offs, dest, As)
-end
-
-function Base.map(f, Xs::NullableArray...) # -> NullableArray{T, N}
-    shape = mapreduce(size, promote_shape, Xs)
-    if prod(shape) == 0
-        return similar(X[1], promote_type(Xs...), shape)
-    else
-        first = f(Base.ith_all(1, Xs)...)
-        dest = similar(Xs[1], typeof(first), shape)
-        dest[1] = first
-        return map_to_n!(f, 1, dest, Xs)
+        return _map(As...; lift=lift)
     end
 end
