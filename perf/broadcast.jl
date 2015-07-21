@@ -136,6 +136,7 @@ function profile_broadcasted_right(C1, C2, V1, V2, H1, H2, Q1, Q2)
     @time(.>>(Q2, Q1))
     # print("For DataArray{Float64}:      ")
     # @time(.>>(I2, I1))
+    nothing
 end
 
 function profile_ops_halfnulls(A1, A2, Y1, Y2, F1, F2)

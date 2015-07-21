@@ -1,6 +1,7 @@
 module NullableArrays
 
-    using  Base.Cartesian
+    using Reexport
+    @reexport using Base.Cartesian
 
     export NullableArray,
            NullableVector,
