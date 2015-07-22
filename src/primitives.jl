@@ -159,7 +159,7 @@ function Base.isfinite(X::NullableArray) # -> NullableArray{Bool}
     return NullableArray(target, copy(X.isnull))
 end
 
-# ----- Base.convert ---------------------------------------------------------#
+# ----- Conversion methods ---------------------------------------------------#
 
 function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N}) # -> Array{S, N}
@@ -245,21 +245,10 @@ function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
     return NullableArray(convert(Array{S}, A.values), A.isnull)
 end
 
-# The following methods are deprecated.
-# TODO: rewrite with proper nomenclature
 
-for f in (:(Base.int), :(Base.float), :(Base.bool))
-    @eval begin
-        function ($f)(X::NullableArray) # -> DataArray
-            if anynull(X)
-                # TODO: investigate NullException constructors
-                # err = "Cannot convert NullableArray with null values to desired type"
-                throw(NullException())
-            else
-                ($f)(X.values)
-            end
-        end
-    end
+function Base.float(X::NullableArray) # -> NullableArray{T, N}
+    isbits(eltype(X)) || error()
+    return NullableArray(float(X.values), copy(X.isnull))
 end
 
 # ----- Base.hash ------------------------------------------------------------#
