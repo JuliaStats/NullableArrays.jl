@@ -1,19 +1,47 @@
 using NullableArrays
 
 srand(1)
-A = rand(5_000_000)
-B = rand(Bool, 5_000_000)
+N = 5_000_000
+A = rand(N)
+B = rand(Bool, N)
+C = Array(Float64, N)
 
-X = NullableArray(Float64, 5_000_000)
-Y = NullableArray(A)
-Z = NullableArray(A, B)
 
-f{T}(x::Nullable{T}) = return Nullable(5*x.value, x.isnull)
+X = NullableArray(A)
+Y = NullableArray(A, B)
+Z = NullableArray(Float64, N)
+
+f(x::Float64) = 5 * x
 
 function profile_map()
-    map!(f, X, Y)
-    map!(f, X, Z)
-    # map!(f, X, Y)
-    @time(map!(f, X, Y))
-    @time(map!(f, X, Z))
+
+    println("Method: map!(f, dest, src) (0 missing entries, lift=true)")
+    print("  for Array{Float64}:          ")
+    map!(f, C, A);
+    @time map!(f, C, A);
+    print("  for NullableArray{Float64}:  ")
+    map!(f, Z, X; lift=true);
+    @time map!(f, Z, X; lift=true);
+    println()
+
+    println("Method: map!(f, dest, src) (~half missing entries, lift=true)")
+    print("  for NullableArray{Float64}:  ")
+    map!(f, Z, Y; lift=true);
+    @time map!(f, Z, Y; lift=true);
+    println()
+
+    println("Method: map(f, src) (0 missing entries, lift=true)")
+    print("  for Array{Float64}:          ")
+    map(f, A);
+    @time map(f, A);
+    print("  for NullableArray{Float64}:  ")
+    map(f, X; lift=true);
+    @time map(f, X; lift=true);
+    println()
+
+    println("Method: map(f, src) (~half missing entries, lift=true)")
+    print("  for NullableArray{Float64}:  ")
+    map(f, Y; lift=true);
+    @time map(f, Y; lift=true);
+    println()
 end

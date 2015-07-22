@@ -13,7 +13,7 @@ my_tests = [
     "broadcast.jl",
     "nullablevector.jl",
     "nullablematrix.jl",
-    "mapreduce.jl",
+    "reduce.jl",
     "statistics.jl"
 ]
 
