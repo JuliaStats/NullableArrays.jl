@@ -56,7 +56,7 @@ function gen_broadcast_function(nd::Int, narrays::Int, f::Function, lift::Bool)
 end
 
 function Base.broadcast!(f, X::NullableArray; lift::Bool=false)
-    broacast!(f, X, X; lift=lift)
+    broadcast!(f, X, X; lift=lift)
 end
 
 @eval let cache = Dict{Any, Dict{Bool, Dict{Int, Dict{Int, Any}}}}()
