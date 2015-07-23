@@ -84,7 +84,7 @@ function gen_map_body{F}(_map_to!::Symbol, narrays::Int, f::F)
         # find first non-null entry in A_1, ... A_narrays
         if lift == true
             emptyel = $e_nullcheck
-            while (emptyel && i < length(A))
+            while (emptyel && i < length(A_1))
                 i += 1
                 emptyel &= $e_nullcheck
             end
@@ -143,6 +143,8 @@ end
         return dest
     end
 end
+
+Base.map!{F}(f::F, X::NullableArray; lift::Bool=false) = map!(f, X, X; lift=lift)
 
 # Base.map
 @eval let cache = Dict{Int, Dict{Base.Callable, Function}}()
