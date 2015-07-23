@@ -179,10 +179,8 @@ function Base.reverse!(X::NullableVector, s=1, n=length(X))
                 else
                     X.values[r] = X.values[i]
                 end
-            else
-                if !X.isnull[r]
-                    X.values[i] = X.values[r]
-                end
+            elseif !X.isnull[r]
+                X.values[i] = X.values[r]
             end
             r -= 1
         end
