@@ -169,6 +169,18 @@ module TestPrimitives
     @test anynull((Nullable(1), Nullable(2))) == false
     @test anynull((Nullable{Int}(), Nullable(1), 3, 6)) == true
 
+    # anynull{T, N, U<:NullableArray}(S::SubArray{T, N, U})
+    A = rand(10, 3, 3)
+    M = rand(Bool, 10, 3, 3)
+    X = NullableArray(A, M)
+    i, j = rand(1:3), rand(1:3)
+    S = slice(X, :, i, j)
+
+    @test anynull(S) == anynull(X[:, i, j])
+    X = NullableArray(A)
+    S = slice(X, :, i, j)
+    @test anynull(S) == false
+
 
 # ----- test allnull ---------------------------------------------------------#
 
@@ -191,7 +203,7 @@ module TestPrimitives
                                     true, false, false, nothing], Bool, Void))
     @test _x.isnull[8] == true
 
-# ----- test Base.convert ----------------------------------------------------#
+# ----- test conversion methods ----------------------------------------------#
 
     u = NullableArray(collect(1:10))
     v = NullableArray(Int, 4, 4)
@@ -251,22 +263,17 @@ module TestPrimitives
 
     # Base.convert{S, T, N}(::Type{NullableArray{S, N}},
     #                       A::NullableArray{T, N})
-    @test isequal(convert(NullableArray{Float64, 2}, Y),
-                          NullableArray(Float64[1 2; 3 4; 5 6; 7 8; 9 10]))
+    nd = rand(1:4)
+    _size = [ rand(1:20) for i in 1:nd ]
+    A = rand(Int, _size...)
+    @test isequal(convert(NullableArray{Float64, nd}, A),
+                  NullableArray(float(A)))
 
-    # The following tests concern methods that are deprecated.
-    # TODO: rewrite tests once source methods have proper nomenclature
-
-    # @test_throws NullException bool(_x)
-    # @test isa(bool(NullableArray([false, true, false, true])), Vector{Bool})
-    # h.isnull[1] = true
-    # # @test anynull(h)
-    # @test_throws NullException int(h)
-    # h.isnull[1] = false
-    # @test isa(int(h), Matrix{Int64})
-    # @test isa(float(g), Matrix{Float64})
-    # g.isnull[1] = true
-    # @test_throws NullException float(g)
+    # float(X::NullableArray)
+    A = rand(Int, 20)
+    M = rand(Bool, 20)
+    X = NullableArray(A, M)
+    @test isequal(float(X), NullableArray(float(A), M))
 
 # ----- test Base.hash (julia/base/hashing.jl:5) -----------------------------#
 
