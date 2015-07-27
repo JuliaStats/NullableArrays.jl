@@ -72,7 +72,7 @@ function Base.var(X::NullableArray; corrected::Bool=true, mean=nothing,
 
     (anynull(X) & !skipnull) && return Nullable{eltype(X)}()
 
-    if mean == 0 || (isa(mean, Nullable) && get(mean == Nullable(0)))
+    if mean == 0 || isequal(mean, Nullable(0))
         return Base.varzm(X; corrected=corrected, skipnull=skipnull)
     elseif mean == nothing
         return varm(X, Base.mean(X; skipnull=skipnull); corrected=corrected,
