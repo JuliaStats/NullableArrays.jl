@@ -6,7 +6,7 @@ module TestReduce
     f(x) = 5 * x
     f{T<:Number}(x::Nullable{T}) = Nullable(5 * x.value, x.isnull)
 
-    for N in (10, 100)
+    for N in (10, 2050)
         A = rand(N)
         M = rand(Bool, N)
         i = rand(1:N)
@@ -22,13 +22,15 @@ module TestReduce
 
         @test isequal(mapreduce(f, +, X), Nullable(mapreduce(f, +, X.values)))
         @test isequal(mapreduce(f, +, Y), Nullable{Float64}())
-        @test isequal(mapreduce(f, +, Y, skipnull=true),
-                      Nullable(mapreduce(f, +, B)))
+        v = mapreduce(f, +, Y, skipnull=true)
+        @test_approx_eq v.value mapreduce(f, +, B)
+        @test !v.isnull
 
         @test isequal(reduce(+, X), Nullable(reduce(+, X.values)))
         @test isequal(reduce(+, Y), Nullable{Float64}())
-        @test isequal(reduce(+, Y, skipnull=true),
-                    Nullable(reduce(+, B)))
+        v = reduce(+, Y, skipnull=true)
+        @test_approx_eq v.value reduce(+, B)
+        @test !v.isnull
 
         for method in (
             sum,
@@ -39,9 +41,13 @@ module TestReduce
             @test isequal(method(X), Nullable(method(A)))
             @test isequal(method(f, X), Nullable(method(f, A)))
             @test isequal(method(Y), Nullable{Float64}())
-            @test isequal(method(Y, skipnull=true), Nullable(method(B)))
+            v = method(Y, skipnull=true)
+            @test_approx_eq v.value method(B)
+            @test !v.isnull
             @test isequal(method(f, Y), Nullable{Float64}())
-            @test isequal(method(f, Y, skipnull=true), Nullable(method(f, B)))
+            v = method(f, Y, skipnull=true)
+            @test_approx_eq v.value method(f, B)
+            @test !v.isnull
         end
 
         for method in (

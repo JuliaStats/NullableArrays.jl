@@ -52,11 +52,11 @@ module TestStatistics
 
         # Test mean
         for skip in (true, false)
-            v = mean(X, skipnull=skip)
+            v = mean(X; skipnull=skip)
             @test_approx_eq v.value mean(A)
             @test !v.isnull
 
-            v = mean(Y, skipnull=skip)
+            v = mean(Y; skipnull=skip)
             if skip == false
                 @test isequal(v, Nullable{Float64}())
             else
@@ -64,11 +64,11 @@ module TestStatistics
                 @test !v.isnull
             end
 
-            v = mean(X, V, skipnull=skip)
+            v = mean(X, V; skipnull=skip)
             @test_approx_eq v.value mean(A, V)
             @test !v.isnull
 
-            v = mean(Y, V, skipnull=skip)
+            v = mean(Y, V; skipnull=skip)
             if skip == false
                 @test isequal(v, Nullable{Float64}())
             else
@@ -130,9 +130,21 @@ module TestStatistics
 
             # Test var, std
             for method in (var, std)
-                for mu in (nothing, mu_A, nmu_A)
+                for mu in (nothing, mu_A, nmu_A, :a)
+                    if mu == :a
+                        @test_throws ErrorException method(X, mean=mu,
+                                                               corrected=corr,
+                                                               skipnull=skip)
+                    else
+                        v = method(X, mean=mu, corrected=corr, skipnull=skip)
+                        @test_approx_eq v.value method(A, mean=mu_A, corrected=corr)
+                        @test !v.isnull
+                    end
+                end
+
+                for mu in (0, Nullable(0))
                     v = method(X, mean=mu, corrected=corr, skipnull=skip)
-                    @test_approx_eq v.value method(A, mean=mu_A, corrected=corr)
+                    @test_approx_eq v.value method(A, mean=0, corrected=corr)
                     @test !v.isnull
                 end
 
@@ -142,6 +154,16 @@ module TestStatistics
                         @test isequal(v, Nullable{Float64}())
                     else
                         @test_approx_eq v.value method(B, mean=mu_B, corrected=corr)
+                        @test !v.isnull
+                    end
+                end
+
+                for mu in (0, Nullable(0))
+                    v = method(Y, mean=mu, corrected=corr, skipnull=skip)
+                    if skip == false
+                        @test isequal(v, Nullable{Float64}())
+                    else
+                        @test_approx_eq v.value method(B, mean=0, corrected=corr)
                         @test !v.isnull
                     end
                 end
