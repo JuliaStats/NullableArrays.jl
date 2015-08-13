@@ -30,4 +30,7 @@ module NullableArrays
     include("reduce.jl")
     include("statistics.jl")
     include("show.jl")
+
+    pkg_dir = Pkg.dir("NullableArrays")
+    include(joinpath(pkg_dir, "perf/BenchmarkUtils.jl"))
 end
