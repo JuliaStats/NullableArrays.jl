@@ -2,7 +2,8 @@ module NullableArrays
 
     using Reexport
     @reexport using Base.Cartesian
-
+    importall Base.Operators
+    
     export NullableArray,
            NullableVector,
            NullableMatrix,
