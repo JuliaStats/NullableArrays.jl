@@ -28,6 +28,5 @@ module NullableArrays
     include("operators.jl")
     include("broadcast.jl")
     include("reduce.jl")
-    include("statistics.jl")
     include("show.jl")
 end
