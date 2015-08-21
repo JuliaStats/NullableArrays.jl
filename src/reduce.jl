@@ -90,6 +90,17 @@ function Base.mapreduce(f, op::Function, X::NullableArray;
     end
 end
 
+# to fix ambiguity warnings
+function Base.mapreduce(f, op::Union{Base.AndFun, Base.OrFun}, X::NullableArray,
+                        skipnull::Bool = false)
+    missingdata = anynull(X)
+    if skipnull
+        return _mapreduce_skipnull(f, op, X, missingdata)
+    else
+        return Base._mapreduce(f, op, X, missingdata)
+    end
+end
+
 function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
     missingdata = anynull(X)
     if skipnull
