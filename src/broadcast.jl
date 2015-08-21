@@ -88,12 +88,12 @@ end
 # implementations use convert(::Type{Bool}, ::Nullable{Bool}), but this is
 # slower.
 for (op, scalar_op) in (
-    (:.==, :(==)),
-    (:.!=, :!=),
-    (:.<, :<),
-    (:.>, :>),
-    (:.<=, :<=),
-    (:.>=, :>=)
+    (:(Base.(:(.==))), :(==)),
+    (:(Base.(:.!=)), :!=),
+    (:(Base.(:.<)), :<),
+    (:(Base.(:.>)), :>),
+    (:(Base.(:.<=)), :<=),
+    (:(Base.(:.>=)), :>=)
 )
     @eval begin
         ($op)(X::NullableArray, Y::NullableArray) = broadcast($scalar_op, X, Y)
