@@ -1,46 +1,159 @@
+@doc """
+# Description
 
-# ----- Outer Constructors -------------------------------------------------- #
+Construct a NullableArray from an array of values and a Boolean mask indicating
+which values should be considered null.
 
-# ----- Constructor #1
-# The following provides an outer constructor whose argument signature matches
-# that of the inner constructor provided in 01_typedefs.jl.
-function NullableArray{T, N}(A::AbstractArray{T, N},
-                             m::Array{Bool, N}) # -> NullableArray{T, N}
-    return NullableArray{T, N}(A, m)
+# Args
+
+* values: An array indicating the values taken on when entries are not null.
+* isnull: An array indicating which entries are not null.
+
+# Returns
+
+* x::NullableArray{T, N}: A nullable array containing the specified values
+    and missing the indicated entries.
+
+# Examples
+
+```
+x = NullableArray([1, 2, 3], [false, false, false])
+y = NullableArray([1, 2, 3])
+```
+""" ->
+function NullableArray{T, N}(
+    values::AbstractArray{T, N},
+    isnull::Array{Bool, N} = fill(false, size(values)),
+)
+    NullableArray{T, N}(values, isnull)
 end
 
-# ----- Constructor #2 -------------------------------------------------------#
-# Constructs a NullableArray from an Array 'a' of values and an optional
-# Array{Bool, N} mask. If omitted, the mask will default to an array of
-# 'false's the size of 'a'.
-function NullableArray{T, N}(A::AbstractArray{T, N}) # -> NullableArray{T, N}
-    return NullableArray{T, N}(A, fill(false, size(A)))
+@doc """
+# Description
+
+Construct a quasi-uninitialized `NullableArray` object by specifying the type
+of its elements and its size as a tuple.
+
+The result is quasi-uninitialized because the underlying memory for
+representing values will be left uninitialized, but the `isnull` bitmask will
+be initialized to false everywhere.
+
+# Args
+
+* T: The type of elements of the resulting `NullableArray`.
+* dims: The size of the resulting `NullableArray` as a tuple.
+
+# Returns
+
+* x::NullableArray{T, N}: A nullable array of the specified type and size.
+
+# Examples
+
+```
+x = NullableArray(Int64, (2, 2))
+```
+""" ->
+function NullableArray{T}(::Type{T}, dims::Dims)
+    NullableArray(Array(T, dims), fill(true, dims))
 end
 
-# ----- Constructor #3 -------------------------------------------------------#
-# TODO: Uncomment this doc entry when Base Julia can parse it correctly.
-# @doc """
-# Allow users to construct a quasi-uninitialized `NullableArray` object by
-# specifing:
-#
-# * `T`: The type of its elements.
-# * `dims`: The size of the resulting `NullableArray`.
-#
-# NOTE: The `values` field will be truly uninitialized, but the `isnull` field
-# will be initialized to `true` everywhere, making every entry of a new
-# `NullableArray` a null value by default.
-# """ ->
-function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
-    return NullableArray(Array(T, dims), fill(true, dims))
-end
+@doc """
+# Description
 
-# ----- Constructor #4 -------------------------------------------------------#
-# Constructs an empty NullableArray of type parameter T and number of dimensions
-# equal to the number of arguments given in 'dims...', where the latter are
-# dimension lengths.
-function NullableArray(T::Type, dims::Int...) # -> NullableArray
+Construct a quasi-uninitialized `NullableArray` object by specifying the type
+of its elements and its size as a sequence of separate integer arguments.
+
+The result is quasi-uninitialized because the underlying memory for
+representing values will be left uninitialized, but the `isnull` bitmask will
+be initialized to false everywhere.
+
+# Args
+
+* T: The type of elements of the resulting `NullableArray`.
+* dims: The size of the resulting `NullableArray` as a sequence of integer
+    arguments.
+
+# Returns
+
+* x::NullableArray{T, N}: A nullable array of the specified type and size.
+
+# Examples
+
+```
+x = NullableArray(Int64, 2, 2)
+```
+""" ->
+function NullableArray(T::Type, dims::Int...)
     return NullableArray(T, dims)
 end
+
+@doc """
+# Description
+
+Construct an empty `NullableArray` object by calling the name of the
+fully parametrized type with zero arguments.
+
+# Args
+
+NONE
+
+# Returns
+
+* x::NullableArray{T, N}: An empty nullable array of the specified type.
+
+# Examples
+
+```
+x = NullableArray{Int64, 2}()
+```
+""" ->
+function Base.call{T, N}(::Type{NullableArray{T, N}})
+    NullableArray(T, ntuple(i -> 0, N))
+end
+
+@doc """
+# Description
+
+Construct an empty `NullableVector` object by calling the name of the
+fully parametrized type with zero arguments.
+
+# Args
+
+NONE
+
+# Returns
+
+* x::NullableVector{T}: An empty nullable vector of the specified type.
+
+# Examples
+
+```
+x = NullableVector{Int64}()
+```
+""" ->
+Base.call{T}(::Type{NullableVector{T}}) = NullableArray(T, (0, ))
+
+@doc """
+# Description
+
+Construct an empty `NullableMatrix` object by calling the name of the
+fully parametrized type with zero arguments.
+
+# Args
+
+NONE
+
+# Returns
+
+* x::NullableMatrix{T}: An empty nullable matrix of the specified type.
+
+# Examples
+
+```
+x = NullableMatrix{Int64}()
+```
+""" ->
+Base.call{T}(::Type{NullableMatrix{T}}) = NullableArray(T, (0, 0))
 
 # ----- Constructor #5 -------------------------------------------------------#
 # The following method constructs a NullableArray from an Array{Any} argument
@@ -93,13 +206,4 @@ function NullableArray{T}(A::AbstractArray,
         end
     end
     return res
-end
-
-#----- Constructor #7 --------------------------------------------------------#
-
-# The following method allows for the construction of zero-element
-# NullableArrays by calling the parametrized type on zero arguments.
-# TODO: add support for dimensions arguments?
-function Base.call{T, N}(::Type{NullableArray{T, N}})
-    NullableArray(T, ntuple(i->0, N))
 end
