@@ -60,20 +60,21 @@ end
 
 # ----- Base._checkbounds ----------------------------------------------------#
 
-function Base._checkbounds{T<:Real}(sz::Int, x::Nullable{T})
-    isnull(x) ? throw(NullException()) : Base._checkbounds(sz, get(x))
+function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
+    isnull(x) ? throw(NullException()) : checkbounds(Bool, sz, get(x))
 end
 
-function Base._checkbounds(sz::Int, I::NullableVector{Bool})
-    length(I) == sz || throw(BoundsError())
+function Base.checkbounds(::Type{Bool}, sz::Int, I::NullableVector{Bool})
+    anynull(I) && throw(NullException())
+    length(I) == sz
 end
 
-function Base._checkbounds{T<:Real}(sz::Int, I::NullableArray{T})
+function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
     inbounds = true
     anynull(I) && throw(NullException())
     for i in 1:length(I)
         @inbounds v = unsafe_getvalue_notnull(I, i)
-        inbounds &= Base._checkbounds(sz, v)
+        inbounds &= checkbounds(Bool, sz, v)
     end
     return inbounds
 end

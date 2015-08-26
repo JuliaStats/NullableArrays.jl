@@ -3,7 +3,6 @@ module TestIndexing
     using NullableArrays
     import NullableArrays: unsafe_getindex_notnull,
                            unsafe_getvalue_notnull
-    import Base: _checkbounds
 
     x = NullableArray(Int, (5, 2))
 
@@ -170,28 +169,23 @@ module TestIndexing
     @test isequal(unsafe_getvalue_notnull(X, 1), 1)
     @test isequal(unsafe_getvalue_notnull(X, 2), 2)
 
-    #----- test Base._checkbounds -----#
+    #----- test Base.checkbounds -----#
 
     X = NullableArray([1:10...])
     b = vcat(false, fill(true, 9))
 
-    # Base._checkbounds{T<:Real}(sz::Int, x::Nullable{T})
-    @test_throws NullException _checkbounds(1, Nullable(1, true))
-    @test _checkbounds(10, Nullable(1)) == true
+    # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
+    @test_throws NullException checkbounds(Bool, 1, Nullable(1, true))
+    @test checkbounds(Bool, 10, Nullable(1)) == true
     @test isequal(X[Nullable(1)], Nullable(1))
 
-    # Base._checkbounds(sz::Int, X::NullableVector{Bool})
-    @test _checkbounds(5, NullableArray([true, false, true, false, true]))
-    @test_throws(BoundsError,
-                 _checkbounds(5,
-                              NullableArray([true, false, true, true])
-                 )
-    )
+    # Base.checkbounds(::Type{Bool}, sz::Int, X::NullableVector{Bool})
+    @test checkbounds(Bool, 5, NullableArray([true, false, true, false, true]))
     @test isequal(X[b], NullableArray([2:10...]))
 
-    # Base._checkbounds{T<:Real}(sz::Int, I::NullableArray{T})
-    @test _checkbounds(10, NullableArray([1:10...]))
-    @test _checkbounds(10, NullableArray([10, 11])) == false
+    # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
+    @test checkbounds(Bool, 10, NullableArray([1:10...]))
+    @test checkbounds(Bool, 10, NullableArray([10, 11])) == false
     @test_throws BoundsError checkbounds(X, NullableArray([10, 11]))
 
     #---- test Base.to_index -----#
