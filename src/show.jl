@@ -11,7 +11,8 @@ end
 abstract NULL
 
 Base.showcompact(io::IO, ::Type{NULL}) = show(io, NULL)
-Base.show(io::IO, ::Type{NULL}) = print(io, "NULL")
+Base.show(io::IO, ::Type{NULL}) = print(io, "#NULL")
+Base.alignment(::Type{NULL}) = (5,0)
 
 function Base.show(io::IO, X::NullableArray)
     print(io, typeof(X))
@@ -59,8 +60,8 @@ function Base.show_delim_array(io::IO, X::NullableArray, op, delim, cl,
     print(io, cl)
 end
 
-function Base.alignment(
-    X::Union{NullableVector, NullableMatrix},
+function Base.alignment{T,N,U<:NullableArray}(
+    X::SubArray{T,N,U},
     rows::AbstractVector, cols::AbstractVector,
     cols_if_complete::Integer, cols_otherwise::Integer, sep::Integer
 )
@@ -69,10 +70,10 @@ function Base.alignment(
         l = r = 0
         for i in rows
             if isassigned(X,i,j)
-                if X.isnull[i, j]
+                if isnull(X, i, j)
                     aij = alignment(NULL)
                 else
-                    aij = alignment(X.values[i,j])
+                    aij = alignment(values(X, i,j))
                 end
             else
                 aij = undef_ref_alignment
@@ -94,6 +95,62 @@ function Base.alignment(
     return a
 end
 
+function Base.alignment(
+    X::Union{NullableArray, NullableMatrix},
+    rows::AbstractVector, cols::AbstractVector,
+    cols_if_complete::Integer, cols_otherwise::Integer, sep::Integer
+)
+    a = []
+    for j in cols
+        l = r = 0
+        for i in rows
+            if isassigned(X,i,j)
+                if isnull(X, i, j)
+                    aij = alignment(NULL)
+                else
+                    aij = alignment(values(X, i,j))
+                end
+            else
+                aij = undef_ref_alignment
+            end
+            l = max(l, aij[1])
+            r = max(r, aij[2])
+        end
+        push!(a, (l, r))
+        if length(a) > 1 && sum(map(sum,a)) + sep*length(a) >= cols_if_complete
+            pop!(a)
+            break
+        end
+    end
+    if 1 < length(a) < size(X,2)
+        while sum(map(sum,a)) + sep*length(a) >= cols_otherwise
+            pop!(a)
+        end
+    end
+    return a
+end
+
+function Base.print_matrix_row{T,N,P<:NullableArray}(io::IO,
+    X::SubArray{T,N,P}, A::Vector,
+    i::Integer, cols::AbstractVector, sep::AbstractString
+)
+    for k = 1:length(A)
+        j = cols[k]
+        if isassigned(X,i,j)
+            x = isnull(X,i,j) ? NULL : values(X,i,j)
+            a = alignment(x)
+            sx = sprint(showcompact_lim, x)
+        else
+            a = undef_ref_alignment
+            sx = undef_ref_str
+        end
+        l = repeat(" ", A[k][1]-a[1])
+        r = repeat(" ", A[k][2]-a[2])
+        print(io, l, sx, r)
+        if k < length(A); print(io, sep); end
+    end
+end
+
 function Base.print_matrix_row(io::IO,
     X::Union{NullableVector, NullableMatrix}, A::Vector,
     i::Integer, cols::AbstractVector, sep::AbstractString
@@ -101,7 +158,7 @@ function Base.print_matrix_row(io::IO,
     for k = 1:length(A)
         j = cols[k]
         if isassigned(X,i,j)
-            x = X.isnull[i,j] ? NULL : X.values[i,j]
+            x = isnull(X,i,j) ? NULL : values(X,i,j)
             a = alignment(x)
             sx = sprint(showcompact_lim, x)
         else
