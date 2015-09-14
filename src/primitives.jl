@@ -1,25 +1,45 @@
-# ----- Base.size ------------------------------------------------------------#
+Base.isnull(X::NullableArray, I::Int...) = X.isnull[I...]
+Base.values(X::NullableArray, I::Int...) = X.values[I...]
 
-# We determine the size of a NullableArray array using the size of its
-# `values` field. We could equivalently use the `.isnull` field.
+@doc """
+`size(X::NullableArray, [d::Real])`
+
+Return a tuple containing the lengths of each dimension of `X`, or if `d` is
+specific, the length of `X` along dimension `d`.
+""" ->
 Base.size(X::NullableArray) = size(X.values) # -> NTuple{Int}
 
-# ----- Base.similar ---------------------------------------------------------#
+@doc """
+`similar(X::NullableArray, [T], [dims])`
 
-# Allocate a similar array
-function Base.similar{T <: Nullable}(X::NullableArray, ::Type{T}, dims::Dims)
+Allocate an uninitialized `NullableArray` of element type `T` and with
+size `dims`. If unspecified, `T` and `dims` default to the element type and size
+equal to that of `X`.
+""" ->
+function Base.similar{T<:Nullable}(X::NullableArray, ::Type{T}, dims::Dims)
     NullableArray(eltype(T), dims)
 end
 
-# Allocate a similar array
+# @doc """
+#
+# """ ->
 Base.similar(X::NullableArray, T, dims::Dims) = NullableArray(T, dims)
 
-# ----- Base.copy/copy! ------------------------------------------------------#
+@doc """
+`copy(X::NullableArray)`
 
+Return a shallow copy of `X`; the outer structure of `X` will be copied, but
+all elements will be identical to those of `X`.
+""" ->
 Base.copy(X::NullableArray) = Base.copy!(similar(X), X)
 
-# Copies the initialized values of a source NullableArray into the respective
-# indices of the destination NullableArray.
+@doc """
+`copy!(dest::NullableArray, src::NullableArray)`
+
+Copy the initialized values of a source NullableArray into the respective
+indices of the destination NullableArray. If an entry in `src` is null, then
+this method nullifies the respective entry in `dest`.
+""" ->
 function Base.copy!(dest::NullableArray,
                     src::NullableArray) # -> NullableArray{T, N}
     if isbits(eltype(dest)) && isbits(eltype(src))
@@ -28,8 +48,7 @@ function Base.copy!(dest::NullableArray,
         dest_values = dest.values
         src_values = src.values
         length(dest_values) >= length(src_values) || throw(BoundsError())
-        # Copy only initilialized values from src into dest
-        # TODO: investigate "BoolArray.chunks"
+        # copy only initilialized values from src into dest
         for i in 1:length(src_values)
             @inbounds !(src.isnull[i]) && (dest.values[i] = src.values[i])
         end
@@ -38,8 +57,13 @@ function Base.copy!(dest::NullableArray,
     return dest
 end
 
-# ----- Base.fill! -----------------------------------------------------------#
+@doc """
+`fill!(X::NullableArray, x::Nullable)`
 
+Fill `X` with the value `x`. If `x` is empty, then `fill!(X, x)` nullifies each
+entry of `X`. Otherwise, `fill!(X, x)` fills `X.values` with the value of `x`
+and designates each entry of `X` as present.
+""" ->
 function Base.fill!(X::NullableArray, x::Nullable) # -> NullableArray{T, N}
     if isnull(x)
         fill!(X.isnull, true)
@@ -50,21 +74,38 @@ function Base.fill!(X::NullableArray, x::Nullable) # -> NullableArray{T, N}
     return X
 end
 
+@doc """
+`fill!(X::NullableArray, x::Nullable)`
+
+Fill `X` with the value `x` and designate each entry as present. If `x` is an
+object reference, all elements will refer to the same object. Note that
+`fill!(X, Foo())` will return `X` filled with the result of evaluating `Foo()`
+once.
+""" ->
 function Base.fill!(X::NullableArray, x::Any) # -> NullableArray{T, N}
     fill!(X.values, x)
     fill!(X.isnull, false)
     return X
 end
 
-# ----- Base.deepcopy --------------------------------------------------------#
+@doc """
+`Base.deepcopy(X::NullableArray)`
 
+Return a `NullableArray` object whose internal `values` and `isnull` fields are
+deep copies of `X.values` and `X.isnull` respectively.
+""" ->
 function Base.deepcopy(X::NullableArray) # -> NullableArray{T}
     return NullableArray(deepcopy(X.values), deepcopy(X.isnull))
 end
 
-# ----- Base.resize! ---------------------------------------------------------#
+@doc """
+`resize!(X::NullableVector, n::Int)`
 
-function Base.resize!{T}(X::NullableArray{T,1}, n::Int) # -> NullableArray{T, N}
+Resize a one-dimensional `NullableArray` `X` to contain precisely `n` elements.
+If `n` is greater than the current length of `X`, then each new entry will be
+designated as null.
+""" ->
+function Base.resize!{T}(X::NullableArray{T,1}, n::Int) # -> NullableArray{T, 1}
     resize!(X.values, n)
     oldn = length(X.isnull)
     resize!(X.isnull, n)
@@ -72,46 +113,63 @@ function Base.resize!{T}(X::NullableArray{T,1}, n::Int) # -> NullableArray{T, N}
     return X
 end
 
-# ----- Base.ndims -----------------------------------------------------------#
+@doc """
+`ndims(X::NullableArray)`
 
+Returns the number of dimensions of `X`.
+""" ->
 Base.ndims(X::NullableArray) = ndims(X.values) # -> Int
 
-# ----- Base.length ----------------------------------------------------------#
+@doc """
+`length(X::NullableArray)`
 
+Returns the maximum index `i` for which `getindex(X, i)` is valid.
+""" ->
 Base.length(X::NullableArray) = length(X.values) # -> Int
 
-# ----- Base.endof -----------------------------------------------------------#
+@doc """
+`endof(X::NullableArray)`
 
+Returns the last entry of `X`.
+""" ->
 Base.endof(X::NullableArray) = endof(X.values) # -> Int
 
-# ----- Base.find ------------------------------------------------------------#
+@doc """
 
+""" ->
 function Base.find(X::NullableArray{Bool}) # -> Array{Int}
     ntrue = 0
     @inbounds for (i, isnull) in enumerate(X.isnull)
         ntrue += !isnull && X.values[i]
     end
-    target = Array(Int, ntrue)
+    res = Array(Int, ntrue)
     ind = 1
     @inbounds for (i, isnull) in enumerate(X.isnull)
         if !isnull && X.values[i]
-            target[ind] = i
+            res[ind] = i
             ind += 1
         end
     end
-    return target
+    return res
 end
 
-# TODO: implement further 'find' methods
+@doc """
+`dropnull(X::NullableVector)`
 
-# ----- dropnull -------------------------------------------------------------#
-
+Return a `Vector` containing only the non-null entries of `X`.
+""" ->
 dropnull(X::NullableVector) = copy(X.values[!X.isnull]) # -> Vector{T}
 
-# ----- anynull --------------------------------------------------------------#
+@doc """
+`anynull(X::NullableArray)`
 
+Returns whether or not any entries of `X` are null.
+""" ->
 anynull(X::NullableArray) = any(X.isnull) # -> Bool
 
+# @doc """
+#
+# """ ->
 # NOTE: the following currently short-circuits.
 function anynull(A::AbstractArray) # -> Bool
     for a in A
@@ -121,41 +179,69 @@ function anynull(A::AbstractArray) # -> Bool
     end
     return false
 end
-
+#
+# @doc """
+#
+# """ ->
 function anynull(xs::NTuple) # -> Bool
     return anynull(collect(xs))
 end
 
-# ----- allnull --------------------------------------------------------------#
+@doc """
+`allnull(X::NullableArray)`
 
+Returns whether or not all the entries in `X` are null.
+""" ->
 allnull(X::NullableArray) = all(X.isnull) # -> Bool
 
-# ----- Base.isnan -----------------------------------------------------------#
+@doc """
+`isnan(X::NullableArray)`
 
+Test whether each entry of `X` is null and if not, test whether the entry is
+not a number (`NaN`). Return the results as `NullableArray{Bool}`. Note that
+null entries of `X` will be reflected by null entries of the resultant
+`NullableArray`.
+""" ->
 function Base.isnan(X::NullableArray) # -> NullableArray{Bool}
     return NullableArray(isnan(X.values), copy(X.isnull))
 end
 
-# ----- Base.isfinite --------------------------------------------------------#
+@doc """
+`isfinite(X::NullableArray)`
 
+Test whether each entry of `X` is null and if not, test whether the entry is
+finite. Return the results as `NullableArray{Bool}`. Note that
+null entries of `X` will be reflected by null entries of the resultant
+`NullableArray`.
+""" ->
 function Base.isfinite(X::NullableArray) # -> NullableArray{Bool}
-    n = length(X)
-    target = Array(Bool, size(X))
-    for i in 1:n
+    res = Array(Bool, size(X))
+    for i in eachindex(X)
         if !X.isnull[i]
-            target[i] = isfinite(X.values[i])
+            res[i] = isfinite(X.values[i])
         end
     end
-    return NullableArray(target, copy(X.isnull))
+    return NullableArray(res, copy(X.isnull))
 end
 
-# ----- Conversion methods ---------------------------------------------------#
+@doc """
+`convert(T, X::NullableArray)`
 
+Convert `X` to an `AbstractArray` of type `T`. Note that if `X` contains any
+null entries then calling `convert` without supplying a replacement value for
+null entries will result in an error.
+
+Currently supported return type arguments include: `Array`, `Array{T}`,
+`Vector`, `Matrix`.
+
+`convert(T, X::NullableArray, replacement)`
+
+Convert `X` to an `AbstractArray` of type `T` and replace all null entries of
+`X` with `replacement` in the result.
+""" ->
 function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N}) # -> Array{S, N}
     if anynull(X)
-        # err = "Cannot convert NullableArray with null values."
-        #TODO: Investigate constructors for NullException
         throw(NullException())
     else
         return convert(Array{S, N}, X.values)
@@ -186,15 +272,15 @@ function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N},
                                replacement::Any) # -> Array{S, N}
     replacementS = convert(S, replacement)
-    target = Array(S, size(X))
+    res = Array(S, size(X))
     for i in 1:length(X)
         if X.isnull[i]
-            target[i] = replacementS
+            res[i] = replacementS
         else
-            target[i] = X.values[i]
+            res[i] = X.values[i]
         end
     end
-    return target
+    return res
 end
 
 function Base.convert{T}(::Type{Vector},
@@ -235,23 +321,14 @@ function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
     return NullableArray(convert(Array{S}, A.values), A.isnull)
 end
 
+@doc """
+`float(X::NullableArray)`
 
+Return a copy of `X` in which each non-null entry is converted to a floating
+point type. Note that this method will throw an error for arguments `X` whose
+element type is not "isbits".
+""" ->
 function Base.float(X::NullableArray) # -> NullableArray{T, N}
     isbits(eltype(X)) || error()
     return NullableArray(float(X.values), copy(X.isnull))
 end
-
-# ----- Base.hash ------------------------------------------------------------#
-
-# Use ready-made method for AbstractArrays or implement method specific to
-# NullableArrays, possibly for performance purposes?
-
-# ----- Base.unique ----------------------------------------------------------#
-
-# Use ready-made method for AbstractArrays or implement method specific to
-# NullableArrays, possibly for performance purposes?
-
-###
-
-Base.isnull(X::NullableArray, I::Int...) = X.isnull[I...]
-Base.values(X::NullableArray, I::Int...) = X.values[I...]

@@ -1,4 +1,3 @@
-
 const unsafe_getindex = Base.unsafe_getindex
 
 @generated function Base.isnull{T,N,P<:NullableArray,IV,LD}(V::SubArray{T,N,P,IV,LD}, I::Int...)

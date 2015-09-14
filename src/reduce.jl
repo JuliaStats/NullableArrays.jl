@@ -1,4 +1,4 @@
-#----- Base.mapreduce interface for skipping null entries --------------------#
+# interface for skipping null entries
 
 function skipnull_init(f, op, X::NullableArray,
                        ifirst::Int, ilast::Int)
@@ -60,7 +60,7 @@ mapreduce_impl_skipnull(f, op::Base.AddFun, X::NullableArray) =
     mapreduce_pairwise_impl_skipnull(f, op, X, 1, length(X.values),
                                    max(128, Base.sum_pairwise_blocksize(f)))
 
-## general mapreduce interface
+# general mapreduce interface
 
 function _mapreduce_skipnull{T}(f, op, X::NullableArray{T}, missingdata::Bool)
     n = length(X)
@@ -79,6 +79,16 @@ function Base._mapreduce(f, op, X::NullableArray, missingdata)
     Nullable(Base._mapreduce(f, op, X.values))
 end
 
+@doc """
+`mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])`
+
+Map a function `f` over the elements of `X` and reduce the result under the
+operation `op`. One can set the behavior of this method to skip the null entries
+of `X` by setting the keyword argument `skipnull` equal to true. If `skipnull`
+behavior is enabled, `f` will be automatically lifted over the elements of `X`.
+Note that, in general, mapreducing over a `NullableArray` will return a
+`Nullable` object regardless of whether `skipnull` is set to `true` or `false`.
+""" ->
 function Base.mapreduce(f, op::Function, X::NullableArray;
                         skipnull::Bool = false)
     missingdata = anynull(X)
@@ -110,10 +120,20 @@ function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
     end
 end
 
+@doc """
+`mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])`
+
+Reduce `X`under the operation `op`. One can set the behavior of this method to
+skip the null entries of `X` by setting the keyword argument `skipnull` equal
+to true. If `skipnull` behavior is enabled, `f` will be automatically lifted
+over the elements of `X`. Note that, in general, mapreducing over a
+`NullableArray` will return a `Nullable` object regardless of whether `skipnull`
+is set to `true` or `false`.
+""" ->
 Base.reduce(op, X::NullableArray; skipnull::Bool = false) =
     mapreduce(Base.IdFun(), op, X; skipnull = skipnull)
 
-#----- Standard reductions ---------------------------------------------------#
+# standard reductions
 
 for (fn, op) in ((:(Base.sum), Base.AddFun()),
                  (:(Base.prod), Base.MulFun()),
@@ -135,9 +155,7 @@ for (fn, f, op) in ((:(Base.sumabs), Base.AbsFun(), Base.AddFun()),
         mapreduce($f, $op, X; skipnull=skipnull)
 end
 
-#----- Base.minimum / Base.maximum -------------------------------------------#
-
-# internal methods
+# internal methods for Base.minimum and Base.maximum
 for Op in (:(Base.MinFun), :(Base.MaxFun))
     @eval begin
         function Base._mapreduce{T}(::Base.IdFun, ::$Op,
