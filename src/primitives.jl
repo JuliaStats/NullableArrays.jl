@@ -184,7 +184,12 @@ end
 #
 # """ ->
 function anynull(xs::NTuple) # -> Bool
-    return anynull(collect(xs))
+    for x in xs
+        if isa(x, Nullable)
+            x.isnull && (return true)
+        end
+    end
+    return false
 end
 
 @doc """
