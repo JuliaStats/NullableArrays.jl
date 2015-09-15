@@ -29,4 +29,5 @@ module NullableArrays
     include("broadcast.jl")
     include("reduce.jl")
     include("show.jl")
+    include("subarray.jl")
 end
