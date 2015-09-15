@@ -3,7 +3,7 @@ NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/johnmyleswhite/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/johnmyleswhite/NullableArrays.jl)
 [![Coverage Status](https://coveralls.io/repos/johnmyleswhite/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/r/johnmyleswhite/NullableArrays.jl?branch=master)
-[![codecov.io](http://codecov.io/github/davidagold/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/davidagold/NullableArrays.jl?branch=master)
+[![codecov.io](http://codecov.io/github/johnmyleswhite/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/johnmyleswhite/NullableArrays.jl?branch=master)
 
 NullableArrays.jl provides the `NullableArray{T, N}` type and its respective interface for use in storing and managing data with missing values.
 
@@ -19,7 +19,7 @@ Missing Values
 ==============
 The central contribution of NullableArrays.jl is to provide a data structure that uses a single type, namely `Nullable{T}` to represent both present and missing values. `Nullable{T}` is a specialized container type that contains precisely either one or zero values. A `Nullable{T}` object that contains a value represents a present value of type `T` that, under other circumstances, might have been missing, whereas an empty `Nullable{T}` object represents a missing value that, under other circumstances, would have been of type `T` had it been present.
 
-Indexing into an `NullableArray{T}` is thus "type-stable" in the sense that `getindex(X::NullableArray{T}, i)` will always return an object of type `Nullable{T}` regardless of whether the returned entry is present or missing. In general, this behavior more robustly supports the Julia compiler's ability to produce specialized lower-level code than do analogous data structures that use a token `NA` type to represent missingness. 
+Indexing into an `NullableArray{T}` is thus "type-stable" in the sense that `getindex(X::NullableArray{T}, i)` will always return an object of type `Nullable{T}` regardless of whether the returned entry is present or missing. In general, this behavior more robustly supports the Julia compiler's ability to produce specialized lower-level code than do analogous data structures that use a token `NA` type to represent missingness.
 
 Constructors
 ============
@@ -44,7 +44,7 @@ julia> NullableArray([1:5...])
  Nullable(5)  
  ```
  Note that the sizes of the two `Array` arguments passed to the above constructor method must be equal.
- 
+
 One can initialize an empty `NullableArray` object by calling `NullableArray(T, dims)`, where `T` is the desired element type of the resultant `NullableArray` and `dims` is either a tuple or sequence of integer arguments designating the size of the resultant `NullableArray`:
 
 ```julia
@@ -54,7 +54,7 @@ julia> NullableArray(Char, 3, 3)
  Nullable{Char}()  Nullable{Char}()  Nullable{Char}()
  Nullable{Char}()  Nullable{Char}()  Nullable{Char}()
  ```
- 
+
  One can also construct a `NullableArray` from a heterogeneous `Array` that uses a token object `x` to represent a missing value. Suppose for instance that the string `"NA"` represents a missing value in `[1, "NA", 2, 3, 5, "NA"]`. One can translate this pattern into a `NullableArray` object by passing to the `NullableArray` constructor the `Array` object at hand, the desired element type of the resultant `NullableArray` and the object that represents missingness in the `Array` argument:
  ```julia
  julia> NullableArray([1, "NA", 2, 3, 5, "NA"], Int, "NA")
@@ -119,14 +119,14 @@ julia> X
 10x2 NullableArrays.NullableArray{Float64,2}:
  Nullable(0.5503097221926698)   Nullable{Float64}()          
  Nullable{Float64}()            Nullable{Float64}()          
- Nullable(0.7806818430935034)   Nullable(0.4966357239169863) 
- Nullable{Float64}()            Nullable(0.8819582596721911) 
- Nullable(0.04244733980209592)  Nullable(0.8634601571530616) 
+ Nullable(0.7806818430935034)   Nullable(0.4966357239169863)
+ Nullable{Float64}()            Nullable(0.8819582596721911)
+ Nullable(0.04244733980209592)  Nullable(0.8634601571530616)
  Nullable{Float64}()            Nullable(0.44256797964251904)
  Nullable(0.3722788311682259)   Nullable(0.26740280850120346)
  Nullable(0.4591974149414313)   Nullable{Float64}()          
  Nullable{Float64}()            Nullable{Float64}()          
- Nullable(0.2485293010638474)   Nullable(0.6661164389956584) 
+ Nullable(0.2485293010638474)   Nullable(0.6661164389956584)
 ```
 As one may expect, simply calling `broadcast(f, X[:,1], X[:,2])` incurs a `MethodError`:
 ```julia
@@ -136,8 +136,8 @@ ERROR: MethodError: `f` has no method matching g(::Nullable{Float64}, ::Nullable
  in broadcast! at broadcast.jl:229
  in broadcast at broadcast.jl:236
 ```
-Let `v, w` be two `Nullable{Float64}` objects. If both `v, w` are non-null, the convention is to have `f(v, w)` return a similarly non-null `Nullable{Float64}` object whose `value` field agrees with `f(v.value, w.value)`.  If either of `v, w` is null, the convention is to return an empty `Nullable{Float64}` object, i.e. to propogate the uncertainty introduced by the null argument. Providing a systematic means of extending `f` to `Nullable` arguments in such a way that satisfies the above behavior is sometimes called *lifting* `f` over `Nullable` arguments. 
- 
+Let `v, w` be two `Nullable{Float64}` objects. If both `v, w` are non-null, the convention is to have `f(v, w)` return a similarly non-null `Nullable{Float64}` object whose `value` field agrees with `f(v.value, w.value)`.  If either of `v, w` is null, the convention is to return an empty `Nullable{Float64}` object, i.e. to propogate the uncertainty introduced by the null argument. Providing a systematic means of extending `f` to `Nullable` arguments in such a way that satisfies the above behavior is sometimes called *lifting* `f` over `Nullable` arguments.
+
 Arguably, the best way to lift existing methods over `Nullable` arguments is to use multiple dispatch. That is, one can very easily extend `f` to handle `Nullable{Float64}` arguments by simply defining an appropriate method:
 ```julia
 function f(x::Nullable{Float64}, y::Nullable{Float64})
@@ -156,7 +156,7 @@ julia> broadcast(f, X[:,1], X[:,2])
  Nullable{Float64}()         
  Nullable(1.4736089974970423)
  Nullable{Float64}()         
- Nullable(1.037331537760899) 
+ Nullable(1.037331537760899)
  Nullable{Float64}()         
  Nullable(1.1046719410910564)
  Nullable{Float64}()         
@@ -175,4 +175,4 @@ julia> fieldnames(NullableArray)
  :values
  :isnull
  ```
-The `isnull` array designates whether indexing into an `X::NullableArray` at a given index `i` ought to return a present or missing value. 
+The `isnull` array designates whether indexing into an `X::NullableArray` at a given index `i` ought to return a present or missing value.
