@@ -60,6 +60,18 @@ function Base.broadcast!(f, X::NullableArray; lift::Bool=false)
 end
 
 @eval let cache = Dict{Any, Dict{Bool, Dict{Int, Dict{Int, Any}}}}()
+    @doc """
+    `broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)`
+
+    This method implements the same behavior as that of `broadcast!` when called on
+    regular `Array` arguments. It also includes the `lift` keyword argument, which
+    when set to true will lift `f` over the entries of the `As`. Lifting is
+    disabled by default. Note that this method's signature specifies the destination
+    `B` array as well as the source `As` arrays as all `NullableArray`s.
+    Thus, calling `broadcast!` on a arguments consisting of both `Array`s and
+    `NullableArray`s will fall back to the implementation of `broadcast!` in
+    `base/broadcast.jl`.
+    """ ->
     function Base.broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)
         nd = ndims(B)
         narrays = length(As)
@@ -74,19 +86,24 @@ end
     end
 end  # let cache
 
+@doc """
+`broadcast(f, As::NullableArray...;lift::Bool=false)`
+
+This method implements the same behavior as that of `broadcast` when called on
+regular `Array` arguments. It also includes the `lift` keyword argument, which
+when set to true will lift `f` over the entries of the `As`. Lifting is
+disabled by default. Note that this method's signature specifies the source
+`As` arrays as all `NullableArray`s. Thus, calling `broadcast!` on a arguments
+consisting of both `Array`s and `NullableArray`s will fall back to the
+implementation of `broadcast` in `base/broadcast.jl`.
+""" ->
 function Base.broadcast(f, As::NullableArray...;lift::Bool=false)
     return broadcast!(f, NullableArray(eltype(Base.promote_eltype(As...)),
                                        Base.Broadcast.broadcast_shape(As...)),
                       As...; lift=lift)
 end
 
-#----- broadcasted binary operations -----------------------------------------#
-
-# The following require specialized implementations because the base/broadcast
-# methods return BitArrays instead of similars of the arguments.
-# An alternative to the following implementations is simply to let the base
-# implementations use convert(::Type{Bool}, ::Nullable{Bool}), but this is
-# slower.
+# broadcasted ops
 for (op, scalar_op) in (
     (:(Base.(:(.==))), :(==)),
     (:(Base.(:.!=)), :!=),

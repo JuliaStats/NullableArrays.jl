@@ -1,7 +1,5 @@
 using Base.Cartesian
 
-# utilities
-
 function gen_nullcheck(narrays::Int)
     As = [symbol("A_"*string(i)) for i = 1:narrays]
     e_nullcheck = :($(As[1]).isnull[i])
@@ -131,6 +129,14 @@ end
 
 # Base.map!
 @eval let cache = Dict{Bool, Dict{Int, Dict{Base.Callable, Function}}}()
+    @doc """
+    `map!{F}(f::F, dest::NullableArray, As::AbstractArray...; lift::Bool=false)`
+
+    This method implements the same behavior as that of `map!` when called on
+    regular `Array` arguments. It also includes the `lift` keyword argument, which
+    when set to true will lift `f` over the entries of the `As`. Lifting is
+    disabled by default.
+    """ ->
     function Base.map!{F}(f::F, dest::NullableArray, As::AbstractArray...;
                           lift::Bool=false)
         narrays = length(As)
@@ -148,6 +154,14 @@ Base.map!{F}(f::F, X::NullableArray; lift::Bool=false) = map!(f, X, X; lift=lift
 
 # Base.map
 @eval let cache = Dict{Int, Dict{Base.Callable, Function}}()
+    @doc """
+    `map{F}(f::F, As::AbstractArray...; lift::Bool=false)`
+
+    This method implements the same behavior as that of `map!` when called on
+    regular `Array` arguments. It also includes the `lift` keyword argument, which
+    when set to true will lift `f` over the entries of the `As`. Lifting is
+    disabled by default.
+    """ ->
     function Base.map{F}(f::F, As::NullableArray...; lift::Bool=false)
         narrays = length(As)
         _map_to! = gensym()
