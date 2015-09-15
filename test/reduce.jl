@@ -60,5 +60,22 @@ module TestReduce
             @test_approx_eq v.value method(B)
             @test v.isnull == false
         end
+
+        H = rand(Bool, N)
+        G = H[find(x->!x, M)]
+        U = NullableArray(H)
+        V = NullableArray(H, M)
+
+        for op in (
+            &,
+            |,
+        )
+            @test isequal(reduce(op, U),
+                          Nullable(reduce(op, H)))
+            @test isequal(reduce(op, U, skipnull=true),
+                          Nullable(reduce(op, H)))
+            @test isequal(reduce(op, V, skipnull=true),
+                          Nullable(reduce(op, G)))
+        end
     end
 end

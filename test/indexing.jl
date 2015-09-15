@@ -108,6 +108,19 @@ module TestIndexing
     # getindex with NullableVector and non-null entries
     @test isequal(X[NullableArray([1, 2, 3])], X[[1, 2, 3]])
 
+    # indexing with Nullables
+
+    n = rand(1:5)
+    siz = [ rand(2:5) for i in n ]
+    A = rand(siz...)
+    M = rand(Bool, siz...)
+    Z = NullableArray(A, M)
+    i = rand(1:length(Z))
+    @test isequal(Z[Nullable(i)], Z[i])
+    I = [ rand(1:size(Z,i)) for i in 1:n ]
+    NI = [ Nullable(i) for i in I ]
+    @test isequal(Z[NI...], Z[I...])
+
     #----- test setindex! -----#
 
     # setindex! with scalar indices

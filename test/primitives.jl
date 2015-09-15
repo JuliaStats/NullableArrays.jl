@@ -1,7 +1,18 @@
 module TestPrimitives
     using Base.Test
     using NullableArrays
-# TODO: Organize tests, include references to /src
+
+    n = rand(1:5)
+    siz = [ rand(2:5) for i in n ]
+    A = rand(siz...)
+    M = rand(Bool, siz...)
+    X = NullableArray(A, M)
+    i = rand(1:length(X))
+    @test values(X, i) == X.values[i]
+    @test isnull(X, i) == X.isnull[i]
+    I = [ rand(1:size(X,i)) for i in 1:n ]
+    @test values(X, I...) == X.values[I...]
+    @test isnull(X, I...) == X.isnull[I...]
 
 # ----- test Base.similar, Base.size  ----------------------------------------#
 
