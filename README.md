@@ -1,7 +1,7 @@
 
 NullableArrays.jl
 =================
-[![Build Status](https://travis-ci.org/johnmyleswhite/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/johnmyleswhite/NullableArrays.jl)
+[![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
 [![Coverage Status](https://coveralls.io/repos/johnmyleswhite/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/r/johnmyleswhite/NullableArrays.jl?branch=master)
 [![codecov.io](http://codecov.io/github/johnmyleswhite/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/johnmyleswhite/NullableArrays.jl?branch=master)
 
