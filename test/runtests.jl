@@ -15,7 +15,8 @@ my_tests = [
     "nullablematrix.jl",
     "reduce.jl",
     "operators.jl",
-    "subarray.jl"
+    "subarray.jl",
+    "show.jl",
 ]
 
 println("Running tests:")
