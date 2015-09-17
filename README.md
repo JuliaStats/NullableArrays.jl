@@ -2,8 +2,8 @@
 NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
-[![Coverage Status](https://coveralls.io/repos/johnmyleswhite/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/r/johnmyleswhite/NullableArrays.jl?branch=master)
-[![codecov.io](http://codecov.io/github/johnmyleswhite/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/johnmyleswhite/NullableArrays.jl?branch=master)
+<!-- [![Coverage Status](https://coveralls.io/repos/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaStats/NullableArrays.jl?branch=master) -->
+[![codecov.io](http://codecov.io/github/JuliaStats/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaStats/NullableArrays.jl?branch=master)
 
 NullableArrays.jl provides the `NullableArray{T, N}` type and its respective interface for use in storing and managing data with missing values.
 
