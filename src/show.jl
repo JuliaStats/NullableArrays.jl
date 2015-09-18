@@ -1,4 +1,5 @@
-using Base: tty_size, alignment, print_matrix_row, strwidth, showcompact_lim
+using Base: tty_size, alignment, print_matrix_row, strwidth, showcompact_lim,
+            undef_ref_alignment, undef_ref_str
 
 type2string{T, N}(::Type{NullableArray{T, N}}) = "NullableArray{$T,$N}"
 type2string{T}(::Type{NullableArray{T}}) = "NullableArray{$T,N}"
