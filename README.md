@@ -2,7 +2,6 @@
 NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
-<!-- [![Coverage Status](https://coveralls.io/repos/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaStats/NullableArrays.jl?branch=master) -->
 [![codecov.io](http://codecov.io/github/JuliaStats/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaStats/NullableArrays.jl?branch=master)
 
 NullableArrays.jl provides the `NullableArray{T, N}` type and its respective interface for use in storing and managing data with missing values.
@@ -25,46 +24,44 @@ Constructors
 ============
 There are a number of ways to construct a `NullableArray` object. Passing a single `Array{T, N}` object to the `NullableArray()` constructor will create a `NullableArray{T, N}` object with all present values:
 ```julia
-julia> NullableArray([1:5...])
-5-element NullableArrays.NullableArray{Int64,1}:
- Nullable(1)
- Nullable(2)
- Nullable(3)
- Nullable(4)
- Nullable(5)
+julia> julia> NullableArray(collect(1:5))
+5-element NullableArray{Int64,1}:
+ 1
+ 2
+ 3
+ 4
+ 5
  ```
  To indicate that certain values ought to be represented as missing, one can pass an additional `Array{Bool, N}` argument; any index `i` for which the latter argument contains a `true` entry will return an missing value from the resultant `NullableArray` object:
  ```julia
- julia> NullableArray([1:5...], [true, false, false, true, false])
-5-element NullableArrays.NullableArray{Int64,1}:
- Nullable{Int64}()
- Nullable(2)      
- Nullable(3)      
- Nullable{Int64}()
- Nullable(5)  
+julia> X = NullableArray([1, 2, 3, 4, 5], [true, false, false, true, false])
+5-element NullableArray{Int64,1}:
+ #NULL
+     2
+     3
+ #NULL
+     5
  ```
  Note that the sizes of the two `Array` arguments passed to the above constructor method must be equal.
+ 
+ `NullableArray`s are designed to look and feel like regular `Array`s where possible and appropriate. Thus `display`ing a `NullableArray` object prints the values of present entries and `#NULL` designator for missing entries. It is important to note, however, that there is no such `#NULL` object, and that indexing into a `NullableArray` *always* returns a `Nullable` object, regardless of whether the entry at the specified index is missing or present:
+
+```julia
+julia> X[1]
+Nullable{Int64}()
+
+julia> X[2]
+Nullable(2)
+```
 
 One can initialize an empty `NullableArray` object by calling `NullableArray(T, dims)`, where `T` is the desired element type of the resultant `NullableArray` and `dims` is either a tuple or sequence of integer arguments designating the size of the resultant `NullableArray`:
 
 ```julia
 julia> NullableArray(Char, 3, 3)
-3x3 NullableArrays.NullableArray{Char,2}:
- Nullable{Char}()  Nullable{Char}()  Nullable{Char}()
- Nullable{Char}()  Nullable{Char}()  Nullable{Char}()
- Nullable{Char}()  Nullable{Char}()  Nullable{Char}()
- ```
-
- One can also construct a `NullableArray` from a heterogeneous `Array` that uses a token object `x` to represent a missing value. Suppose for instance that the string `"NA"` represents a missing value in `[1, "NA", 2, 3, 5, "NA"]`. One can translate this pattern into a `NullableArray` object by passing to the `NullableArray` constructor the `Array` object at hand, the desired element type of the resultant `NullableArray` and the object that represents missingness in the `Array` argument:
- ```julia
- julia> NullableArray([1, "NA", 2, 3, 5, "NA"], Int, "NA")
-6-element NullableArrays.NullableArray{Int64,1}:
- Nullable(1)      
- Nullable{Int64}()
- Nullable(2)      
- Nullable(3)      
- Nullable(5)      
- Nullable{Int64}()
+3x3 NullableArray{Char,2}:
+ #NULL  #NULL  #NULL
+ #NULL  #NULL  #NULL
+ #NULL  #NULL  #NULL
  ```
 
 Indexing
@@ -80,9 +77,9 @@ julia> A = [1:5...]
  5
 
 julia> X = NullableArray([2, 3])
-2-element NullableArrays.NullableArray{Int64,1}:
- Nullable(2)
- Nullable(3)
+2-element NullableArray{Int64,1}:
+ 2
+ 3
 
 julia> A[X]
 2-element Array{Int64,1}:
@@ -92,9 +89,9 @@ julia> A[X]
  Note, however, that attempting to index into any such `AbstractArray` with a null value will incur an error:
 ```julia
 julia> Y = NullableArray([2, 3], [true, false])
-2-element NullableArrays.NullableArray{Int64,1}:
- Nullable{Int64}()
- Nullable(3)      
+2-element NullableArray{Int64,1}:
+ #NULL
+     3      
 
 julia> A[Y]
 ERROR: NullException()
@@ -113,28 +110,28 @@ Suppose for instance that I have a method
 f(x::Float64, y::Float64) = exp(x * y)
 ```
 
-that I wish to `broadcast` over the two columns of `X::NullableArray{Float64, 2}`:
+that I wish to `map` over the two columns of `X::NullableArray{Float64, 2}`:
 ```julia
-julia> X
-10x2 NullableArrays.NullableArray{Float64,2}:
- Nullable(0.5503097221926698)   Nullable{Float64}()          
- Nullable{Float64}()            Nullable{Float64}()          
- Nullable(0.7806818430935034)   Nullable(0.4966357239169863)
- Nullable{Float64}()            Nullable(0.8819582596721911)
- Nullable(0.04244733980209592)  Nullable(0.8634601571530616)
- Nullable{Float64}()            Nullable(0.44256797964251904)
- Nullable(0.3722788311682259)   Nullable(0.26740280850120346)
- Nullable(0.4591974149414313)   Nullable{Float64}()          
- Nullable{Float64}()            Nullable{Float64}()          
- Nullable(0.2485293010638474)   Nullable(0.6661164389956584)
+julia> X = NullableArray(rand(10, 2), rand(Bool, 10, 2))
+10x2 NullableArray{Float64,2}:
+     0.0962217      0.057771 
+ #NULL              0.655217 
+ #NULL          #NULL        
+ #NULL              0.691814 
+     0.219243       0.197571 
+ #NULL              0.948356 
+ #NULL              0.601794 
+ #NULL          #NULL        
+ #NULL              0.0927559
+ #NULL          #NULL  
 ```
-As one may expect, simply calling `broadcast(f, X[:,1], X[:,2])` incurs a `MethodError`:
+As one may expect, simply calling `map(f, X[:,1], X[:,2])` incurs a `MethodError`:
 ```julia
-julia> broadcast(f, X[:,1], X[:,2])
-ERROR: MethodError: `f` has no method matching g(::Nullable{Float64}, ::Nullable{Float64})
- in _F_ at broadcast.jl:80
- in broadcast! at broadcast.jl:229
- in broadcast at broadcast.jl:236
+julia> map(f, X[:,1], X[:,2])
+ERROR: MethodError: `f` has no method matching f(::Nullable{Float64}, ::Nullable{Float64})
+ [inlined code] from /Users/David/.julia/v0.4/NullableArrays/src/map.jl:93
+ in _F_ at /Users/David/.julia/v0.4/NullableArrays/src/map.jl:124
+ in map at /Users/David/.julia/v0.4/NullableArrays/src/map.jl:172
 ```
 Let `v, w` be two `Nullable{Float64}` objects. If both `v, w` are non-null, the convention is to have `f(v, w)` return a similarly non-null `Nullable{Float64}` object whose `value` field agrees with `f(v.value, w.value)`.  If either of `v, w` is null, the convention is to return an empty `Nullable{Float64}` object, i.e. to propogate the uncertainty introduced by the null argument. Providing a systematic means of extending `f` to `Nullable` arguments in such a way that satisfies the above behavior is sometimes called *lifting* `f` over `Nullable` arguments.
 
@@ -151,20 +148,47 @@ end
 Now `broadcast` works as one would expect:
 ```julia
 julia> broadcast(f, X[:,1], X[:,2])
-10-element Array{Nullable{Float64},1}:
- Nullable{Float64}()         
- Nullable{Float64}()         
- Nullable(1.4736089974970423)
- Nullable{Float64}()         
- Nullable(1.037331537760899)
- Nullable{Float64}()         
- Nullable(1.1046719410910564)
- Nullable{Float64}()         
- Nullable{Float64}()         
- Nullable(1.1800413178724836)
+10-element NullableArray{Float64,1}:
+     1.00557
+ #NULL      
+ #NULL      
+ #NULL      
+     1.04427
+ #NULL      
+ #NULL      
+ #NULL      
+ #NULL      
+ #NULL 
 ```
 
 The convention is not to support signatures of mixed `Nullable` and non `Nullable` arguments for solely the purposes of lifting. This reflects both conceptual concerns as well practical limitations -- in particular, to cover all possible combinations of `Nullable` and non-`Nullable` arguments for a signature of length N would require 2^N method definitions. If one finds that one is calling a function `f` on both `Nullable` and non-`Nullable` arguments, it is typically best to wrap the non-`Nullable` arguments into `Nullable` arguments and invoke the lifted version. Alternatively, one can instead pass their respective `value` fields to `f` -- **HOWEVER**, this approach is both less safe and less general and should only be used if one is certain that the `Nullable` arguments are non-null.
+
+The present package also offers means of lifting a function `f` over the entries of a `NullableArray` `X` when the two are passed as arguments to methods such as `map`, `broadcast` or `mapreduce`. The former two (and their mutating variants) offer the `lift` keyword argument that will lift `f` over `X` without requiring the user to define a new method for `f`:
+
+```julia
+julia> g(x::Float64) = 2x
+g (generic function with 1 method)
+
+julia> map(g, X; lift=true)
+10x2 NullableArray{Float64,2}:
+     0.192443      0.115542
+ #NULL             1.31043 
+ #NULL         #NULL       
+ #NULL             1.38363 
+     0.438486      0.395142
+ #NULL             1.89671 
+ #NULL             1.20359 
+ #NULL         #NULL       
+ #NULL             0.185512
+ #NULL         #NULL  
+```
+
+`mapreduce` and `reduce` both offer the `skipnull` keyword argument, which directs the method to skip over the null entries of the argument `NullableArray` when reducing. Because the null entries are disregarded, setting `skipnull=true` is taken to be an implicit request to lift the supplied method `f` over `X`:
+
+```julia
+julia> mapreduce(g, +, X[:,1]; skipnull=true)
+Nullable(0.6309288649002225)
+```
 
 `NullableArray` Implementation Details
 ======================
