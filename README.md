@@ -9,10 +9,12 @@ NullableArrays.jl provides the `NullableArray{T, N}` type and its respective int
 
 `NullableArray{T, N}` is implemented as a subtype of `AbstractArray{Nullable{T}, N}` and inherits functionality from the `AbstractArray` interface.
 
-The present repository is currently in a proto-typing stage of development, and the package is not officially registered. You can still obtain the package for your own use by cloning it in the REPL with:
+NullableArrays.jl is a registered Julia package and currently (`v0.0.1`) in beta release. It is available through the `Pkg.add()` command:
+
+```julia
+julia> Pkg.add("NullableArrays")
 ```
-Pkg.clone("https://github.com/johnmyleswhite/NullableArrays.jl.git")
-```
+
 
 Missing Values
 ==============
