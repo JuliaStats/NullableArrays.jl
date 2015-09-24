@@ -140,7 +140,7 @@ for (fn, op) in ((:(Base.sum), Base.AddFun()),
                  (:(Base.minimum), Base.MinFun()),
                  (:(Base.maximum), Base.MaxFun()))
     @eval begin
-        $fn(f::Union(Function,Base.Func{1}),
+        $fn(f::Union{Function,Base.Func{1}},
             X::NullableArray;
             skipnull::Bool = false) =
                 mapreduce(f, $op, X; skipnull = skipnull)
