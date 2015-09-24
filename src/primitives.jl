@@ -321,9 +321,25 @@ function Base.convert(::Type{NullableArray},
     return NullableArray(A)
 end
 
+function Base.convert{S, T, N}(::Type{NullableArray{S}},
+                               X::NullableArray{T, N}) # -> NullableArray{S, N}
+    res = similar(X, Nullable{S}, size(X))
+    for i in eachindex(X)
+        if !isassigned(X.values, i)
+            X.isnull[i] ? nothing : error()
+        else
+            res[i] = X[i]
+        end
+    end
+    return res
+end
+
 function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
-                               A::NullableArray{T, N}) # -> NullableArray{S, N}
-    return NullableArray(convert(Array{S}, A.values), A.isnull)
+                               X::NullableArray{T, N}) # -> NullableArray{S, N}
+    res = NullableArray(convert(Array{S}, X.values), X.isnull)
+    # res2 = convert(NullableArray{S}, X)
+    # println(isequal(res, res2))
+    return res
 end
 
 @doc """
