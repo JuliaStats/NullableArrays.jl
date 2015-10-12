@@ -135,6 +135,59 @@ Returns the last entry of `X`.
 Base.endof(X::NullableArray) = endof(X.values) # -> Int
 
 @doc """
+`==(A::NullableArray, B::NullableArray)`
+`==(A::NullableArray, B::AbstractArray)`
+`==(A::AbstractArray, B::NullableArray)`
+
+Returns `Nullable(true)` if all array elements of the same rank
+are equal and none of the arrays contain missing values, `Nullable(false)`
+if two (non-missing) elements of the same rank differ, and `Nullable{Bool}()`
+otherwise.
+""" ->
+function Base.(:(==))(A::NullableArray, B::NullableArray)
+    if size(A) != size(B)
+        return Nullable(false)
+    end
+    anynull = false
+    for i in eachindex(A,B)
+        if A.isnull[i] || B.isnull[i]
+            anynull = true
+        elseif A.values[i] != B.values[i]
+            return Nullable(false)
+        end
+    end
+    if anynull
+        return Nullable{Bool}()
+    else
+        return Nullable(true)
+    end
+end
+
+function Base.(:(==))(A::NullableArray, B::AbstractArray)
+    if size(A) != size(B)
+        return Nullable(false)
+    end
+    if isa(B, Range)
+        return Nullable(false)
+    end
+    anynull = false
+    for i in eachindex(A,B)
+        if A.isnull[i]
+            anynull = true
+        elseif A.values[i] != B[i]
+            return Nullable(false)
+        end
+    end
+    if anynull
+        return Nullable{Bool}()
+    else
+        return Nullable(true)
+    end
+end
+
+Base.(:(==))(A::AbstractArray, B::NullableArray) = B == A
+
+@doc """
 
 """ ->
 function Base.find(X::NullableArray{Bool}) # -> Array{Int}
