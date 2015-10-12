@@ -46,6 +46,9 @@ module TestOperators
         x = op(Nullable(v), Nullable(w))
         @test_approx_eq x.value op(v, w)
         @test !x.isnull
+        y = op(Nullable(v), w)
+        @test_approx_eq y.value op(v, w)
+        @test !y.isnull
         @test_throws ErrorException op(Nullable(rand(1)), Nullable(rand(1)))
     end
 
@@ -58,6 +61,9 @@ module TestOperators
         x = op(Nullable(v), Nullable(w))
         @test_approx_eq x.value op(v, w)
         @test !x.isnull
+        y = op(Nullable(v), w)
+        @test_approx_eq y.value op(v, w)
+        @test !y.isnull
         @test_throws ErrorException op(Nullable(rand(Bool, 1)), Nullable(rand(Bool, 1)))
     end
 
@@ -70,6 +76,9 @@ module TestOperators
         x = op(Nullable(v), Nullable(w))
         @test_approx_eq x.value op(v, w)
         @test !x.isnull
+        y = op(Nullable(v), w)
+        @test_approx_eq y.value op(v, w)
+        @test !y.isnull
         @test_throws ErrorException op(Nullable(rand(Int, 1)), Nullable(rand(Int, 1)))
     end
 end
