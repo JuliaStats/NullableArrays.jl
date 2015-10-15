@@ -17,6 +17,8 @@ for typ in (Float64, Int, UInt, Char)
         show(io, Y1)
         display(disp, X1)
         display(disp, Y1)
+        typeof(X1)
+        typeof(Y1)
     end
 
     for m in (10, 100), n in (10, 100)
@@ -29,6 +31,8 @@ for typ in (Float64, Int, UInt, Char)
         show(io, Y2)
         display(disp, X2)
         display(disp, Y2)
+        typeof(X2)
+        typeof(Y2)
     end
 
     nd = rand(3:5)
@@ -42,6 +46,8 @@ for typ in (Float64, Int, UInt, Char)
     show(io, Y3)
     display(disp, X3)
     display(disp, Y3)
+    typeof(X3)
+    typeof(Y3)
 end
 
 end # module TestShow
