@@ -1,14 +1,6 @@
 using Base: tty_size, alignment, print_matrix_row, strwidth, showcompact_lim,
             undef_ref_alignment, undef_ref_str
 
-type2string{T, N}(::Type{NullableArray{T, N}}) = "NullableArray{$T,$N}"
-type2string{T}(::Type{NullableArray{T}}) = "NullableArray{$T,N}"
-type2string(::Type{NullableArray}) = "NullableArray{T,N}"
-Base.show{T<:NullableArray}(io::IO, ::Type{T}) = print(io, type2string(T))
-function Base.summary(X::NullableArray)
-    string(Base.dims2string(size(X)), " ", type2string(typeof(X)))
-end
-
 abstract NULL
 
 Base.showcompact(io::IO, ::Type{NULL}) = show(io, NULL)
