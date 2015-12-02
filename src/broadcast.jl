@@ -42,10 +42,9 @@ function gen_broadcast_body(nd::Int, narrays::Int, f, lift::Bool)
     end
 end
 
-function gen_broadcast_function(nd::Int, narrays::Int, f::Function, lift::Bool)
+function gen_broadcast_function(nd::Int, narrays::Int, f, lift::Bool)
     As = [symbol("A_"*string(i)) for i = 1:narrays]
     body = gen_broadcast_body(nd, narrays, f, lift)
-    # println(macroexpand( body ))
     @eval let
         local _F_
         function _F_(B, $(As...))
