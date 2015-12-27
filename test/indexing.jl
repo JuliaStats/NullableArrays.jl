@@ -88,7 +88,11 @@ module TestIndexing
     Z_values = reshape(collect(1:125), (5,5,5))
     Z = NullableArray(Z_values)
 
-    @test isequal(Z[1, 1:4, 1], NullableArray{Int, 2}([1 6 11 16]))
+    if VERSION > v"0.5.0-dev+1195" # PR #13612 in JuliaLang
+        @test isequal(Z[1, 1:4, 1], NullableArray([1, 6, 11, 16]))
+    else
+        @test isequal(Z[1, 1:4, 1], NullableArray([1 6 11 16]))
+    end
 
     # getindex with AbstractVector{Bool}
     b = bitrand(10, 10)
