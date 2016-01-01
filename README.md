@@ -16,6 +16,8 @@ NullableArrays.jl is a registered Julia package and currently (`v0.0.1`) in beta
 julia> Pkg.add("NullableArrays")
 ```
 
+As of 01/01/2016, [David Gold](https://github.com/davidagold) is the lead maintainer of this package.
+
 
 Missing Values
 ==============
