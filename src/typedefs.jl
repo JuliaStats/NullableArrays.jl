@@ -1,22 +1,10 @@
-# === Design Notes ===
-#
-# `NullableArray{T, N}` is a struct-of-arrays representation of
-# `Array{Nullable{T}, N}`. This makes it easy to define complicated operations
-# (e.g. matrix multiplication) by reusing the existing definition for
-# `Array{T}`.
-#
-# One complication when defining functions that operate on the internal fields
-# of a `NullableArray` is that developers must take care to ensure that they
-# do not index into an undefined entry in the `values` field. This is not a
-# problem for `isbits` types, which are never `#undef`, but will trigger
-# an exception for any other type.
-#
-# TODO: Ensure that size(values) == size(isnull) using inner constructor.
-# TODO: Implement outer constructor required once we add an inner constructor.
 @doc """
 `NullableArray{T, N}` is an efficient alternative to `Array{Nullable{T}, N}`.
-It allows users to easily define operations on arrays with null values by
-reusing operations that only work on arrays without any null values.
+It allows users to define operations on arrays with null values by reusing
+operations that only work on arrays without any null values. We refer to
+such reuse as "lifting" an operation from the domain of non-nullable values
+to the domain of nullable values. Examples include lifting the definition of
+matrix multiplication from non-nullable arrays to nullable arrays.
 """ ->
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     values::Array{T, N}
@@ -31,5 +19,12 @@ immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     end
 end
 
+@doc """
+`NullableVector{T}` is an alias for `NullableArray{T, 1}`
+""" ->
 typealias NullableVector{T} NullableArray{T, 1}
+
+@doc """
+`NullableMatrix{T}` is an alias for `NullableArray{T, 2}`
+""" ->
 typealias NullableMatrix{T} NullableArray{T, 2}
