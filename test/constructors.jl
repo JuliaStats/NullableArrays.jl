@@ -65,5 +65,16 @@ module TestConstructors
     @test isequal(NullableArray{Bool, 2}(),
                   NullableArray{Bool, 2}(Array(Bool, 0, 0)))
 
-
+    # test conversion from arrays of nullables
+    array_of_nulls = Nullable{Int}[Nullable(1), Nullable(2), Nullable(3), Nullable()]
+    @test isa(NullableArray(array_of_nulls), NullableArray{Int,1})
+    @test isequal(NullableArray(array_of_nulls), NullableArray{Int,1}([1,2,3,4],[false,false,false,true]))
+    @test isa(NullableArray{Int64}(array_of_nulls), NullableArray{Int,1})
+    @test isequal(NullableArray{Int64}(array_of_nulls), NullableArray{Int,1}([1,2,3,4],[false,false,false,true]))
+    @test isa(NullableArray{Float64}(array_of_nulls), NullableArray{Float64,1})
+    @test isequal(NullableArray{Float64}(array_of_nulls), NullableArray{Float64,1}([1.0,2.0,3.0,4.0],[false,false,false,true]))
+    @test isa(NullableArray{Int64,1}(array_of_nulls), NullableArray{Int,1})
+    @test isequal(NullableArray{Int64,1}(array_of_nulls), NullableArray{Int,1}([1,2,3,4],[false,false,false,true]))
+    @test isa(NullableArray{Float64,1}(array_of_nulls), NullableArray{Float64,1})
+    @test isequal(NullableArray{Float64,1}(array_of_nulls), NullableArray{Float64,1}([1.0,2.0,3.0,4.0],[false,false,false,true]))
 end

@@ -102,3 +102,24 @@ end
 # TODO: add support for dimensions arguments?
 @compat (::Type{NullableArray{T, N}}){T, N}() = NullableArray(T, ntuple(i->0, N))
 
+
+#----- Conversion from Array of Nullables #1 -----------------------------------#
+# Take an Array of Nullable objects and convert it into a NullableArray
+function Base.convert{S,T,N}(::Type{NullableArray{S,N}},in::Array{Nullable{T},N})
+   out = NullableArray{S,N}(Array(S,size(in)),Array(Bool,size(in)))
+   for i = 1:length(in)
+       (out.isnull[i] = in[i].isnull) ? nothing : out.values[i] = in[i].value
+   end
+   out
+end
+
+#----- Conversion from Array of Nullables #2 -----------------------------------#
+# Take an Array of Nullable objects and convert it into a NullableArray
+# A slightly more convenient syntax to match the type of the input
+Base.convert{S,T,N}(::Type{NullableArray{S}},in::Array{Nullable{T},N}) = Base.convert(NullableArray{S,N},in)
+
+#----- Constructor #8 -----------------------------------#
+# Take an Array of Nullable objects and convert it into a NullableArray
+# The constructor needs defining as it is a more specialized version of the
+# above, and thus will not fall back to convert.
+NullableArray{T,N}(in::Array{Nullable{T},N}) = Base.convert(NullableArray{T,N},in)
