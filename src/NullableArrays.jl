@@ -1,5 +1,6 @@
 module NullableArrays
 
+    using Compat
     using Reexport
     @reexport using Base.Cartesian
 
