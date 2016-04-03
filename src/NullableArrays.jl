@@ -1,34 +1,35 @@
 module NullableArrays
 
-    using Compat
-    using Reexport
-    @reexport using Base.Cartesian
+using Compat
+using Reexport
+@reexport using Base.Cartesian
 
-    export NullableArray,
-           NullableVector,
-           NullableMatrix,
+export NullableArray,
+       NullableVector,
+       NullableMatrix,
 
-           # Macros
+       # Macros
 
-           # Methods
-           dropnull,
-           anynull,
-           allnull,
-           head,
-           nullify!,
-           padnull!,
-           padnull,
-           tail
+       # Methods
+       dropnull,
+       anynull,
+       allnull,
+       head,
+       nullify!,
+       padnull!,
+       padnull,
+       tail
 
-    include("typedefs.jl")
-    include("constructors.jl")
-    include("primitives.jl")
-    include("indexing.jl")
-    include("map.jl")
-    include("nullablevector.jl")
-    include("operators.jl")
-    include("broadcast.jl")
-    include("reduce.jl")
-    include("show.jl")
-    include("subarray.jl")
+include("typedefs.jl")
+include("constructors.jl")
+include("primitives.jl")
+include("indexing.jl")
+include("map.jl")
+include("nullablevector.jl")
+include("operators.jl")
+include("broadcast.jl")
+include("reduce.jl")
+include("show.jl")
+include("subarray.jl")
+
 end
