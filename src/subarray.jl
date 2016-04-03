@@ -1,3 +1,6 @@
+if VERSION >= v"0.5.0-dev+2718"
+    include("subarray0_5.jl")
+else
 const unsafe_getindex = Base.unsafe_getindex
 
 @generated function Base.isnull{T,N,P<:NullableArray,IV,LD}(V::SubArray{T,N,P,IV,LD}, I::Int...)
@@ -32,6 +35,7 @@ end
         $exhead
         Base.getindex(V.parent.values, $(idxs...))
     end
+end
 end
 
 @generated function anynull{T, N, U<:NullableArray}(S::SubArray{T, N, U})
