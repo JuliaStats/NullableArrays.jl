@@ -100,6 +100,5 @@ end
 # The following method allows for the construction of zero-element
 # NullableArrays by calling the parametrized type on zero arguments.
 # TODO: add support for dimensions arguments?
-function Base.call{T, N}(::Type{NullableArray{T, N}})
-    NullableArray(T, ntuple(i->0, N))
-end
+@compat (::Type{NullableArray{T, N}}){T, N}() = NullableArray(T, ntuple(i->0, N))
+
