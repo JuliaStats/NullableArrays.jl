@@ -1,5 +1,6 @@
 using NullableArrays
 using DataArrays
+import Compat: @functorize
 
 srand(1)
 A = rand(5_000_000)
@@ -226,68 +227,68 @@ end
 function profile_skip(skip::Bool)
     println("Comparison of skipnull/skipNA methods")
     println()
-    println("f := IdFun(), op := AddFun()")
+    println("f := identity, op := +")
     println("mapreduce(f, op, X; skipnull/skipNA=$skip) (0 missing entries)")
 
-    mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=skip)
+    mapreduce(@functorize(identity), @functorize(+), X, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(mapreduce(Base.IdFun(), Base.AddFun(), X, skipnull=skip))
+    @time(mapreduce(@functorize(identity), @functorize(+), X, skipnull=skip))
 
-    mapreduce(Base.IdFun(), Base.AddFun(), D, skipna=skip)
+    mapreduce(@functorize(identity), @functorize(+), D, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(mapreduce(Base.IdFun(), Base.AddFun(), D, skipna=skip))
+    @time(mapreduce(@functorize(identity), @functorize(+), D, skipna=skip))
 
     println()
     println("reduce(op, X; skipnull/skipNA=$skip) (0 missing entries)")
-    reduce(Base.AddFun(), X, skipnull=skip)
+    reduce(@functorize(+), X, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(reduce(Base.AddFun(), X, skipnull=skip))
+    @time(reduce(@functorize(+), X, skipnull=skip))
 
-    reduce(Base.AddFun(), D, skipna=skip)
+    reduce(@functorize(+), D, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(reduce(Base.AddFun(), D, skipna=skip))
+    @time(reduce(@functorize(+), D, skipna=skip))
 
     println()
     println("mapreduce(f, op, X; skipnull/skipNA=$skip) (~half missing entries)")
-    mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=skip)
+    mapreduce(@functorize(identity), @functorize(+), Y, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(mapreduce(Base.IdFun(), Base.AddFun(), Y, skipnull=skip))
+    @time(mapreduce(@functorize(identity), @functorize(+), Y, skipnull=skip))
 
-    mapreduce(Base.IdFun(), Base.AddFun(), E, skipna=skip)
+    mapreduce(@functorize(identity), @functorize(+), E, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(mapreduce(Base.IdFun(), Base.AddFun(), E, skipna=skip))
+    @time(mapreduce(@functorize(identity), @functorize(+), E, skipna=skip))
 
     println()
     println("reduce(op, X; skipnull/skipNA=$skip) (~half missing entries)")
-    reduce(Base.AddFun(), Y, skipnull=skip)
+    reduce(@functorize(+), Y, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(reduce(Base.AddFun(), Y, skipnull=skip))
+    @time(reduce(@functorize(+), Y, skipnull=skip))
 
-    reduce(Base.AddFun(), E, skipna=true)
+    reduce(@functorize(+), E, skipna=true)
     print("  for DataArray{Float64}:      ")
-    @time(reduce(Base.AddFun(), E, skipna=true))
+    @time(reduce(@functorize(+), E, skipna=true))
     nothing
 end
 
 function profile_skip_impl()
     println("Comparison of internal skip methods:")
     println("mapreduce_impl_skipnull(f, op, X) (0 missing entries)")
-    NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X)
+    NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), X)
     print("  for NullableArray{Float64}:  ")
-    @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), X))
+    @time(NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), X))
 
-    DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D)
+    DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), D)
     print("  for DataArray{Float64}:      ")
-    @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), D))
+    @time(DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), D))
 
     println()
     println("mapreduce_impl_skipnull(f, op, X) (~half missing entries)")
-    NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y)
+    NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), Y)
     print("  for NullableArray{Float64}:  ")
-    @time(NullableArrays.mapreduce_impl_skipnull(Base.IdFun(), Base.AddFun(), Y))
+    @time(NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), Y))
 
-    DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E)
+    DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), E)
     print("  for DataArray{Float64}:      ")
-    @time(DataArrays.mapreduce_impl_skipna(Base.IdFun(), Base.AddFun(), E))
+    @time(DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), E))
     nothing
 end
