@@ -1,3 +1,4 @@
+import Compat: @functorize
 
 @noinline throw_error() = error()
 
@@ -104,14 +105,14 @@ end
 
 ## Lifted functors
 
-@compat function (::Base.MinFun){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
+@compat function (::typeof(@functorize(scalarmin))){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
     if isbits(S1) & isbits(S2)
         return Nullable(Base.scalarmin(x.value, y.value), x.isnull | y.isnull)
     else
         error()
     end
 end
-@compat function (::Base.MaxFun){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
+@compat function (::typeof(@functorize(scalarmax))){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
     if isbits(S1) & isbits(S2)
         return Nullable(Base.scalarmax(x.value, y.value), x.isnull | y.isnull)
     else
