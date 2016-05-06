@@ -1,20 +1,4 @@
 @doc """
-`head(X::NullableArray)`
-
-Returns the first six elements of `X` as a `NullableArray`. If `X` contains
-fewer than six elements, then this method returns `X`.
-""" ->
-head(X::NullableArray) = X[1:min(6, length(X))]
-
-@doc """
-`tail(X::NullableArray)`
-
-Returns the last six elements of `X` as a `NullableArray`. If `X` contains
-fewer than six elements, then this method returns `X`.
-""" ->
-tail(X::NullableArray) = X[max(1, length(X) - 5):length(X)]
-
-@doc """
 `push!{T, V}(X::NullableVector{T}, v::V)`
 
 Insert `v` at the end of `X`, which registers `v` as a present value.

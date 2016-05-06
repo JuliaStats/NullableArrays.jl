@@ -8,10 +8,6 @@ module TestNullableVector
     X = NullableArray(A)
     Y = NullableArray(B)
 
-    #--- head/tail
-    @test isequal(head(X), NullableArray([1:6...]))
-    @test isequal(tail(X), NullableArray([5:10...]))
-
     #--- Base.push!
 
     # Base.push!{T, V}(X::NullableVector{T}, v::V)
