@@ -306,26 +306,6 @@ function Base.convert{T, N}(::Type{Array},
     return convert(Array{T, N}, X, replacement)
 end
 
-function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
-                               A::AbstractArray{T, N}) # -> NullableArray{S, N}
-    return NullableArray(convert(Array{S, N}, A))
-end
-
-function Base.convert{S, T, N}(::Type{NullableArray{S}},
-                             A::AbstractArray{T, N}) # -> NullableArray{S, N}
-    return NullableArray(convert(Array{S, N}, A))
-end
-
-function Base.convert(::Type{NullableArray},
-                            A::AbstractArray) # -> NullableArray
-    return NullableArray(A)
-end
-
-function Base.convert{S, T, N}(::Type{NullableArray{S, N}},
-                               A::NullableArray{T, N}) # -> NullableArray{S, N}
-    return NullableArray(convert(Array{S}, A.values), A.isnull)
-end
-
 @doc """
 `float(X::NullableArray)`
 

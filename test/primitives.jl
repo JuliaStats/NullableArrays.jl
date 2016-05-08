@@ -272,14 +272,6 @@ module TestPrimitives
     Z = NullableArray([1 2; 3 4; 5 6; 7 8; 9 nothing], Int, Void)
     @test_throws NullException convert(Matrix, Z)
 
-    # Base.convert{S, T, N}(::Type{NullableArray{S, N}},
-    #                       A::NullableArray{T, N})
-    nd = rand(1:4)
-    _size = [ rand(1:20) for i in 1:nd ]
-    A = rand(Int, _size...)
-    @test isequal(convert(NullableArray{Float64, nd}, A),
-                  NullableArray(float(A)))
-
     # float(X::NullableArray)
     A = rand(Int, 20)
     M = rand(Bool, 20)
