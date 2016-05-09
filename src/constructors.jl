@@ -1,23 +1,14 @@
 
 # ----- Outer Constructors -------------------------------------------------- #
 
-# ----- Constructor #1
 # The following provides an outer constructor whose argument signature matches
-# that of the inner constructor provided in 01_typedefs.jl.
+# that of the inner constructor provided in typedefs.jl: constructs a NullableArray
+# from an Array of values and an Array{Bool} mask.
 function NullableArray{T, N}(A::AbstractArray{T, N},
                              m::Array{Bool, N}) # -> NullableArray{T, N}
     return NullableArray{T, N}(A, m)
 end
 
-# ----- Constructor #2 -------------------------------------------------------#
-# Constructs a NullableArray from an Array 'a' of values and an optional
-# Array{Bool, N} mask. If omitted, the mask will default to an array of
-# 'false's the size of 'a'.
-function NullableArray{T, N}(A::AbstractArray{T, N}) # -> NullableArray{T, N}
-    return NullableArray{T, N}(A, fill(false, size(A)))
-end
-
-# ----- Constructor #3 -------------------------------------------------------#
 # TODO: Uncomment this doc entry when Base Julia can parse it correctly.
 # @doc """
 # Allow users to construct a quasi-uninitialized `NullableArray` object by
@@ -34,7 +25,6 @@ function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
     return NullableArray(Array(T, dims), fill(true, dims))
 end
 
-# ----- Constructor #4 -------------------------------------------------------#
 # Constructs an empty NullableArray of type parameter T and number of dimensions
 # equal to the number of arguments given in 'dims...', where the latter are
 # dimension lengths.
@@ -42,7 +32,6 @@ function NullableArray(T::Type, dims::Int...) # -> NullableArray
     return NullableArray(T, dims)
 end
 
-# ----- Constructor #5 -------------------------------------------------------#
 # The following method constructs a NullableArray from an Array{Any} argument
 # 'A' that contains some placeholder of type 'T' for null values.
 #
@@ -72,7 +61,6 @@ function NullableArray{T, U}(A::AbstractArray,
     return res
 end
 
-# ----- Constructor #6 -------------------------------------------------------#
 # The following method constructs a NullableArray from an Array{Any} argument
 # `A` that contains some placeholder value `na` for null values.
 #
@@ -95,31 +83,55 @@ function NullableArray{T}(A::AbstractArray,
     return res
 end
 
-#----- Constructor #7 --------------------------------------------------------#
 # The following method allows for the construction of zero-element
 # NullableArrays by calling the parametrized type on zero arguments.
 # TODO: add support for dimensions arguments?
 @compat (::Type{NullableArray{T, N}}){T, N}() = NullableArray(T, ntuple(i->0, N))
 
-#----- Conversion from Array of Nullables #1 -----------------------------------#
-# Take an Array of Nullable objects and convert it into a NullableArray
-function Base.convert{S, T, N}(::Type{NullableArray{S, N}}, in::AbstractArray{Nullable{T}, N})
-   out = NullableArray{S, N}(Array(S, size(in)), Array(Bool, size(in)))
-   for i = 1:length(in)
-       if !(out.isnull[i] = isnull(in[i]))
-           out.values[i] = in[i].value
+
+# ----- Conversion to NullableArrays ---------------------------------------- #
+# Also provides constructors from arrays via the fallback mechanism.
+
+#----- Conversion from arrays (of non-Nullables) -----------------------------#
+function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
+                               A::AbstractArray{S, N}) # -> NullableArray{T, N}
+    NullableArray{T, N}(convert(Array{T, N}, A), fill(false, size(A)))
+end
+
+function Base.convert{S, T, N}(::Type{NullableArray{T}},
+                               A::AbstractArray{S, N}) # -> NullableArray{T, N}
+    convert(NullableArray{T, N}, A)
+end
+
+function Base.convert{T, N}(::Type{NullableArray},
+                            A::AbstractArray{T, N}) # -> NullableArray{T, N}
+    convert(NullableArray{T, N}, A)
+end
+
+#----- Conversion from arrays of Nullables -----------------------------------#
+function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
+                               A::AbstractArray{Nullable{S}, N}) # -> NullableArray{T, N}
+   out = NullableArray{T, N}(Array(T, size(A)), Array(Bool, size(A)))
+   for i = 1:length(A)
+       if !(out.isnull[i] = isnull(A[i]))
+           out.values[i] = A[i].value
        end
    end
    out
 end
 
-#----- Conversion from Array of Nullables #2 -----------------------------------#
-# Take an Array of Nullable objects and convert it into a NullableArray
-# A slightly more convenient syntax to match the type of the input
-Base.convert{S, T, N}(::Type{NullableArray{S}}, in::AbstractArray{Nullable{T}, N}) = Base.convert(NullableArray{S, N}, in)
+#----- Conversion from NullableArrays of a different type --------------------#
+function Base.convert{S, T, N}(::Type{NullableArray{T}},
+                               A::AbstractArray{Nullable{S}, N}) # -> NullableArray{T, N}
+    convert(NullableArray{T, N}, A)
+end
 
-#----- Constructor #8 -----------------------------------#
-# Take an Array of Nullable objects and convert it into a NullableArray
-# The constructor needs defining as it is a more specialized version of the
-# above, and thus will not fall back to convert.
-NullableArray{T, N}(in::Array{Nullable{T}, N}) = Base.convert(NullableArray{T, N}, in)
+function Base.convert{T, N}(::Type{NullableArray},
+                            A::AbstractArray{Nullable{T}, N}) # -> NullableArray{T, N}
+    convert(NullableArray{T, N}, A)
+end
+
+function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
+                               A::NullableArray{S, N}) # -> NullableArray{T, N}
+    NullableArray(convert(Array{T, N}, A.values), A.isnull)
+end
