@@ -14,11 +14,9 @@ export NullableArray,
        dropnull,
        anynull,
        allnull,
-       head,
        nullify!,
        padnull!,
-       padnull,
-       tail
+       padnull
 
 include("typedefs.jl")
 include("constructors.jl")
