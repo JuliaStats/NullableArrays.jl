@@ -16,14 +16,9 @@ Allocate an uninitialized `NullableArray` of element type `T` and with
 size `dims`. If unspecified, `T` and `dims` default to the element type and size
 equal to that of `X`.
 """ ->
-function Base.similar{T<:Nullable}(X::NullableArray, ::Type{T}, dims::Dims)
-    NullableArray(eltype(T), dims)
+function Base.similar{T}(X::NullableArray, ::Type{T}, dims::Dims)
+    T<:Nullable ? NullableArray(eltype(T), dims) : NullableArray(T, dims)
 end
-
-# @doc """
-#
-# """ ->
-Base.similar(X::NullableArray, T, dims::Dims) = NullableArray(T, dims)
 
 @doc """
 `copy(X::NullableArray)`
