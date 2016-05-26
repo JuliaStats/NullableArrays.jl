@@ -55,7 +55,7 @@ function Base.unshift!(X::NullableVector, v::Nullable) # -> NullableVector{T}
 end
 
 @doc """
-`unshift!(X::NullableVector, v::Nullable)`
+`unshift!(X::NullableVector, v)`
 
 Insert a value `v` at the beginning of `X` and return `X`.
 """ ->
@@ -71,7 +71,10 @@ end
 Insert multiple values `vs` at the beginning of `X` and return `X`.
 """ ->
 function Base.unshift!(X::NullableVector, vs...)
-    return unshift!(unshift!(X, last(vs)), vs[1:endof(vs)-1]...)
+    for i in endof(vs):-1:1
+        unshift!(X, vs[i])
+    end
+    return X
 end
 
 @doc """
