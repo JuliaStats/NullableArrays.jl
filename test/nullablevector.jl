@@ -21,6 +21,10 @@ module TestNullableVector
     push!(Z, Nullable(5))
     @test isequal(Z, NullableArray([5, 1, 5], [false, true, false]))
 
+    ZZ = NullableVector{Int}()
+    push!(ZZ, 5, Nullable(), Nullable(5))
+    @test isequal(ZZ, Z)
+
     #--- Base.pop!
 
     # Base.pop!(X::NullableArray)
@@ -42,7 +46,6 @@ module TestNullableVector
                   )
           )
 
-    # Base.unshift!(X::NullableVector, vs...)
     @test isequal(unshift!(Y, 1, Nullable(), Nullable(3)),
                   NullableArray([1, 2, 3, 1, 2, 3, 4, 5],
                                 [false, true, false, false,
@@ -152,8 +155,20 @@ module TestNullableVector
                   NullableArray([2:12...]))
     @test isequal(append!(X, [Nullable(13), Nullable(14)]),
                   NullableArray([2:14...]))
-    @test isequal(append!(X, [Nullable(15), Nullable()]),
+    @test isequal(append!(X, [Nullable(15), Nullable{Int64}()]),
                   NullableArray([2:16...], vcat(fill(false, 14), true)))
+
+    #--- test Base.prepend!
+
+    # Base.prepend!(X::NullableVector, items::AbstractVector)
+
+    XX = NullableArray([3:12...])
+    @test isequal(prepend!(XX, [1, 2]),
+                  NullableArray([1:12...]))
+    @test isequal(prepend!(XX, [Nullable(-1), Nullable(0)]),
+                  NullableArray([-1:12...]))
+    @test isequal(prepend!(XX, [Nullable{Int64}(), Nullable(-2)]),
+                  NullableArray([-3:12...], vcat(true, fill(false, 15))))
 
     #--- test Base.sizehint!
 
