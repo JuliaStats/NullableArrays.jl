@@ -66,18 +66,6 @@ function Base.unshift!(X::NullableVector, v) # -> NullableVector{T}
 end
 
 @doc """
-`unshift!(X::NullableVector, vs...)`
-
-Insert multiple values `vs` at the beginning of `X` and return `X`.
-""" ->
-function Base.unshift!(X::NullableVector, vs...)
-    for i in endof(vs):-1:1
-        unshift!(X, vs[i])
-    end
-    return X
-end
-
-@doc """
 `shift!{T}(X::NullableVector{T})`
 
 Remove the first entry from `X` and return it as a `Nullable` object.
@@ -197,8 +185,28 @@ collection to `append!`.
 function Base.append!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
+    items_copy = convert(typeof(X), items)
     resize!(X, old_length + nitems)
-    X[old_length + 1:end] = items[1:nitems]
+    X[old_length+1:end] = items_copy
+    return X
+end
+
+@doc """
+`prepend!(X::NullableVector, items::AbstractVector)`
+
+Add the elements of `items` to the beginning of `X`.
+
+Note that `prepend!(X, [1, 2, 3])` is equivalent to `unshift!(X, 1, 2, 3)`,
+where the items to be added to `X` are passed individually to `unshift!` and as a
+collection to `prepend!`.
+""" ->
+function Base.prepend!(X::NullableVector, items::AbstractVector)
+    old_length = length(X)
+    nitems = length(items)
+    items_copy = convert(typeof(X), items)
+    ccall(:jl_array_grow_beg, Void, (Any, UInt), X.values, nitems)
+    ccall(:jl_array_grow_beg, Void, (Any, UInt), X.isnull, nitems)
+    X[1:nitems] = items_copy
     return X
 end
 
@@ -220,7 +228,7 @@ Insert `front` null entries at the beginning of `X` and add `back` null entries
 at the end of `X`. Returns `X`.
 """ ->
 function padnull!{T}(X::NullableVector{T}, front::Integer, back::Integer)
-    unshift!(X, fill(Nullable{T}(), front)...)
+    prepend!(X, fill(Nullable{T}(), front))
     append!(X, fill(Nullable{T}(), back))
     return X
 end
