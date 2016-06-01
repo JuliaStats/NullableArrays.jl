@@ -162,12 +162,12 @@ module TestNullableVector
 
     # Base.prepend!(X::NullableVector, items::AbstractVector)
 
-    XX = NullableArray([3:12...])
-    @test isequal(prepend!(XX, [1, 2]),
+    X = NullableArray([3:12...])
+    @test isequal(prepend!(X, [1, 2]),
                   NullableArray([1:12...]))
-    @test isequal(prepend!(XX, [Nullable(-1), Nullable(0)]),
+    @test isequal(prepend!(X, [Nullable(-1), Nullable(0)]),
                   NullableArray([-1:12...]))
-    @test isequal(prepend!(XX, [Nullable{Int64}(), Nullable(-2)]),
+    @test isequal(prepend!(X, [Nullable{Int64}(), Nullable(-2)]),
                   NullableArray([-3:12...], vcat(true, fill(false, 15))))
 
     #--- test Base.sizehint!
