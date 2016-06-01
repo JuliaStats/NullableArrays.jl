@@ -185,9 +185,8 @@ collection to `append!`.
 function Base.append!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
-    items_copy = convert(typeof(X), items)
     resize!(X, old_length + nitems)
-    X[old_length+1:end] = items_copy
+    copy!(X, length(X)-nitems+1, items, 1, nitems)
     return X
 end
 
@@ -203,10 +202,13 @@ collection to `prepend!`.
 function Base.prepend!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
-    items_copy = convert(typeof(X), items)
     ccall(:jl_array_grow_beg, Void, (Any, UInt), X.values, nitems)
     ccall(:jl_array_grow_beg, Void, (Any, UInt), X.isnull, nitems)
-    X[1:nitems] = items_copy
+    if X === items
+        copy!(X, 1, items, nitems+1, nitems)
+    else
+        copy!(X, 1, items, 1, nitems)
+    end
     return X
 end
 
