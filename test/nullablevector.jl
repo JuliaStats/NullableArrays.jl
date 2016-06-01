@@ -156,7 +156,7 @@ module TestNullableVector
     @test isequal(append!(X, [Nullable(13), Nullable(14)]),
                   NullableArray([2:14...]))
     @test isequal(append!(X, [Nullable(15), Nullable{Int64}()]),
-                  NullableArray([2:16...], vcat(fill(false, 14), true)))
+                  NullableArray(Nullable{Int}[-2:12..., Nullable()]))
 
     #--- test Base.prepend!
 
@@ -168,7 +168,7 @@ module TestNullableVector
     @test isequal(prepend!(X, [Nullable(-1), Nullable(0)]),
                   NullableArray([-1:12...]))
     @test isequal(prepend!(X, [Nullable{Int64}(), Nullable(-2)]),
-                  NullableArray([-3:12...], vcat(true, fill(false, 15))))
+                  NullableArray(Nullable{Int}[Nullable(), -2:12...]))
 
     #--- test Base.sizehint!
 
