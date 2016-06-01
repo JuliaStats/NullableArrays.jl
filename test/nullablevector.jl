@@ -156,7 +156,7 @@ module TestNullableVector
     @test isequal(append!(X, [Nullable(13), Nullable(14)]),
                   NullableArray(2:14))
     @test isequal(append!(X, [Nullable(15), Nullable{Int}()]),
-                  NullableArray(Nullable{Int}[-2:12..., Nullable()]))
+                  NullableArray(Nullable{Int}[2:15..., Nullable()]))
 
     #--- test Base.prepend!
 
