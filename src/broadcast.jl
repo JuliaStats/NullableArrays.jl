@@ -104,12 +104,12 @@ end
 
 # broadcasted ops
 for (op, scalar_op) in (
-    (:(Base.:(.==)), :(==)),
-    (:(Base.:.!=), :!=),
-    (:(Base.:.<), :<),
-    (:(Base.:.>), :>),
-    (:(Base.:.<=), :<=),
-    (:(Base.:.>=), :>=)
+    (:(@compat Base.:(.==)), :(==)),
+    (:(@compat Base.:.!=), :!=),
+    (:(@compat Base.:.<), :<),
+    (:(@compat Base.:.>), :>),
+    (:(@compat Base.:.<=), :<=),
+    (:(@compat Base.:.>=), :>=)
 )
     @eval begin
         ($op)(X::NullableArray, Y::NullableArray) = broadcast($scalar_op, X, Y)
