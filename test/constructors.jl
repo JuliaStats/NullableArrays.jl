@@ -1,5 +1,5 @@
 module TestConstructors
-    using Base.Test, Compat
+    using Base.Test
     using NullableArrays
 
     # test Inner Constructor
