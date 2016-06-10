@@ -1,7 +1,7 @@
 using Base.Cartesian
 
 function gen_nullcheck(narrays::Int)
-    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    As = [Symbol("A_"*string(i)) for i = 1:narrays]
     e_nullcheck = :($(As[1]).isnull[i])
     for i = 2:narrays
         e_nullcheck = Expr(:||, e_nullcheck, :($(As[i]).isnull[i]))
@@ -99,7 +99,7 @@ function gen_map_body{F}(_map_to!::Symbol, narrays::Int, f::F)
 end
 
 function gen_map!_function{F}(narrays::Int, lift::Bool, f::F)
-    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    As = [Symbol("A_"*string(i)) for i = 1:narrays]
     body = gen_map!_body(narrays, lift, f)
     @eval let
         local _F_
@@ -111,7 +111,7 @@ function gen_map!_function{F}(narrays::Int, lift::Bool, f::F)
 end
 
 function gen_map_function{F}(_map_to!::Symbol, narrays::Int, f::F)
-    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    As = [Symbol("A_"*string(i)) for i = 1:narrays]
     body_map_to! = gen_map_to!_body(_map_to!, narrays, f)
     body_map = gen_map_body(_map_to!, narrays, f)
 

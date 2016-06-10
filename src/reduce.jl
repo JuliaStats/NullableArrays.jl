@@ -55,11 +55,14 @@ function mapreduce_pairwise_impl_skipnull{T}(f, op, X::NullableArray{T},
     end
 end
 
+# from comment: https://github.com/JuliaLang/julia/pull/16217#issuecomment-223768129
+sum_pairwise_blocksize(T) = Base.pairwise_blocksize(T, +)
+
 mapreduce_impl_skipnull{T}(f, op, X::NullableArray{T}) =
     mapreduce_seq_impl_skipnull(f, op, X, 1, length(X.values))
 mapreduce_impl_skipnull(f, op::typeof(@functorize(+)), X::NullableArray) =
     mapreduce_pairwise_impl_skipnull(f, op, X, 1, length(X.values),
-                                   max(128, Base.sum_pairwise_blocksize(f)))
+                                   max(128, sum_pairwise_blocksize(f)))
 
 # general mapreduce interface
 

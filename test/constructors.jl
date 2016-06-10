@@ -1,5 +1,5 @@
 module TestConstructors
-    using Base.Test
+    using Base.Test, Compat
     using NullableArrays
 
     # test Inner Constructor
@@ -60,7 +60,7 @@ module TestConstructors
     @test isa(Z, NullableVector{Int})
     @test Z.isnull == [false, true, false, false, false, false, true]
 
-    Y = NullableArray([1, "na", 2, 3, 4, 5, "na"], Int, ASCIIString)
+    Y = NullableArray([1, "na", 2, 3, 4, 5, "na"], Int, Compat.ASCIIString)
     @test isequal(Y, Z)
 
     # test parameterized type constructor with no arguments
