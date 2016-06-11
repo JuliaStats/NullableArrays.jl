@@ -4,8 +4,8 @@ using Base.Broadcast: check_broadcast_shape
 function gen_nullcheck(narrays::Int, nd::Int)
     e_nullcheck = macroexpand(:( @nref $nd isnull_1 d->j_d_1 ))
     for k = 2:narrays
-        isnull = symbol("isnull_$k")
-        j_d_k = symbol("j_d_$k")
+        isnull = Symbol("isnull_$k")
+        j_d_k = Symbol("j_d_$k")
         e_isnull_k = macroexpand(:( @nref $nd $(isnull) d->$(j_d_k) ))
         e_nullcheck = Expr(:||, e_nullcheck, e_isnull_k)
     end
@@ -43,7 +43,7 @@ function gen_broadcast_body(nd::Int, narrays::Int, f, lift::Bool)
 end
 
 function gen_broadcast_function(nd::Int, narrays::Int, f, lift::Bool)
-    As = [symbol("A_"*string(i)) for i = 1:narrays]
+    As = [Symbol("A_"*string(i)) for i = 1:narrays]
     body = gen_broadcast_body(nd, narrays, f, lift)
     @eval let
         local _F_
@@ -104,12 +104,12 @@ end
 
 # broadcasted ops
 for (op, scalar_op) in (
-    (:(Base.(:(.==))), :(==)),
-    (:(Base.(:.!=)), :!=),
-    (:(Base.(:.<)), :<),
-    (:(Base.(:.>)), :>),
-    (:(Base.(:.<=)), :<=),
-    (:(Base.(:.>=)), :>=)
+    (:(@compat Base.:(.==)), :(==)),
+    (:(@compat Base.:.!=), :!=),
+    (:(@compat Base.:.<), :<),
+    (:(@compat Base.:.>), :>),
+    (:(@compat Base.:.<=), :<=),
+    (:(@compat Base.:.>=), :>=)
 )
     @eval begin
         ($op)(X::NullableArray, Y::NullableArray) = broadcast($scalar_op, X, Y)

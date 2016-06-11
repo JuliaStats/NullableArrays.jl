@@ -3,10 +3,10 @@ import Compat: @functorize
 @noinline throw_error() = error()
 
 for f in (
-    :(Base.(:+)),
-    :(Base.(:-)),
-    :(Base.(:!)),
-    :(Base.(:~)),
+    :(@compat Base.:+),
+    :(@compat Base.:-),
+    :(@compat Base.:!),
+    :(@compat Base.:~),
 )
     @eval begin
         @inline function $(f){S}(x::Nullable{S})
@@ -21,16 +21,16 @@ end
 
 # Implement the binary operators: +, -, *, /, %, &, |, ^, <<, and >>
 for f in (
-    :(Base.(:+)),
-    :(Base.(:-)),
-    :(Base.(:*)),
-    :(Base.(:/)),
-    :(Base.(:%)),
-    :(Base.(:&)),
-    :(Base.(:|)),
-    :(Base.(:^)),
-    :(Base.(:<<)),
-    :(Base.(:>>)),
+    :(@compat Base.:+),
+    :(@compat Base.:-),
+    :(@compat Base.:*),
+    :(@compat Base.:/),
+    :(@compat Base.:%),
+    :(@compat Base.:&),
+    :(@compat Base.:|),
+    :(@compat Base.:^),
+    :(@compat Base.:<<),
+    :(@compat Base.:>>),
 )
     @eval begin
         @inline function $(f){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
@@ -45,8 +45,8 @@ end
 
 # Implement the binary operators: == and !=
 for f in (
-    :(Base.(:(==))),
-    :(Base.(:!=)),
+    :(@compat Base.:(==)),
+    :(@compat Base.:!=),
 )
     @eval begin
         function $(f){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
@@ -61,10 +61,10 @@ end
 
 # Implement the binary operators: <, >, <=, and >=
 for f in (
-    :(Base.(:<)),
-    :(Base.(:>)),
-    :(Base.(:<=)),
-    :(Base.(:>=)),
+    :(@compat Base.:<),
+    :(@compat Base.:>),
+    :(@compat Base.:<=),
+    :(@compat Base.:>=),
 )
     @eval begin
         function $(f){S1, S2}(x::Nullable{S1}, y::Nullable{S2})
@@ -119,4 +119,3 @@ end
         error()
     end
 end
-
