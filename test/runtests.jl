@@ -4,7 +4,7 @@ fatalerrors = length(ARGS) > 0 && ARGS[1] == "-f"
 quiet = length(ARGS) > 0 && ARGS[1] == "-q"
 anyerrors = false
 
-my_tests = [
+my_tests = [] #= [
     "typedefs.jl",
     "constructors.jl",
     "primitives.jl",
@@ -17,7 +17,11 @@ my_tests = [
     "operators.jl",
     "subarray.jl",
     "show.jl",
-]
+] =#
+
+if VERSION ≥ v"0.5-"
+    push!(my_tests, "functional.jl")
+end
 
 println("Running tests:")
 
