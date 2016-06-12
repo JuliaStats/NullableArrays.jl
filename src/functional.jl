@@ -67,21 +67,6 @@ end
 # broadcast to infinite-dimensional nullables, but the other direction is not
 # supported.
 
-# there are two shapes we are concerned about: infinite-dimensional 1×1×...
-# and infinite-dimensional 0×0×...; we don't care about zero-dimensional because
-# in that case all arguments were numbers, and broadcasting over only numbers
-# isn't supported by base currently
-function nullable_broadcast_shape(us::Union{Nullable,Number}...)
-    for u in us
-        if isa(us, Nullable)
-            if u.isnull
-                return true
-            end
-        end
-    end
-    return false
-end
-
 # Base's broadcast has a very loose signature so we can easily make it more
 # specific. Broadcast on numbers is still not supported. FIXME: remove generated
 # functions where unnecessary
