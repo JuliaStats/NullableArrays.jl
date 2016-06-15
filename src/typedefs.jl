@@ -21,15 +21,17 @@ reusing operations that only work on arrays without any null values.
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     values::Array{T, N}
     isnull::Array{Bool, N}
+    # extra field for potentially holding a reference to a parent memory block
+    # (think mmapped file, for example) that `values` is actually derived from
+    parent::Vector{UInt8}
 
-    function NullableArray(d::AbstractArray{T, N}, m::Array{Bool, N})
+    function NullableArray(d::AbstractArray{T, N}, m::Array{Bool, N}, parent::Vector{UInt8}=Vector{UInt8}())
         if size(d) != size(m)
             msg = "values and missingness arrays must be the same size"
             throw(ArgumentError(msg))
         end
-        new(d, m)
+        new(d, m, parent)
     end
 end
-
 typealias NullableVector{T} NullableArray{T, 1}
 typealias NullableMatrix{T} NullableArray{T, 2}
