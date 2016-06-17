@@ -2,8 +2,10 @@
 NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
+[![Coveralls](https://coveralls.io/repos/github/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![codecov.io](http://codecov.io/github/JuliaStats/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![NullableArrays](http://pkg.julialang.org/badges/NullableArrays_0.4.svg)](http://pkg.julialang.org/?pkg=NullableArrays)
+[![NullableArrays](http://pkg.julialang.org/badges/NullableArrays_0.5.svg)](http://pkg.julialang.org/?pkg=NullableArrays)
 
 NullableArrays.jl provides the `NullableArray{T, N}` type and its respective interface for use in storing and managing data with missing values.
 
@@ -23,7 +25,7 @@ Missing Values
 ==============
 The central contribution of NullableArrays.jl is to provide a data structure that uses a single type, namely `Nullable{T}` to represent both present and missing values. `Nullable{T}` is a specialized container type that contains precisely either one or zero values. A `Nullable{T}` object that contains a value represents a present value of type `T` that, under other circumstances, might have been missing, whereas an empty `Nullable{T}` object represents a missing value that, under other circumstances, would have been of type `T` had it been present.
 
-Indexing into an `NullableArray{T}` is thus "type-stable" in the sense that `getindex(X::NullableArray{T}, i)` will always return an object of type `Nullable{T}` regardless of whether the returned entry is present or missing. In general, this behavior more robustly supports the Julia compiler's ability to produce specialized lower-level code than do analogous data structures that use a token `NA` type to represent missingness.
+Indexing into a `NullableArray{T}` is thus "type-stable" in the sense that `getindex(X::NullableArray{T}, i)` will always return an object of type `Nullable{T}` regardless of whether the returned entry is present or missing. In general, this behavior more robustly supports the Julia compiler's ability to produce specialized lower-level code than do analogous data structures that use a token `NA` type to represent missingness.
 
 Constructors
 ============
@@ -197,7 +199,7 @@ Nullable(0.6309288649002225)
 
 `NullableArray` Implementation Details
 ======================
-Under the hood of each `NullableArray{T, N}` object are two fields: a `values::Array{T, N}` field and an `isnull:Array{Bool, N}` field:
+Under the hood of each `NullableArray{T, N}` object are two fields: a `values::Array{T, N}` field and an `isnull::Array{Bool, N}` field:
 ```julia
 julia> fieldnames(NullableArray)
 2-element Array{Symbol,1}:
