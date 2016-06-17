@@ -2,7 +2,7 @@
 NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaStats/NullableArrays.jl?branch=master)
+[![Coveralls](https://coveralls.io/repos/github/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![codecov.io](http://codecov.io/github/JuliaStats/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![NullableArrays](http://pkg.julialang.org/badges/NullableArrays_0.4.svg)](http://pkg.julialang.org/?pkg=NullableArrays)
 [![NullableArrays](http://pkg.julialang.org/badges/NullableArrays_0.5.svg)](http://pkg.julialang.org/?pkg=NullableArrays)
