@@ -84,23 +84,44 @@ function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
     return getindex(X.values, I...)
 end
 
-function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
-    isnull(x) ? throw(NullException()) : checkbounds(Bool, sz, get(x))
-end
-
-function Base.checkbounds(::Type{Bool}, sz::Int, I::NullableVector{Bool})
-    anynull(I) && throw(NullException())
-    length(I) == sz
-end
-
-function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
-    inbounds = true
-    anynull(I) && throw(NullException())
-    for i in 1:length(I)
-        @inbounds v = unsafe_getvalue_notnull(I, i)
-        inbounds &= checkbounds(Bool, sz, v)
+if VERSION >= v"0.5.0-dev+4697"
+    function Base.checkindex(::Type{Bool}, inds::UnitRange, i::Nullable)
+        isnull(i) ? throw(NullException()) : checkindex(Bool, inds, get(i))
     end
-    return inbounds
+
+    function Base.checkindex{N}(::Type{Bool}, inds::UnitRange, I::NullableArray{Bool, N})
+        anynull(I) && throw(NullException())
+        checkindex(Bool, inds, I.values)
+    end
+
+    function Base.checkindex{T<:Real}(::Type{Bool}, inds::UnitRange, I::NullableArray{T})
+        anynull(I) && throw(NullException())
+        b = true
+        for i in 1:length(I)
+            @inbounds v = unsafe_getvalue_notnull(I, i)
+            b &= checkindex(Bool, inds, v)
+        end
+        return b
+    end
+else
+    function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
+        isnull(x) ? throw(NullException()) : checkbounds(Bool, sz, get(x))
+     end
+
+    function Base.checkbounds(::Type{Bool}, sz::Int, I::NullableVector{Bool})
+         anynull(I) && throw(NullException())
+        length(I) == sz
+     end
+
+    function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
+        inbounds = true
+         anynull(I) && throw(NullException())
+         for i in 1:length(I)
+             @inbounds v = unsafe_getvalue_notnull(I, i)
+            inbounds &= checkbounds(Bool, sz, v)
+         end
+        return inbounds
+     end
 end
 
 function Base.to_index(X::NullableArray)
