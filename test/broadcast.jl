@@ -30,9 +30,11 @@ module TestBroadcast
     Z2 = NullableArray(Float64, 10, dims...)
     Z3 = NullableArray(Float64, 10, [dims; i]...)
 
+    f() = 5
     f(x) = Nullable(5) * x
     f(x, y) = x + y
     f(x, y, z) = x + y + z
+    g() = 5
     g(x::Float64) = 5 * x
     g(x::Float64, y::Float64) = x * y
     g(x::Float64, y::Float64, z::Float64) = x * y * z
@@ -72,11 +74,11 @@ module TestBroadcast
         ( (A1, U1, ()), (A2, U2, ()), (A3, U3, ()),
           (A1, V1, (M1,)), (A2, V2, (M2,)), (A3, V3, (M3,)),
     )
-        map!(g, array)
+        broadcast!(f, array)
         broadcast!(f, nullablearray)
         @test isequal(nullablearray, NullableArray(array, mask...))
 
-        map!(g, array)
+        broadcast!(g, array)
         broadcast!(g, nullablearray; lift=true)
         @test isequal(nullablearray, NullableArray(array, mask...))
     end
