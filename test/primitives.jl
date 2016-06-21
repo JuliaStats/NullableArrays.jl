@@ -69,19 +69,16 @@ module TestPrimitives
     set2 = map(nonbits, set1)
 
     for (dest, src, bigsrc, emptysrc, res1, res2) in Any[set1, set2]
-        # Base.copy! was inconsistent until recently in 0.4-dev
-        da_or_04 = VERSION > v"0.4-"
-
         @test isequal(copy!(copy(dest), src), res1)
         @test isequal(copy!(copy(dest), 1, src), res1)
 
-        da_or_04 && @test isequal(copy!(copy(dest), 2, src, 2), res2)
+        @test isequal(copy!(copy(dest), 2, src, 2), res2)
         @test isequal(copy!(copy(dest), 2, src, 2, 1), res2)
 
         @test isequal(copy!(copy(dest), 99, src, 99, 0), dest)
 
         @test isequal(copy!(copy(dest), 1, emptysrc), dest)
-        da_or_04 && @test_throws BoundsError copy!(dest, 1, emptysrc, 1)
+        @test_throws BoundsError copy!(dest, 1, emptysrc, 1)
 
         for idx in [0, 4]
             @test_throws BoundsError copy!(dest, idx, src)
@@ -91,7 +88,11 @@ module TestPrimitives
             @test_throws BoundsError copy!(dest, 1, src, idx, 1)
         end
 
-       da_or_04 && @test_throws BoundsError copy!(dest, 1, src, 1, -1)
+        if VERSION >= v"0.5.0-dev"
+            @test_throws ArgumentError copy!(dest, 1, src, 1, -1)
+        else
+            @test_throws BoundsError copy!(dest, 1, src, 1, -1)
+        end
 
         @test_throws BoundsError copy!(dest, bigsrc)
 

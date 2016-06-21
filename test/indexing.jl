@@ -191,19 +191,35 @@ module TestIndexing
     X = NullableArray([1:10...])
     b = vcat(false, fill(true, 9))
 
-    # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
-    @test_throws NullException checkbounds(Bool, 1, Nullable(1, true))
-    @test checkbounds(Bool, 10, Nullable(1)) == true
-    @test isequal(X[Nullable(1)], Nullable(1))
+    if VERSION >= v"0.5.0-dev+4697"
+        # Base.checkindex(::Type{Bool}, inds::UnitRange, i::Nullable)
+        @test_throws NullException checkindex(Bool, 1:1, Nullable(1, true))
+        @test checkindex(Bool, 1:10, Nullable(1)) == true
+        @test isequal(X[Nullable(1)], Nullable(1))
 
-    # Base.checkbounds(::Type{Bool}, sz::Int, X::NullableVector{Bool})
-    @test checkbounds(Bool, 5, NullableArray([true, false, true, false, true]))
-    @test isequal(X[b], NullableArray([2:10...]))
+        # Base.checkindex{N}(::Type{Bool}, inds::UnitRange, I::NullableArray{Bool, N})
+        @test checkindex(Bool, 1:5, NullableArray([true, false, true, false, true]))
+        @test isequal(X[b], NullableArray([2:10...]))
 
-    # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
-    @test checkbounds(Bool, 10, NullableArray([1:10...]))
-    @test checkbounds(Bool, 10, NullableArray([10, 11])) == false
-    @test_throws BoundsError checkbounds(X, NullableArray([10, 11]))
+        # Base.checkindex{T<:Real}(::Type{Bool}, inds::UnitRange, I::NullableArray{T})
+        @test checkindex(Bool, 1:10, NullableArray([1:10...]))
+        @test checkindex(Bool, 1:10, NullableArray([10, 11])) == false
+        @test_throws BoundsError checkbounds(X, NullableArray([10, 11]))
+    else
+        # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, x::Nullable{T})
+        @test_throws NullException checkbounds(Bool, 1, Nullable(1, true))
+        @test checkbounds(Bool, 10, Nullable(1)) == true
+        @test isequal(X[Nullable(1)], Nullable(1))
+
+        # Base.checkbounds(::Type{Bool}, sz::Int, X::NullableVector{Bool})
+        @test checkbounds(Bool, 5, NullableArray([true, false, true, false, true]))
+        @test isequal(X[b], NullableArray([2:10...]))
+
+        # Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
+        @test checkbounds(Bool, 10, NullableArray([1:10...]))
+        @test checkbounds(Bool, 10, NullableArray([10, 11])) == false
+        @test_throws BoundsError checkbounds(X, NullableArray([10, 11]))
+    end
 
     #---- test Base.to_index -----#
 
