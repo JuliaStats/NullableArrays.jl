@@ -12,7 +12,7 @@ H = [ rand(1:sz[i]) for i in 1:nd ]
 
 for i in 1:nd
     J = [ (x->x==i ? I[x] : Colon())(j) for j in 1:nd ]
-    S = slice(X, J...)
+    S = NullableArrays._view(X, J...)
     H = [ (x->x==i ? I[x] : rand(1:sz[x]))(j) for j in 1:nd ]
     _H = H[find(x->x!=i, collect(1:nd))]
 

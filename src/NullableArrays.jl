@@ -20,6 +20,12 @@ export NullableArray,
        padnull!,
        padnull
 
+    if VERSION < v"0.5-"
+        _view = slice
+    else
+        _view = view
+    end
+
 include("typedefs.jl")
 include("constructors.jl")
 include("primitives.jl")
