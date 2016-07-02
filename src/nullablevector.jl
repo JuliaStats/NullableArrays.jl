@@ -142,23 +142,37 @@ function Base.splice!{T<:Integer}(X::NullableVector,
     f = first(rng)
     l = last(rng)
 
-    if m < d # insert is shorter than range
-        delta = d - m
-        if f - 1 < n - l
-            Base._deleteat_beg!(X.values, f, delta)
-            Base._deleteat_beg!(X.isnull, f, delta)
-        else
-            Base._deleteat_end!(X.values, l - delta + 1, delta)
-            Base._deleteat_end!(X.isnull, l - delta + 1, delta)
+    if VERSION >= v"0.5.0-dev+5022"
+        if m < d # insert is shorter than range
+            delta = d - m
+            i = (f - 1 < n - l) ? f : (l - delta + 1)
+            Base._deleteat!(X.values, i, delta)
+            Base._deleteat!(X.isnull, i, delta)
+        elseif m > d # insert is longer than range
+            delta = m - d
+            i = (f - 1 < n - l) ? f : (l + 1)
+            Base._growat!(X.values, i, delta)
+            Base._growat!(X.isnull, i, delta)
         end
-    elseif m > d # insert is longer than range
-        delta = m - d
-        if f -  1 < n - l
-            Base._growat_beg!(X.values, f, delta)
-            Base._growat_beg!(X.isnull, f, delta)
-        else
-            Base._growat_end!(X.values, l + 1, delta)
-            Base._growat_end!(X.isnull, l + 1, delta)
+    else
+        if m < d # insert is shorter than range
+            delta = d - m
+            if f - 1 < n - l
+                Base._deleteat_beg!(X.values, f, delta)
+                Base._deleteat_beg!(X.isnull, f, delta)
+            else
+                Base._deleteat_end!(X.values, l - delta + 1, delta)
+                Base._deleteat_end!(X.isnull, l - delta + 1, delta)
+            end
+        elseif m > d # insert is longer than range
+            delta = m - d
+            if f -  1 < n - l
+                Base._growat_beg!(X.values, f, delta)
+                Base._growat_beg!(X.isnull, f, delta)
+            else
+                Base._growat_end!(X.values, l + 1, delta)
+                Base._growat_end!(X.isnull, l + 1, delta)
+            end
         end
     end
 
