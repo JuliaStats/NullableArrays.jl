@@ -5,7 +5,7 @@ import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax
 using Compat: @functorize
 
 # Methods adapted from Base Julia 0.5
-if VERSION <= v"0.5.0-dev"
+if VERSION < v"0.5.0-dev+5096"
     promote_op(::Any, T) = T
     promote_op{T}(::Type{T}, ::Any) = T
 
