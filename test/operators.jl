@@ -99,6 +99,9 @@ module TestOperators
             @test isa(x, Nullable{R}) && isnull(x)
             x = op(Nullable{R}())
             @test isa(x, Nullable{R}) && isnull(x)
+
+            x = op(Nullable())
+            @test isa(x, Nullable{Union{}}) && isnull(x)
         end
 
         # unsafe unary operators
@@ -119,6 +122,9 @@ module TestOperators
         @test isa(x, Nullable{R}) && isnull(x)
         x = sqrt(Nullable{R}())
         @test isa(x, Nullable{R}) && isnull(x)
+
+        x = sqrt(Nullable())
+        @test isa(x, Nullable{Union{}}) && isnull(x)
 
         for u in (u0, u1, u2), v in (v0, v1, v2)
             # safe binary operators
@@ -143,6 +149,13 @@ module TestOperators
                 @test isa(x, Nullable{R}) && isnull(x)
                 x = op(Nullable(u, true), Nullable(v))
                 @test isa(x, Nullable{R}) && isnull(x)
+
+                x = op(Nullable(u, true), Nullable())
+                @test isa(x, Nullable{S}) && isnull(x)
+                x = op(Nullable(), Nullable(u, true))
+                @test isa(x, Nullable{S}) && isnull(x)
+                x = op(Nullable(), Nullable())
+                @test isa(x, Nullable{Union{}}) && isnull(x)
             end
 
             # unsafe binary operators
@@ -159,6 +172,13 @@ module TestOperators
             x = Nullable(u, true)^Nullable(-abs(v), false)
             @test isnull(x) && eltype(x) === R
 
+            x = Nullable(u, true)^Nullable()
+            @test isa(x, Nullable{S}) && isnull(x)
+            x = Nullable()^Nullable(u, true)
+            @test isa(x, Nullable{S}) && isnull(x)
+            x = Nullable()^Nullable()
+            @test isa(x, Nullable{Union{}}) && isnull(x)
+
             # ÷ and %
             for op in (÷, %)
                 if S <: Integer && T <: Integer && v == 0
@@ -173,6 +193,13 @@ module TestOperators
                 @test isnull(x) && eltype(x) === R
                 x = op(Nullable(u, true), Nullable(v, false))
                 @test isnull(x) && eltype(x) === R
+
+                x = op(Nullable(u, true), Nullable())
+                @test isa(x, Nullable{S}) && isnull(x)
+                x = op(Nullable(), Nullable(u, true))
+                @test isa(x, Nullable{S}) && isnull(x)
+                x = op(Nullable(), Nullable())
+                @test isa(x, Nullable{Union{}}) && isnull(x)
             end
         end
     end
