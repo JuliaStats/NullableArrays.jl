@@ -1,174 +1,214 @@
-using Base.Cartesian
+if VERSION < v"0.5.0-dev+3294"
+    include("map0_4.jl")
+else
+    using Base: collect_similar, Generator, ith_all
 
-function gen_nullcheck(narrays::Int)
-    As = [Symbol("A_"*string(i)) for i = 1:narrays]
-    e_nullcheck = :($(As[1]).isnull[i])
-    for i = 2:narrays
-        e_nullcheck = Expr(:||, e_nullcheck, :($(As[i]).isnull[i]))
+    macro nullcheck(Xs, nargs)
+        res = :($(Xs)[1].isnull[i])
+        for i = 2:nargs
+            e = :($(Xs)[$i].isnull[i])
+            res = Expr(:||, res, e)
+        end
+        return res
     end
-    return e_nullcheck
-end
 
-function gen_map!_body{F}(narrays::Int, lift::Bool, f::F)
-    _f = Expr(:quote, f)
-    e_nullcheck = gen_nullcheck(narrays)
-    if lift
-        return quote
-            for i in 1:length(dest)
-                if $e_nullcheck
+    macro fcall(Xs, nargs)
+        res = Expr(:call, :f)
+        for i in 1:nargs
+            push!(res.args, :($(Xs)[$i].values[i]))
+        end
+        return res
+    end
+
+    # Base.map!
+
+    Base.map!{F}(f::F, X::NullableArray; lift=false) = map!(f, X, X; lift=lift)
+    function Base.map!{F}(f::F, dest::NullableArray, X::NullableArray; lift=false)
+        if lift
+            for (i, j) in zip(eachindex(dest), eachindex(X))
+                if X.isnull[j]
                     dest.isnull[i] = true
                 else
-                    dest[i] = $_f((@ntuple $narrays j->A_j.values[i])...)
+                    dest.isnull[i] = false
+                    dest.values[i] = f(X.values[j])
                 end
             end
-        end
-    else
-        return quote
-            for i in 1:length(dest)
-                dest[i] = $_f((@ntuple $narrays j->A_j[i])...)
+        else
+            for (i, j) in zip(eachindex(dest), eachindex(X))
+                dest[i] = f(X[j])
             end
         end
+        return dest
     end
-end
 
-function gen_map_to!_body{F}(_map_to!::Symbol, narrays::Int, f::F)
-    _f = Expr(:quote, f)
-    e_nullcheck = gen_nullcheck(narrays)
-    return quote
-        @inbounds for i in offs:length(A_1)
-            if lift
-                if $e_nullcheck
-                    # we don't need to compute anything if A.isnull[i], since
-                    # the return type is specified by T and by the algorithm in
-                    # 'body'
+    function Base.map!{F}(f::F, dest::NullableArray, X1::NullableArray,
+                          X2::NullableArray; lift=false)
+        if lift
+            for (i, j, k) in zip(eachindex(dest), eachindex(X1), eachindex(X2))
+                if X1.isnull[j] | X2.isnull[k]
                     dest.isnull[i] = true
-                    continue
                 else
-                    v = $_f((@ntuple $narrays j->A_j.values[i])...)
+                    dest.isnull[i] = false
+                    dest.values[i] = f(X1.values[j], X2.values[k])
+                end
+            end
+        else
+            for (i, j, k) in zip(eachindex(dest), eachindex(X1), eachindex(X2))
+                dest[i] = f(X1[j], X2[k])
+            end
+        end
+        return dest
+    end
+
+    function Base.map!{F}(f::F, dest::NullableArray, Xs::NullableArray...; lift=false)
+        _map!(f, dest, Xs, lift)
+    end
+
+    @generated function _map!{F, N}(f::F, dest::NullableArray, Xs::Tuple{Vararg{NullableArray, N}}, lift)
+        return quote
+            if lift
+                for i in linearindices(Xs[1])
+                    if @nullcheck Xs $N
+                        dest.isnull[i] = true
+                    else
+                        dest.isnull[i] = false
+                        dest.values[i] = @fcall Xs $N
+                    end
                 end
             else
-                v = $_f((@ntuple $narrays j->A_j[i])...)
+                for i in linearindices(Xs[1])
+                    dest[i] = f(ith_all(i, Xs)...)
+                end
             end
-            S = typeof(v)
-            if S !== T && !(S <: T)
+            return dest
+        end
+    end
+
+    # Base.map
+
+    function Base.map(f, X::NullableArray; lift=false)
+        lift ? _liftedmap(f, X) : collect_similar(X, Generator(f, X))
+    end
+    function Base.map(f, X1::NullableArray, X2::NullableArray; lift=false)
+        lift ? _liftedmap(f, X1, X2) : collect(Generator(f, X1, X2))
+    end
+    function Base.map(f, Xs::NullableArray...; lift=false)
+        lift ? _liftedmap(f, Xs...) : collect(Generator(f, Xs...))
+    end
+
+    function _liftedmap(f, X::NullableArray)
+        len = length(X)
+        # if X is empty, fall back on type inference
+        len > 0 || return NullableArray{Base.return_types(f, (eltype(X),)), 0}()
+        i = 1
+        while X.isnull[i]
+            i += 1
+        end
+        # if X is all null, fall back on type inference
+        i <= len || return similar(X, Base.return_types(f, (eltype(X),)))
+        v = f(X.values[i])
+        dest = similar(X, typeof(v))
+        dest[i] = v
+        map_to!(f, dest, X, i+1, len)
+    end
+
+    function _liftedmap(f, X1::NullableArray, X2::NullableArray)
+        len = prod(promote_shape(X1, X2))
+        len > 0 || return NullableArray{Base.return_types(f, (eltype(X1), eltype(X2))), 0}()
+        i = 1
+        while X1.isnull[i] | X2.isnull[i]
+            i += 1
+        end
+        i <= len || return similar(X1, Base.return_types(f, (eltype(X1), eltype(X2))))
+        v = f(X1.values[i], X2.values[i])
+        dest = similar(X1, typeof(v))
+        dest[i] = v
+        map_to!(f, dest, X1, X2, i+1, len)
+    end
+
+    @generated function _liftedmap{N}(f, Xs::Vararg{NullableArray, N})
+        return quote
+            shp = size(zip(Xs...))
+            len = prod(shp)
+            i = 1
+            while @nullcheck Xs $N
+                i += 1
+            end
+            i <= len || return similar(X1, Base.return_types(f, tuple([ eltype(X) for X in Xs ])))
+            v = @fcall Xs $N
+            dest = similar(Xs[1], typeof(v))
+            dest[i] = v
+            map_to!(f, dest, Xs, i+1, len)
+        end
+    end
+
+    function map_to!{T}(f, dest::NullableArray{T}, X, offs, len)
+        # map to dest array, checking the type of each result. if a result does not
+        # match, widen the result type and re-dispatch.
+        i = offs
+        while i <= len
+            @inbounds if X.isnull[i]
+                i += 1; continue
+            end
+            @inbounds el = f(X.values[i])
+            S = typeof(el)
+            if S === T || S <: T
+                @inbounds dest[i] = el::T
+                i += 1
+            else
                 R = typejoin(T, S)
                 new = similar(dest, R)
-                copy!(new, 1, dest, 1, i - 1)
-                new[i] = v
-                return $(_map_to!)(new, i + 1, (@ntuple $narrays j->A_j)...; lift=lift)
+                copy!(new, 1, dest, 1, i-1)
+                @inbounds new[i] = el
+                return map_to!(f, new, X, i+1, len)
             end
-            dest[i] = v::T
         end
         return dest
     end
-end
 
-function gen_map_body{F}(_map_to!::Symbol, narrays::Int, f::F)
-    _f = Expr(:quote, f)
-    e_nullcheck = gen_nullcheck(narrays)
-    if narrays == 1
-        pre = quote
-            isempty(A_1) && return isa(f, Type) ? similar(A_1, f) : similar(A_1)
-        end
-    else
-        pre = quote
-            shape = mapreduce(size, promote_shape, (@ntuple $narrays j->A_j))
-            prod(shape) == 0 && return similar(A_1, promote_type((@ntuple $narrays j->A_j)...), shape)
-        end
-    end
-    return quote
-        $pre
-        i = 1
-        # find first non-null entry in A_1, ... A_narrays
-        if lift == true
-            emptyel = $e_nullcheck
-            while (emptyel && i < length(A_1))
+    function map_to!{T}(f, dest::NullableArray{T}, X1, X2, offs, len)
+        i = offs
+        while i <= len
+            @inbounds if X1.isnull[i] | X2.isnull[i]
+                i += 1; continue
+            end
+            @inbounds el = f(X1.values[i], X2.values[i])
+            S = typeof(el)
+            if S === T || S <: T
+                @inbounds dest[i] = el::T
                 i += 1
-                emptyel &= $e_nullcheck
+            else
+                R = typejoin(T, S)
+                new = similar(dest, R)
+                copy!(new, 1, dest, 1, i-1)
+                @inbounds new[i] = el
+                return map_to!(f, new, X1, X2, i+1, len)
             end
-            # if all entries are null, return a similar
-            i == length(A_1) && return isa(f, Type) ? similar(A_1, f) : similar(A_1)
-            v = $_f((@ntuple $narrays j->A_j.values[i])...)
-        else
-            v = $_f((@ntuple $narrays j->A_j[i])...)
         end
-        dest = similar(A_1, typeof(v))
-        dest[i] = v
-        return $(_map_to!)(dest, i + 1, (@ntuple $narrays j->A_j)...; lift=lift)
-    end
-end
-
-function gen_map!_function{F}(narrays::Int, lift::Bool, f::F)
-    As = [Symbol("A_"*string(i)) for i = 1:narrays]
-    body = gen_map!_body(narrays, lift, f)
-    @eval let
-        local _F_
-        function _F_(dest, $(As...))
-            $body
-        end
-        _F_
-    end
-end
-
-function gen_map_function{F}(_map_to!::Symbol, narrays::Int, f::F)
-    As = [Symbol("A_"*string(i)) for i = 1:narrays]
-    body_map_to! = gen_map_to!_body(_map_to!, narrays, f)
-    body_map = gen_map_body(_map_to!, narrays, f)
-
-    @eval let $_map_to! # create a closure for subsequent calls to $_map_to!
-        function $(_map_to!){T}(dest::NullableArray{T}, offs, $(As...); lift::Bool=false)
-            $body_map_to!
-        end
-        local _F_
-        function _F_($(As...); lift::Bool=false)
-            $body_map
-        end
-        return _F_
-    end # let $_map_to!
-end
-
-# Base.map!
-@eval let cache = Dict{Bool, Dict{Int, Dict{Base.Callable, Function}}}()
-    @doc """
-    `map!{F}(f::F, dest::NullableArray, As::AbstractArray...; lift::Bool=false)`
-
-    This method implements the same behavior as that of `map!` when called on
-    regular `Array` arguments. It also includes the `lift` keyword argument, which
-    when set to true will lift `f` over the entries of the `As`. Lifting is
-    disabled by default.
-    """ ->
-    function Base.map!{F}(f::F, dest::NullableArray, As::AbstractArray...;
-                          lift::Bool=false)
-        narrays = length(As)
-
-        cache_lift  = Base.@get!  cache         lift    Dict{Int, Dict{Base.Callable, Function}}()
-        cache_f     = Base.@get!  cache_lift    narrays Dict{Base.Callable, Function}()
-        func        = Base.@get!  cache_f       f       gen_map!_function(narrays, lift, f)
-
-        func(dest, As...)
         return dest
     end
-end
 
-Base.map!{F}(f::F, X::NullableArray; lift::Bool=false) = map!(f, X, X; lift=lift)
-
-# Base.map
-@eval let cache = Dict{Int, Dict{Base.Callable, Function}}()
-    @doc """
-    `map{F}(f::F, As::AbstractArray...; lift::Bool=false)`
-
-    This method implements the same behavior as that of `map!` when called on
-    regular `Array` arguments. It also includes the `lift` keyword argument, which
-    when set to true will lift `f` over the entries of the `As`. Lifting is
-    disabled by default.
-    """ ->
-    function Base.map{F}(f::F, As::NullableArray...; lift::Bool=false)
-        narrays = length(As)
-        _map_to! = gensym()
-
-        cache_fs    = Base.@get!  cache     narrays  Dict{Base.Callable, Function}()
-        _map        = Base.@get!  cache_fs  f        gen_map_function(_map_to!, narrays, f)
-
-        return _map(As...; lift=lift)
+    @generated function map_to!{T, N}(f, dest::NullableArray{T}, Xs::Tuple{Vararg{NullableArray, N}}, offs, len)
+        return quote
+            i = offs
+            while i <= len
+                @inbounds if @nullcheck Xs $N
+                    i += 1; continue
+                end
+                @inbounds el = @fcall Xs $N
+                S = typeof(el)
+                if S === T || S <: T
+                    @inbounds dest[i] = el::T
+                    i += 1
+                else
+                    R = typejoin(T, S)
+                    new = similar(dest, R)
+                    copy!(new, 1, dest, 1, i-1)
+                    @inbounds new[i] = el
+                    return map_to!(f, new, Xs, i+1, len)
+                end
+            end
+            return dest
+        end
     end
 end
