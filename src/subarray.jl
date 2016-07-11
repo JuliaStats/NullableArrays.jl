@@ -40,7 +40,7 @@ end
 
 @generated function anynull{T, N, U<:NullableArray}(S::SubArray{T, N, U})
     return quote
-        isnull = slice(S.parent.isnull, S.indexes...)
+        isnull = view(S.parent.isnull, S.indexes...)
         @nloops $N i S begin
             (@nref $N isnull i) && (return true)
         end

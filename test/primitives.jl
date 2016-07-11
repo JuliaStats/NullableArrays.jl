@@ -1,6 +1,7 @@
 module TestPrimitives
     using Base.Test
     using NullableArrays
+    using Compat.view
 
     n = rand(1:5)
     siz = [ rand(2:5) for i in n ]
@@ -186,11 +187,11 @@ module TestPrimitives
     M = rand(Bool, 10, 3, 3)
     X = NullableArray(A, M)
     i, j = rand(1:3), rand(1:3)
-    S = slice(X, :, i, j)
+    S = view(X, :, i, j)
 
     @test anynull(S) == anynull(X[:, i, j])
     X = NullableArray(A)
-    S = slice(X, :, i, j)
+    S = view(X, :, i, j)
     @test anynull(S) == false
 
 

@@ -3,6 +3,7 @@ VERSION >= v"0.4.0-dev+6521" && __precompile__(true)
 module NullableArrays
 
 using Compat
+using Compat.view
 using Reexport
 @reexport using Base.Cartesian
 
