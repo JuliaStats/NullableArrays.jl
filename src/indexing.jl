@@ -85,16 +85,16 @@ function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
 end
 
 if VERSION >= v"0.5.0-dev+4697"
-    function Base.checkindex(::Type{Bool}, inds::UnitRange, i::Nullable)
+    function Base.checkindex(::Type{Bool}, inds::AbstractUnitRange, i::Nullable)
         isnull(i) ? throw(NullException()) : checkindex(Bool, inds, get(i))
     end
 
-    function Base.checkindex{N}(::Type{Bool}, inds::UnitRange, I::NullableArray{Bool, N})
+    function Base.checkindex{N}(::Type{Bool}, inds::AbstractUnitRange, I::NullableArray{Bool, N})
         anynull(I) && throw(NullException())
         checkindex(Bool, inds, I.values)
     end
 
-    function Base.checkindex{T<:Real}(::Type{Bool}, inds::UnitRange, I::NullableArray{T})
+    function Base.checkindex{T<:Real}(::Type{Bool}, inds::AbstractUnitRange, I::NullableArray{T})
         anynull(I) && throw(NullException())
         b = true
         for i in 1:length(I)
