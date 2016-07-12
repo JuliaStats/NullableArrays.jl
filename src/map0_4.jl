@@ -1,4 +1,4 @@
-Base.promote_shape(X1::NullableArray, X2::NullableArray) = promote_shape(size(X1), size(X2))
+using Base: promote_eltype
 
 function _map(f, X)
     if isempty(X)
@@ -35,13 +35,13 @@ function _map(f, Xs...)
 end
 
 
-function map_to!{T,F}(f::F, offs, st, dest::AbstractArray{T}, A)
+function map_to!{T,F}(f::F, offs, st, dest::NullableArray{T}, X)
     # map to dest array, checking the type of each result. if a result does not
     # match, widen the result type and re-dispatch.
     i = offs
-    while !done(A, st)
-        @inbounds Ai, st = next(A, st)
-        el = f(Ai)
+    while !done(X, st)
+        @inbounds Xi, st = next(X, st)
+        el = f(Xi)
         S = typeof(el)
         if S === T || S <: T
             @inbounds dest[i] = el::T
@@ -51,39 +51,39 @@ function map_to!{T,F}(f::F, offs, st, dest::AbstractArray{T}, A)
             new = similar(dest, R)
             copy!(new,1, dest,1, i-1)
             @inbounds new[i] = el
-            return map_to!(f, i+1, st, new, A)
+            return map_to!(f, i+1, st, new, X)
         end
     end
     return dest
 end
 
-function map_to!{T,F}(f::F, offs, dest::AbstractArray{T}, A::AbstractArray, B::AbstractArray)
-    for i = offs:length(A) #Fixme iter
-        @inbounds Ai, Bi = A[i], B[i]
-        el = f(Ai, Bi)
+function map_to!{T,F}(f::F, offs, dest::NullableArray{T}, X1::NullableArray, X2::NullableArray)
+    for i = offs:length(X1)
+        @inbounds X1i, X2i = X1[i], X2[i]
+        el = f(X1i, X2i)
         S = typeof(el)
         if (S !== T) && !(S <: T)
             R = typejoin(T, S)
             new = similar(dest, R)
             copy!(new,1, dest,1, i-1)
             @inbounds new[i] = el
-            return map_to!(f, i+1, new, A, B)
+            return map_to!(f, i+1, new, X1, X2)
         end
         @inbounds dest[i] = el::T
     end
     return dest
 end
 
-function map_to_n!{T,F}(f::F, offs, dest::AbstractArray{T}, As)
-    for i = offs:length(As[1])
-        el = f(ith_all(i, As)...)
+function map_to_n!{T,F}(f::F, offs, dest::NullableArray{T}, Xs)
+    for i = offs:length(Xs[1])
+        el = f(ith_all(i, Xs)...)
         S = typeof(el)
         if (S !== T) && !(S <: T)
             R = typejoin(T, S)
             new = similar(dest, R)
             copy!(new,1, dest,1, i-1)
             @inbounds new[i] = el
-            return map_to_n!(f, i+1, new, As)
+            return map_to_n!(f, i+1, new, Xs)
         end
         @inbounds dest[i] = el::T
     end

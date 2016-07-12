@@ -8,6 +8,11 @@ else
     using Base: collect_similar, Generator
 end
 
+function _return_type(f, Xs...)
+    rtypes = Base.return_types(f, tuple([ inner_eltype(X) for X in Xs ]...))
+    T = isempty(rtypes) ? Union{} : rtypes[1]
+end
+
 macro nullcheck(Xs, nargs)
     res = :($(Xs)[1].isnull[i])
     for i = 2:nargs
@@ -24,6 +29,8 @@ macro fcall(Xs, nargs)
     end
     return res
 end
+
+inner_eltype{T}(X::NullableArray{T}) = T
 
 # Base.map!
 
@@ -66,11 +73,10 @@ function Base.map!{F}(f::F, dest::NullableArray, X1::NullableArray,
 end
 
 function Base.map!{F}(f::F, dest::NullableArray, Xs::NullableArray...; lift=false)
-    _map!(f, dest, Xs, lift)
+    _mapn!(f, dest, Xs, lift)
 end
 
-
-@generated function _map!{F, N}(f::F, dest::NullableArray, Xs::NTuple{N, NullableArray}, lift)
+@generated function _mapn!{F, N}(f::F, dest::NullableArray, Xs::NTuple{N, NullableArray}, lift)
     return quote
         if lift
             for i in eachindex(dest)
@@ -117,13 +123,17 @@ end
 function _liftedmap(f, X::NullableArray)
     len = length(X)
     # if X is empty, fall back on type inference
-    len > 0 || return NullableArray{Base.return_types(f, (eltype(X),))[1], 1}()
+    len > 0 || return NullableArray(_return_type(f, X), 0)
     i = 1
-    while X.isnull[i]
+    while X.isnull[i] & (i < len)
         i += 1
     end
     # if X is all null, fall back on type inference
-    i <= len || return similar(X, Base.return_types(f, (eltype(X),))[1])
+    if X.isnull[i]
+        T = _return_type(f, X)
+        return similar(X, T)
+    end
+    # otherwise, initialize and map to destination array
     v = f(X.values[i])
     dest = similar(X, typeof(v))
     dest[i] = v
@@ -131,13 +141,16 @@ function _liftedmap(f, X::NullableArray)
 end
 
 function _liftedmap(f, X1::NullableArray, X2::NullableArray)
-    len = prod(promote_shape(X1, X2))
-    len > 0 || return NullableArray{Base.return_types(f, (eltype(X1), eltype(X2))), 0}()
+    len = prod(promote_shape(size(X1), size(X2)))
+    len > 0 || return NullableArray(_return_type(f, X1, X2), 0)
     i = 1
-    while X1.isnull[i] | X2.isnull[i]
+    while (X1.isnull[i] | X2.isnull[i]) & (i < len)
         i += 1
     end
-    i <= len || return similar(X1, Base.return_types(f, (eltype(X1), eltype(X2))))
+    if X1.isnull[i] | X2.isnull[i]
+        T = _return_type(f, X1, X2)
+        return similar(X1, T)
+    end
     v = f(X1.values[i], X2.values[i])
     dest = similar(X1, typeof(v))
     dest[i] = v
@@ -148,11 +161,15 @@ end
     return quote
         shp = mapreduce(size, promote_shape, Xs)
         len = prod(shp)
+        len > 0 || return NullableArray(_return_type(f, Xs...), 0)
         i = 1
-        while @nullcheck Xs $N
+        while (@nullcheck Xs $N) & (i < len)
             i += 1
         end
-        i <= len || return similar(X1, Base.return_types(f, tuple([ eltype(X) for X in Xs ])))
+        if @nullcheck Xs $N
+            T = _return_type(f, Xs...)
+            return similar(Xs[1], T)
+        end
         v = @fcall Xs $N
         dest = similar(Xs[1], typeof(v))
         dest[i] = v
