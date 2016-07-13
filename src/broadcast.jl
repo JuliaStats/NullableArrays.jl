@@ -1,5 +1,13 @@
-using Base.Broadcast: check_broadcast_shape
+using Base: promote_eltype
+using Base.Broadcast: check_broadcast_shape, broadcast_shape
 using Base.Cartesian
+
+if VERSION >= v"0.5.0-dev+5189"
+    _to_shape(dims::Base.DimsOrInds) = map(_to_shape, dims)
+    _to_shape(r::Base.OneTo) = Int(last(r))
+else
+    _to_shape(x) = x
+end
 
 if VERSION < v"0.5.0-dev+4724"
     function gen_nullcheck(narrays::Int, nd::Int)
@@ -24,7 +32,7 @@ if VERSION < v"0.5.0-dev+4724"
                 @nexprs $narrays k->(isnull_k = A_k.isnull)
                 # check size
                 @assert ndims(B) == $nd
-                @ncall $narrays Base.Broadcast.check_broadcast_shape size(B) k->A_k
+                @ncall $narrays check_broadcast_shape size(B) k->A_k
                 # main loops
                 @nloops($nd, i, B,
                     d->(@nexprs $narrays k->(j_d_k = size(A_k, d) == 1 ? 1 : i_d)), # pre
@@ -155,8 +163,8 @@ else
     @inline function Base.broadcast!(f, Z::NullableArray, Xs::NullableArray...;
                                      lift=false)
         nargs = length(Xs)
+        check_broadcast_shape(indices(Z), Xs...)
         sz = size(Z)
-        check_broadcast_shape(sz, Xs...)
         mapindex = map(x->newindexer(sz, x), Xs)
         Base.Broadcast._broadcast!(f, Z, mapindex, Xs, Val{nargs}; lift=lift)
         Z
@@ -176,8 +184,8 @@ arguments consisting of both `Array`s and `NullableArray`s will fall back to the
 implementation of `broadcast` in `base/broadcast.jl`.
 """ ->
 @inline function Base.broadcast(f, Xs::NullableArray...;lift::Bool=false)
-    return broadcast!(f, NullableArray(eltype(Base.promote_eltype(Xs...)),
-                                       Base.Broadcast.broadcast_shape(Xs...)),
+    return broadcast!(f, NullableArray(eltype(promote_eltype(Xs...)),
+                                       _to_shape(broadcast_shape(Xs...))),
                       Xs...; lift=lift)
 end
 
