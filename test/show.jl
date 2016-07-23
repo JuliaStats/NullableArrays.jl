@@ -48,6 +48,11 @@ for typ in (Float64, Int, UInt, Char)
     display(disp, Y3)
     typeof(X3)
     typeof(Y3)
+
+    X = NullableArray{typ}()
+    show(io, X)
+    display(disp, X)
+    typeof(X)
 end
 
 end # module TestShow

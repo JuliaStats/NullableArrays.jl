@@ -5,7 +5,7 @@ Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
 
 # resolve ambiguity created by the two definitions that follow.
 function Base.getindex{T, N}(X::NullableArray{T, N})
-    return X
+    return X[1]
 end
 
 @doc """

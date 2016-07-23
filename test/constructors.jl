@@ -41,13 +41,39 @@ module TestConstructors
     @test isa(u2, NullableMatrix{Int})
     @test isa(u3, NullableArray{Int, 3})
 
-    # test (::Type{T}, dims::Dims...) constructor
+    # test (::Type{T}, dims::Int...) constructor
     x1 = NullableArray(Int, 2)
     x2 = NullableArray(Int, 2, 2)
     x3 = NullableArray(Int, 2, 2, 2)
     @test isa(x1, NullableVector{Int})
     @test isa(x2, NullableMatrix{Int})
     @test isa(x3, NullableArray{Int, 3})
+
+    # test NullableArray{T}(dims::Dims)
+    d1, d2 = rand(1:100), rand(1:100)
+    X1 = NullableArray{Int}((d1,))
+    X2 = NullableArray{Int}((d1, d2))
+    @test isequal(X1, NullableArray(Array{Int}((d1,)), fill(true, (d1,))))
+    @test isequal(X2, NullableArray(Array{Int}((d1, d2)), fill(true, (d1, d2))))
+    for i in 1:5
+        m = rand(3:5)
+        dims = tuple([ rand(1:5) for i in 1:m ]...)
+        X3 = NullableArray{Int}(dims)
+        @test isequal(X3, NullableArray(Array{Int}(dims), fill(true, dims)))
+    end
+
+    # test NullableArray{T}(dims::Int...)
+    d1, d2 = rand(1:100), rand(1:100)
+    X1 = NullableArray{Int}(d1)
+    X2 = NullableArray{Int}(d1, d2)
+    @test isequal(X1, NullableArray(Array{Int}(d1), fill(true, d1)))
+    @test isequal(X2, NullableArray(Array{Int}(d1, d2), fill(true, d1, d2)))
+    for i in 1:5
+        m = rand(3:5)
+        dims = [ rand(1:5) for i in 1:m ]
+        X3 = NullableArray{Int}(dims...)
+        @test isequal(X3, NullableArray(Array{Int}(dims...), fill(true, dims...)))
+    end
 
     # test (A::AbstractArray, ::Type{T}, ::Type{U}) constructor
     z = NullableArray([1, nothing, 2, nothing, 3], Int, Void)
@@ -63,10 +89,9 @@ module TestConstructors
     Y = NullableArray([1, nothing, 2, 3, 4, 5, nothing], Int, Void)
     @test isequal(Y, Z)
 
-    # test parameterized type constructor with no arguments
-    @test isequal(NullableVector{Int}(), NullableArray{Int, 1}([]))
-    @test isequal(NullableArray{Bool, 2}(),
-                  NullableArray{Bool, 2}(Array(Bool, 0, 0)))
+    # test NullableArray{T}()
+    X = NullableArray{Int}()
+    @test isequal(size(X), ())
 
     # test conversion from arrays, arrays of nullables and NullableArrays
     miss1 = [false,false,false,false]

@@ -31,8 +31,7 @@ module TestIndexing
     X = NullableArray(_values, _isnull)
 
     # Base.getindex{T, N}(X::NullableArray{T, N})
-    @test isequal(getindex(X), X)
-    @test getindex(X) === X
+    @test isequal(getindex(X), X[1])
 
     # Base.getindex{T, N}(X::NullableArray{T, N}, I::Nullable{Int}...)
     @test_throws NullException getindex(X, Nullable{Int}(), Nullable{Int}())

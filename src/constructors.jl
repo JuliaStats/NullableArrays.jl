@@ -32,6 +32,9 @@ function NullableArray(T::Type, dims::Int...) # -> NullableArray
     return NullableArray(T, dims)
 end
 
+@compat (::Type{NullableArray{T}}){T}(dims::Dims) = NullableArray(T, dims)
+@compat (::Type{NullableArray{T}}){T}(dims::Int...) = NullableArray(T, dims)
+
 # The following method constructs a NullableArray from an Array{Any} argument
 # 'A' that contains some placeholder of type 'T' for null values.
 #
@@ -85,7 +88,6 @@ end
 
 # The following method allows for the construction of zero-element
 # NullableArrays by calling the parametrized type on zero arguments.
-# TODO: add support for dimensions arguments?
 @compat (::Type{NullableArray{T, N}}){T, N}() = NullableArray(T, ntuple(i->0, N))
 
 
