@@ -1,18 +1,6 @@
 # No longer needed since https://github.com/JuliaLang/julia/pull/15928
-if VERSION >= v"0.5.0-dev+3610"
-    # Code similar to Base.show_vector()
-    function Base.show(io::IO, X::NullableVector)
-        print(io, typeof(X), "(")
-        if length(X) > 20
-            Base.show_delim_array(io, X, "[", ",", "", false, 1, 10)
-            print(io, "  …  ")
-            Base.show_delim_array(io, X, "", ",", "]", false, length(X)-9, 10)
-        else
-            Base.show_delim_array(io, X, "[", ",", "]", false)
-        end
-        print(io, ")")
-    end
-else
+# and https://github.com/JuliaLang/julia/issues/16354
+if VERSION < v"0.5.0-dev+3610"
     using Base: tty_size, alignment, print_matrix_row, strwidth, showcompact_lim,
                 undef_ref_alignment, undef_ref_str
 
