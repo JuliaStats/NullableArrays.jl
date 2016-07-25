@@ -55,7 +55,7 @@ function Base.unshift!(X::NullableVector, v::Nullable) # -> NullableVector{T}
 end
 
 @doc """
-`unshift!(X::NullableVector, v::Nullable)`
+`unshift!(X::NullableVector, v)`
 
 Insert a value `v` at the beginning of `X` and return `X`.
 """ ->
@@ -63,15 +63,6 @@ function Base.unshift!(X::NullableVector, v) # -> NullableVector{T}
     unshift!(X.values, v)
     unshift!(X.isnull, false)
     return X
-end
-
-@doc """
-`unshift!(X::NullableVector, vs...)`
-
-Insert multiple values `vs` at the beginning of `X` and return `X`.
-""" ->
-function Base.unshift!(X::NullableVector, vs...)
-    return unshift!(unshift!(X, last(vs)), vs[1:endof(vs)-1]...)
 end
 
 @doc """
@@ -209,7 +200,29 @@ function Base.append!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
     resize!(X, old_length + nitems)
-    X[old_length + 1:end] = items[1:nitems]
+    copy!(X, length(X)-nitems+1, items, 1, nitems)
+    return X
+end
+
+@doc """
+`prepend!(X::NullableVector, items::AbstractVector)`
+
+Add the elements of `items` to the beginning of `X`.
+
+Note that `prepend!(X, [1, 2, 3])` is equivalent to `unshift!(X, 1, 2, 3)`,
+where the items to be added to `X` are passed individually to `unshift!` and as a
+collection to `prepend!`.
+""" ->
+function Base.prepend!(X::NullableVector, items::AbstractVector)
+    old_length = length(X)
+    nitems = length(items)
+    ccall(:jl_array_grow_beg, Void, (Any, UInt), X.values, nitems)
+    ccall(:jl_array_grow_beg, Void, (Any, UInt), X.isnull, nitems)
+    if X === items
+        copy!(X, 1, items, nitems+1, nitems)
+    else
+        copy!(X, 1, items, 1, nitems)
+    end
     return X
 end
 
@@ -231,7 +244,7 @@ Insert `front` null entries at the beginning of `X` and add `back` null entries
 at the end of `X`. Returns `X`.
 """ ->
 function padnull!{T}(X::NullableVector{T}, front::Integer, back::Integer)
-    unshift!(X, fill(Nullable{T}(), front)...)
+    prepend!(X, fill(Nullable{T}(), front))
     append!(X, fill(Nullable{T}(), back))
     return X
 end
