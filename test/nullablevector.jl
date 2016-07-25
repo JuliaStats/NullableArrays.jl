@@ -216,4 +216,11 @@ module TestNullableVector
     vals = Z.values
     nulls = Z.isnull
     @test isequal(reverse!(Z), NullableArray(A, reverse!(Z.isnull)))
+
+    ## empty!(X::NullableVector)
+    n = rand(1:1_000)
+    A, M = rand(n), rand(Bool, n)
+    X = NullableArray(A, M)
+    empty!(X)
+    @test isempty(X)
 end

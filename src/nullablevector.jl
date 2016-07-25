@@ -299,3 +299,15 @@ Return a copy of `X` with the first `n` elements starting at index `s`
 function Base.reverse(X::NullableVector, s=1, n=length(X))
     return reverse!(copy(X), s, n)
 end
+
+@doc """
+`empty!(X::NullableVector) -> NullableVector`
+
+Remove all elements from a `NullableVector`. Returns `NullableVector{T}()`,
+where `T` is the `eltype` of `X`.
+"""
+function Base.empty!(X::NullableVector)
+    empty!(X.values)
+    empty!(X.isnull)
+    return X
+end
