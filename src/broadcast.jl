@@ -9,7 +9,7 @@ else
     _to_shape(x) = x
 end
 
-if VERSION < v"0.5.0-dev+4724"
+if VERSION < v"0.5.0-dev+5434"
     function gen_nullcheck(narrays::Int, nd::Int)
         e_nullcheck = macroexpand(:( @nref $nd isnull_1 d->j_d_1 ))
         for k = 2:narrays
@@ -94,7 +94,7 @@ if VERSION < v"0.5.0-dev+4724"
         end
     end  # let cache
 else
-    using Base.Broadcast: newindexer, newindex
+    using Base.Broadcast: newindexer, map_newindexer, newindex
 
     function _nullcheck(nargs)
         nullcheck = :(isnull_1[I_1])
@@ -107,19 +107,21 @@ else
         nargs >= 1 ? nullcheck : :(false)
     end
 
-    @generated function Base.Broadcast._broadcast!{M,XT,nargs}(f,
-    Z::NullableArray, indexmaps::M, Xs::XT, ::Type{Val{nargs}}; lift=false)
+    @generated function Base.Broadcast._broadcast!{K,ID,XT,nargs}(f,
+    Z::NullableArray, keeps::K, Idefaults::ID, Xs::XT, ::Type{Val{nargs}}; lift=false)
         nullcheck = _nullcheck(nargs)
         quote
             T = eltype(Z)
             $(Expr(:meta, :noinline))
+            # destructure keeps and Xs tuples (common to both lifted and non-lifted broadcast)
+            @nexprs $nargs i->(keep_i = keeps[i])
+            @nexprs $nargs i->(Idefault_i = Idefaults[i])
             if !lift
-                # destructure the indexmaps and As tuples
+                # destructure the keeps and As tuples
                 @nexprs $nargs i->(X_i = Xs[i])
-                @nexprs $nargs i->(imap_i = indexmaps[i])
                 @simd for I in CartesianRange(indices(Z))
                     # reverse-broadcast the indices
-                    @nexprs $nargs i->(I_i = newindex(I, imap_i))
+                    @nexprs $nargs i->(I_i = newindex(I, keep_i, Idefault_i))
                     # extract array values
                     @nexprs $nargs i->(@inbounds val_i = X_i[I_i])
                     # call the function and store the result
@@ -129,13 +131,12 @@ else
                 # destructure the indexmaps and Xs tuples
                 @nexprs $nargs i->(values_i = Xs[i].values)
                 @nexprs $nargs i->(isnull_i = Xs[i].isnull)
-                @nexprs $nargs i->(imap_i = indexmaps[i])
                 @simd for I in CartesianRange(indices(Z))
                     # reverse-broadcast the indices
-                    @nexprs $nargs i->(I_i = newindex(I, imap_i))
+                    @nexprs $nargs i->(I_i = newindex(I, keep_i, Idefault_i))
                     if $nullcheck
                         # if any args are null, store null
-                        @inbounds Z[I] = Nullable{T}()
+                        @inbounds Z.isnull[I] = true
                     else
                         # extract array values
                         @nexprs $nargs i->(@inbounds val_i = values_i[I_i])
@@ -160,14 +161,20 @@ else
     both `Array`s and `NullableArray`s will fall back to the implementation of
     `broadcast!` in `base/broadcast.jl`.
     """ ->
+    # Required to solve dispatch ambiguity between
+    #   broadcast!(f, X::AbstractArray, x::Number...)
+    #   broadcast!(f, Z::NullableArrays.NullableArray, Xs::NullableArrays.NullableArray...)
+    @inline Base.broadcast!(f, Z::NullableArray; lift=false) =
+        broadcast!(f, Z, Z; lift=lift)
+
     @inline function Base.broadcast!(f, Z::NullableArray, Xs::NullableArray...;
                                      lift=false)
         nargs = length(Xs)
-        check_broadcast_shape(indices(Z), Xs...)
-        sz = size(Z)
-        mapindex = map(x->newindexer(sz, x), Xs)
-        Base.Broadcast._broadcast!(f, Z, mapindex, Xs, Val{nargs}; lift=lift)
-        Z
+        shape = indices(Z)
+        check_broadcast_shape(shape, Xs...)
+        keeps, Idefaults = map_newindexer(shape, Xs)
+        Base.Broadcast._broadcast!(f, Z, keeps, Idefaults, Xs, Val{nargs}; lift=lift)
+        return Z
     end
 end
 
