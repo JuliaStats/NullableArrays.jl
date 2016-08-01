@@ -26,7 +26,7 @@ end
 Return a shallow copy of `X`; the outer structure of `X` will be copied, but
 all elements will be identical to those of `X`.
 """ ->
-Base.copy(X::NullableArray) = Base.copy!(similar(X), X)
+Base.copy{T}(X::NullableArray{T}) = Base.copy!(similar(X, T), X)
 
 @doc """
 `copy!(dest::NullableArray, src::NullableArray)`
