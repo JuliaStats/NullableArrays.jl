@@ -123,6 +123,8 @@ function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
 end
 
 #----- Conversion from NullableArrays of a different type --------------------#
+Base.convert{T, N}(::Type{NullableArray}, X::NullableArray{T,N}) = X
+
 function Base.convert{S, T, N}(::Type{NullableArray{T}},
                                A::AbstractArray{Nullable{S}, N}) # -> NullableArray{T, N}
     convert(NullableArray{T, N}, A)
