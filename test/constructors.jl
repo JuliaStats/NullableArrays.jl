@@ -123,4 +123,11 @@ module TestConstructors
         @test isa(convert(NullableArray{Float64,1}, a), NullableArray{Float64,1})
         @test isequal(convert(NullableArray{Float64,1}, a), NullableArray{Float64,1}([1.0,2.0,3.0,4.0],miss))
     end
+
+    # converting a NullableArray to unqualified type NullableArray should be no-op
+    m = rand(10:100)
+    A = rand(m)
+    M = rand(Bool, m)
+    X = NullableArray(A, M)
+    @test X === convert(NullableArray, X)
 end
