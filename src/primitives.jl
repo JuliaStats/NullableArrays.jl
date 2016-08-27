@@ -108,6 +108,10 @@ function Base.resize!{T}(X::NullableArray{T,1}, n::Int) # -> NullableArray{T, 1}
     return X
 end
 
+function Base.reshape(X::NullableArray, dims::Dims) # -> NullableArray
+    NullableArray(reshape(X.values, dims), reshape(X.isnull, dims))
+end
+
 @doc """
 `ndims(X::NullableArray)`
 

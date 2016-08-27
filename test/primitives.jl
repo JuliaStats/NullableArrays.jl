@@ -134,6 +134,19 @@ module TestPrimitives
     @test Y1.values[1:5] == Y.values[1:5]
     @test Y1.isnull[1:5] == Y.isnull[1:5]
 
+# ----- test Base.reshape ----------------------------------------------------#
+
+    Y1 = reshape(copy(Y), length(Y), 1)
+    @test size(Y1) == (length(Y), 1)
+    @test all(i->isequal(Y1[i], Y[i]), 1:length(Y))
+    Y2 = reshape(Y1, 1, length(Y1))
+    @test size(Y2) == (1, length(Y1))
+    @test all(i->isequal(Y1[i], Y2[i]), 1:length(Y2))
+    # Test that arrays share the same data
+    Y2.values[1] += 1
+    Y2.isnull[2] = true
+    @test all(i->isequal(Y1[i], Y2[i]), 1:length(Y2))
+
 # ----- test Base.ndims ------------------------------------------------------#
 
     for n in 1:4
