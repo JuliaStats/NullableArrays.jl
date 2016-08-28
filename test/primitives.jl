@@ -161,8 +161,18 @@ module TestPrimitives
 
 # ----- test dropnull --------------------------------------------------------#
 
+    # dropnull(X::NullableArray)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test dropnull(z) == [1, 2, 3, 5, 7]
+
+    # dropnull(X::AbstractArray)
+    A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
+            Nullable(), Nullable(7), Nullable()]
+    @test dropnull(A) == [1, 2, 3, 5, 7]
+
+    # dropnull(X::AbstractArray{<:Nullable})
+    B = convert(Vector{Nullable}, A)
+    @test dropnull(B) == [1, 2, 3, 5, 7]
 
 # ----- test anynull ---------------------------------------------------------#
 
@@ -197,9 +207,19 @@ module TestPrimitives
 
 # ----- test allnull ---------------------------------------------------------#
 
+    # allnull(X::NullableArray)
     @test allnull(z) == true
-    setindex!(z, 10, 1)
+    z[1] = 10
     @test allnull(z) == false
+
+    # anynull(X::AbstractArray{<:Nullable})
+    @test allnull(Nullable{Int}[Nullable(), Nullable()]) == true
+    @test allnull(Nullable{Int}[Nullable(1), Nullable()]) == false
+
+    # anynull(X::Any)
+    @test allnull(Any[Nullable(), Nullable()]) == true
+    @test allnull([1, 2]) == false
+    @test allnull(1:3) == false
 
 # ----- test Base.isnan ------------------------------------------------------#
 
