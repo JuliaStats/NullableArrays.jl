@@ -201,6 +201,17 @@ module TestOperators
                 x = op(Nullable(), Nullable())
                 @test isa(x, Nullable{Union{}}) && isnull(x)
             end
+
+            # isless
+            @test isless(Nullable(u), Nullable(v)) === isless(u, v)
+
+            @test isless(Nullable(u), Nullable(v, true)) === true
+            @test isless(Nullable(u, true), Nullable(v)) === false
+            @test isless(Nullable(u, true), Nullable(v, true)) === false
+
+            @test isless(Nullable(u), Nullable()) === true
+            @test isless(Nullable(), Nullable(v)) === false
+            @test isless(Nullable(), Nullable()) === false
         end
     end
 end

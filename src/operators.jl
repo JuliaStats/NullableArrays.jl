@@ -1,7 +1,7 @@
 ## Lifted operators
 
 importall Base.Operators
-import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax
+import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
 using Compat: @functorize
 
 # Methods adapted from Base Julia 0.5
@@ -85,7 +85,8 @@ end
 if VERSION >= v"0.5.0-dev"
     for op in (:+, :-, :*, :/, :&, :|, :<<, :>>, :(>>>),
                :(==), :<, :>, :<=, :>=,
-               :scalarmin, :scalarmax)
+               :scalarmin, :scalarmax,
+               :isless)
         @eval begin
             # to fix ambiguities
             null_safe_op{S<:SafeFloats,
@@ -129,4 +130,25 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
         $op{S}(x::Nullable{Union{}}, y::Nullable{S}) = Nullable{S}()
         $op{S}(x::Nullable{S}, y::Nullable{Union{}}) = Nullable{S}()
     end
+end
+
+if !method_exists(isless, (Nullable, Nullable))
+    function isless{S,T}(x::Nullable{S}, y::Nullable{T})
+        # NULL values are sorted last
+        if null_safe_op(@functorize(isless), S, T)
+            (!x.isnull & y.isnull) |
+            (!x.isnull & !y.isnull & isless(x.value, y.value))
+        else
+            if x.isnull
+                return false
+            elseif y.isnull
+                return true
+            else
+                return isless(x.value, y.value)
+            end
+        end
+    end
+    isless(x::Nullable{Union{}}, y::Nullable{Union{}}) = false
+    isless(x::Nullable{Union{}}, y::Nullable) = false
+    isless(x::Nullable, y::Nullable{Union{}}) = !x.isnull
 end
