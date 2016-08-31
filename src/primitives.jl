@@ -152,51 +152,50 @@ function Base.find(X::NullableArray{Bool}) # -> Array{Int}
     return res
 end
 
-@doc """
-`dropnull(X::NullableVector)`
 
-Return a `Vector` containing only the non-null entries of `X`.
+_isnull(x::Any) = false
+_isnull(x::Nullable) = isnull(x)
+
+@doc """
+`dropnull(X::AbstractVector)`
+
+Return a vector containing only the non-null entries of `X`,
+unwrapping `Nullable` entries. A copy is always returned, even when
+`X` does not contain any null values.
 """ ->
-dropnull(X::NullableVector) = copy(X.values[!X.isnull]) # -> Vector{T}
+function dropnull(X::AbstractVector)                 # -> AbstractVector
+    Y = filter(x->!_isnull(x), X)
+    res = similar(Y)
+    for i in eachindex(Y, res)
+        res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+    end
+    res
+end
+function dropnull{T<:Nullable}(X::AbstractVector{T}) # -> AbstractVector
+    Y = filter(x->!_isnull(x), X)
+    res = similar(Y, eltype(T))
+    for i in eachindex(Y, res)
+        res[i] = Y[i].value
+    end
+    res
+end
+dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 
 @doc """
-`anynull(X::NullableArray)`
+`anynull(X)`
 
 Returns whether or not any entries of `X` are null.
 """ ->
-anynull(X::NullableArray) = any(X.isnull) # -> Bool
-
-# @doc """
-#
-# """ ->
-# NOTE: the following currently short-circuits.
-function anynull(A::AbstractArray) # -> Bool
-    for a in A
-        if isa(a, Nullable)
-            a.isnull && (return true)
-        end
-    end
-    return false
-end
-#
-# @doc """
-#
-# """ ->
-function anynull(xs::NTuple) # -> Bool
-    for x in xs
-        if isa(x, Nullable)
-            x.isnull && (return true)
-        end
-    end
-    return false
-end
+anynull(X::Any) = any(_isnull, X)           # -> Bool
+anynull(X::NullableArray) = any(X.isnull)   # -> Bool
 
 @doc """
-`allnull(X::NullableArray)`
+`allnull(X)`
 
 Returns whether or not all the entries in `X` are null.
 """ ->
-allnull(X::NullableArray) = all(X.isnull) # -> Bool
+allnull(X::Any) = all(_isnull, X)           # -> Bool
+allnull(X::NullableArray) = all(X.isnull)   # -> Bool
 
 @doc """
 `isnan(X::NullableArray)`
