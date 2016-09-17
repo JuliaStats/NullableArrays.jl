@@ -78,7 +78,7 @@ module TestOperators
         v1 = one(T)
         v2 = T <: Union{BigInt, BigFloat} ? T(rand(Int128)) : rand(T)
 
-        abs(v2) > 5 && (v2 = T(5)) # Work around JuliaLang/julia#16989
+        (v2 > 5 || v2 < -5) && (v2 = T(5)) # Work around JuliaLang/julia#16989
 
         # safe unary operators
         for op in (+, -, ~, abs, abs2, cbrt)
