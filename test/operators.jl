@@ -160,10 +160,10 @@ module TestOperators
 
             # unsafe binary operators
             # ^
-            if S <: Integer && T <: Integer && u != 0
-                @test_throws DomainError Nullable(u)^Nullable(ensure_neg(one(v)))
+            if S <: Integer && T <: Integer && u != 0 && u != 1 && v != 0
+                @test_throws DomainError Nullable(u)^Nullable(ensure_neg(v))
             end
-            @test isequal(Nullable(u)^Nullable(2*one(T)), Nullable(u^(2*one(T))))
+            @test isequal(Nullable(u)^Nullable(one(T)+one(T)), Nullable(u^(one(T)+one(T))))
             R = Base.promote_op(^, S, T)
             x = Nullable(u, true)^Nullable(-abs(v), true)
             @test isnull(x) && eltype(x) === R
