@@ -133,7 +133,7 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
 end
 
 if !method_exists(isless, (Nullable, Nullable))
-    function isless{S,T}(x::Nullable{S}, y::Nullable{T})
+    @inline function isless{S,T}(x::Nullable{S}, y::Nullable{T})
         # NULL values are sorted last
         if null_safe_op(@functorize(isless), S, T)
             (!x.isnull & y.isnull) |
