@@ -190,7 +190,7 @@ function Base.mapreduce_impl{T}(f, op::typeof(@functorize(scalarmin)), X::Nullab
     i += 1
     while i <= last
         @inbounds x = f(X[i])
-        if x.isnull || v.isnull
+        if isnull(x) | isnull(v)
             return Nullable{eltype(x)}()
         elseif x.value < v.value
             v = x
@@ -207,7 +207,7 @@ function Base.mapreduce_impl{T}(f, op::typeof(@functorize(scalarmax)), X::Nullab
     i += 1
     while i <= last
         @inbounds x = f(X[i])
-        if x.isnull || v.isnull
+        if isnull(x) | isnull(v)
             return Nullable{eltype(x)}()
         elseif x.value > v.value
             v = x

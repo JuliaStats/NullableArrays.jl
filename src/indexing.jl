@@ -19,7 +19,7 @@ designated by `I` is present, then it will be returned wrapped in a
 # Extract a scalar element from a `NullableArray`.
 @inline function Base.getindex{T, N}(X::NullableArray{T, N}, I::Int...)
     if isbits(T)
-        Nullable{T}(X.values[I...], X.isnull[I...])
+        ifelse(X.isnull[I...], Nullable{T}(), Nullable{T}(X.values[I...]))
     else
         if X.isnull[I...]
             Nullable{T}()
