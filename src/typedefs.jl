@@ -1,3 +1,7 @@
+typealias AbstractNullableArray{T, N} AbstractArray{Nullable{T}, N}
+typealias AbstractNullableVector{T} AbstractNullableArray{T, 1}
+typealias AbstractNullableMatrix{T} AbstractNullableArray{T, 2}
+
 # === Design Notes ===
 #
 # `NullableArray{T, N}` is a struct-of-arrays representation of
@@ -18,7 +22,7 @@
 It allows users to easily define operations on arrays with null values by
 reusing operations that only work on arrays without any null values.
 """ ->
-immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
+immutable NullableArray{T, N} <: AbstractNullableArray{T, N}
     values::Array{T, N}
     isnull::Array{Bool, N}
     # extra field for potentially holding a reference to a parent memory block
