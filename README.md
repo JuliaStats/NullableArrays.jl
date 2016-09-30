@@ -145,7 +145,7 @@ Let `v, w` be two `Nullable{Float64}` objects. If both `v, w` are non-null, the 
 Arguably, the best way to lift existing methods over `Nullable` arguments is to use multiple dispatch. That is, one can very easily extend `f` to handle `Nullable{Float64}` arguments by simply defining an appropriate method:
 ```julia
 function f(x::Nullable{Float64}, y::Nullable{Float64})
-    if x.isnull | y.isnull
+    if isnull(x) | isnull(y)
         return Nullable{Float64}()
     else
         return Nullable(f(x.value, y.value))

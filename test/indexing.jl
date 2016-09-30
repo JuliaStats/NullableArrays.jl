@@ -35,7 +35,11 @@ module TestIndexing
 
     # Base.getindex{T, N}(X::NullableArray{T, N}, I::Nullable{Int}...)
     @test_throws NullException getindex(X, Nullable{Int}(), Nullable{Int}())
-    @test isequal(getindex(X, Nullable(1)), Nullable(_values[1], _isnull[1]))
+    if _isnull[1]
+        @test isnull(getindex(X, Nullable(1)))
+    else
+        @test isequal(getindex(X, Nullable(1)), Nullable(_values[1]))
+    end
 
     # Scalar getindex
     for i = 1:100
@@ -192,7 +196,7 @@ module TestIndexing
 
     if VERSION >= v"0.5.0-dev+4697"
         # Base.checkindex(::Type{Bool}, inds::UnitRange, i::Nullable)
-        @test_throws NullException checkindex(Bool, 1:1, Nullable(1, true))
+        @test_throws NullException checkindex(Bool, 1:1, Nullable{Int}())
         @test checkindex(Bool, 1:10, Nullable(1)) == true
         @test isequal(X[Nullable(1)], Nullable(1))
 

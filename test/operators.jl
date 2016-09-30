@@ -18,6 +18,13 @@ module TestOperators
     Y = NullableArray(B, M)
 
     srand(1)
+
+    if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
+        _Nullable(x, hasvalue::Bool) = Nullable(x, hasvalue)
+    else
+        _Nullable(x, hasvalue::Bool) = Nullable(x, !hasvalue)
+    end
+
     ensure_neg(x::Unsigned) = -convert(Signed, x)
     ensure_neg(x::Any) = -abs(x)
 
@@ -43,7 +50,7 @@ module TestOperators
                 @test op(Nullable(u0)) === Nullable(op(u0))
                 @test op(Nullable(u1)) === Nullable(op(u1))
                 @test op(Nullable(u2)) === Nullable(op(u2))
-                @test op(Nullable(u0, true)) === Nullable(op(u0), true)
+                @test op(_Nullable(u0, false)) === _Nullable(op(u0), false)
             end
 
             for u in (u0, u1, u2), v in (v0, v1, v2)
@@ -54,17 +61,17 @@ module TestOperators
                     (T <: AbstractFloat || S <: AbstractFloat) && op in (&, |, >>, <<, >>>) && continue
 
                     @test op(Nullable(u), Nullable(v)) === Nullable(op(u, v))
-                    @test op(Nullable(u, true), Nullable(v, true)) === Nullable(op(u, v), true)
-                    @test op(Nullable(u), Nullable(v, true)) === Nullable(op(u, v), true)
-                    @test op(Nullable(u, true), Nullable(v)) === Nullable(op(u, v), true)
+                    @test op(_Nullable(u, false), _Nullable(v, false)) === _Nullable(op(u, v), false)
+                    @test op(Nullable(u), _Nullable(v, false)) === _Nullable(op(u, v), false)
+                    @test op(_Nullable(u, false), Nullable(v)) === _Nullable(op(u, v), false)
                 end
             end
         end
 
         @test !Nullable(true) === Nullable(false)
         @test !Nullable(false) === Nullable(true)
-        @test !(Nullable(true, true)) === Nullable(false, true)
-        @test !(Nullable(false, true)) === Nullable(true, true)
+        @test !(_Nullable(true, false)) === _Nullable(false, false)
+        @test !(_Nullable(false, false)) === _Nullable(true, false)
     end
 
     # test all types and operators (including null-unsafe ones)
@@ -91,11 +98,11 @@ module TestOperators
             @test isa(x, Nullable{R}) && isequal(x, Nullable(op(v1)))
             x = op(Nullable(v2))
             @test isa(x, Nullable{R}) && isequal(x, Nullable(op(v2)))
-            x = op(Nullable(v0, true))
+            x = op(_Nullable(v0, false))
             @test isa(x, Nullable{R}) && isnull(x)
-            x = op(Nullable(v1, true))
+            x = op(_Nullable(v1, false))
             @test isa(x, Nullable{R}) && isnull(x)
-            x = op(Nullable(v2, true))
+            x = op(_Nullable(v2, false))
             @test isa(x, Nullable{R}) && isnull(x)
             x = op(Nullable{R}())
             @test isa(x, Nullable{R}) && isnull(x)
@@ -114,11 +121,11 @@ module TestOperators
         @test isa(x, Nullable{R}) && isequal(x, Nullable(sqrt(v1)))
         x = sqrt(Nullable(abs(v2)))
         @test isa(x, Nullable{R}) && isequal(x, Nullable(sqrt(abs(v2))))
-        x = sqrt(Nullable(v0, true))
+        x = sqrt(_Nullable(v0, false))
         @test isa(x, Nullable{R}) && isnull(x)
-        x = sqrt(Nullable(ensure_neg(v1), true))
+        x = sqrt(_Nullable(ensure_neg(v1), false))
         @test isa(x, Nullable{R}) && isnull(x)
-        x = sqrt(Nullable(ensure_neg(v2), true))
+        x = sqrt(_Nullable(ensure_neg(v2), false))
         @test isa(x, Nullable{R}) && isnull(x)
         x = sqrt(Nullable{R}())
         @test isa(x, Nullable{R}) && isnull(x)
@@ -143,16 +150,16 @@ module TestOperators
                     @test isequal(op(Nullable(u), Nullable(v)), Nullable(op(u, v)))
                 end
                 R = Base.promote_op(op, S, T)
-                x = op(Nullable(u, true), Nullable(v, true))
+                x = op(_Nullable(u, false), _Nullable(v, false))
                 @test isa(x, Nullable{R}) && isnull(x)
-                x = op(Nullable(u), Nullable(v, true))
+                x = op(Nullable(u), _Nullable(v, false))
                 @test isa(x, Nullable{R}) && isnull(x)
-                x = op(Nullable(u, true), Nullable(v))
+                x = op(_Nullable(u, false), Nullable(v))
                 @test isa(x, Nullable{R}) && isnull(x)
 
-                x = op(Nullable(u, true), Nullable())
+                x = op(_Nullable(u, false), Nullable())
                 @test isa(x, Nullable{S}) && isnull(x)
-                x = op(Nullable(), Nullable(u, true))
+                x = op(Nullable(), _Nullable(u, false))
                 @test isa(x, Nullable{S}) && isnull(x)
                 x = op(Nullable(), Nullable())
                 @test isa(x, Nullable{Union{}}) && isnull(x)
@@ -165,16 +172,16 @@ module TestOperators
             end
             @test isequal(Nullable(u)^Nullable(one(T)+one(T)), Nullable(u^(one(T)+one(T))))
             R = Base.promote_op(^, S, T)
-            x = Nullable(u, true)^Nullable(-abs(v), true)
+            x = _Nullable(u, false)^_Nullable(-abs(v), false)
             @test isnull(x) && eltype(x) === R
-            x = Nullable(u, false)^Nullable(-abs(v), true)
+            x = _Nullable(u, true)^_Nullable(-abs(v), false)
             @test isnull(x) && eltype(x) === R
-            x = Nullable(u, true)^Nullable(-abs(v), false)
+            x = _Nullable(u, false)^_Nullable(-abs(v), true)
             @test isnull(x) && eltype(x) === R
 
-            x = Nullable(u, true)^Nullable()
+            x = Nullable(u, false)^Nullable()
             @test isa(x, Nullable{S}) && isnull(x)
-            x = Nullable()^Nullable(u, true)
+            x = Nullable()^_Nullable(u, false)
             @test isa(x, Nullable{S}) && isnull(x)
             x = Nullable()^Nullable()
             @test isa(x, Nullable{Union{}}) && isnull(x)
@@ -187,16 +194,16 @@ module TestOperators
                     @test isequal(op(Nullable(u), Nullable(v)), Nullable(op(u, v)))
                 end
                 R = Base.promote_op(op, S, T)
-                x = op(Nullable(u, true), Nullable(v, true))
+                x = op(_Nullable(u, false), _Nullable(v, false))
                 @test isnull(x) && eltype(x) === R
-                x = op(Nullable(u, false), Nullable(v, true))
+                x = op(_Nullable(u, true), _Nullable(v, false))
                 @test isnull(x) && eltype(x) === R
-                x = op(Nullable(u, true), Nullable(v, false))
+                x = op(_Nullable(u, false), _Nullable(v, true))
                 @test isnull(x) && eltype(x) === R
 
-                x = op(Nullable(u, true), Nullable())
+                x = op(Nullable(u, false), Nullable())
                 @test isa(x, Nullable{S}) && isnull(x)
-                x = op(Nullable(), Nullable(u, true))
+                x = op(Nullable(), _Nullable(u, false))
                 @test isa(x, Nullable{S}) && isnull(x)
                 x = op(Nullable(), Nullable())
                 @test isa(x, Nullable{Union{}}) && isnull(x)
@@ -205,9 +212,9 @@ module TestOperators
             # isless
             @test isless(Nullable(u), Nullable(v)) === isless(u, v)
 
-            @test isless(Nullable(u), Nullable(v, true)) === true
-            @test isless(Nullable(u, true), Nullable(v)) === false
-            @test isless(Nullable(u, true), Nullable(v, true)) === false
+            @test isless(Nullable(u), _Nullable(v, false)) === true
+            @test isless(_Nullable(u, false), Nullable(v)) === false
+            @test isless(_Nullable(u, false), _Nullable(v, false)) === false
 
             @test isless(Nullable(u), Nullable()) === true
             @test isless(Nullable(), Nullable(v)) === false

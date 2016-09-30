@@ -16,7 +16,7 @@ Insert a value at the end of `X` from a `Nullable` value `v`. If `v` is null
 then this method adds a null entry at the end of `X`. Returns `X`.
 """ ->
 function Base.push!{T, V}(X::NullableVector{T}, v::Nullable{V})
-    if v.isnull
+    if isnull(v)
         resize!(X.values, length(X.values) + 1)
         push!(X.isnull, true)
     else
@@ -44,7 +44,7 @@ Insert a value at the beginning of `X` from a `Nullable` value `v`. If `v` is
 null then this method inserts a null entry at the beginning of `X`. Returns `X`.
 """ ->
 function Base.unshift!(X::NullableVector, v::Nullable) # -> NullableVector{T}
-    if v.isnull
+    if isnull(v)
         ccall(:jl_array_grow_beg, Void, (Any, UInt), X.values, 1)
         unshift!(X.isnull, true)
     else

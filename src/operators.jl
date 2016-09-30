@@ -4,6 +4,12 @@ importall Base.Operators
 import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
 using Compat: @functorize
 
+if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
+    _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, hasvalue)
+else
+    _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, !hasvalue)
+end
+
 # Methods adapted from Base Julia 0.5
 if VERSION < v"0.5.0-dev+5096"
     promote_op(::Any, T) = T
@@ -67,10 +73,10 @@ for op in (:+, :-, :!, :~, :abs, :abs2, :sqrt, :cbrt)
         @inline function $op{S}(x::Nullable{S})
             R = promote_op($op, S)
             if null_safe_op(@functorize($op), S)
-                Nullable{R}($op(x.value), x.isnull)
+                _Nullable(R, $op(x.value), !isnull(x))
             else
-                x.isnull ? Nullable{R}() :
-                           Nullable{R}($op(x.value))
+                isnull(x) ? Nullable{R}() :
+                            Nullable{R}($op(x.value))
             end
         end
         $op(x::Nullable{Union{}}) = Nullable()
@@ -120,10 +126,10 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
         @inline function $op{S,T}(x::Nullable{S}, y::Nullable{T})
             R = promote_op(@functorize($op), S, T)
             if null_safe_op(@functorize($op), S, T)
-                Nullable{R}($op(x.value, y.value), x.isnull | y.isnull)
+                _Nullable(R, $op(x.value, y.value), !(isnull(x) | isnull(y)))
             else
-                (x.isnull | y.isnull) ? Nullable{R}() :
-                                        Nullable{R}($op(x.value, y.value))
+                (isnull(x) | isnull(y)) ? Nullable{R}() :
+                                          Nullable{R}($op(x.value, y.value))
             end
         end
         $op(x::Nullable{Union{}}, y::Nullable{Union{}}) = Nullable()
@@ -132,16 +138,16 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
     end
 end
 
-if !method_exists(isless, (Nullable, Nullable))
+if !method_exists(isless, Tuple{Nullable{Int}, Nullable{Int}})
     function isless{S,T}(x::Nullable{S}, y::Nullable{T})
         # NULL values are sorted last
         if null_safe_op(@functorize(isless), S, T)
-            (!x.isnull & y.isnull) |
-            (!x.isnull & !y.isnull & isless(x.value, y.value))
+            (!isnull(x) & isnull(y)) |
+            (!isnull(x) & !isnull(y) & isless(x.value, y.value))
         else
-            if x.isnull
+            if isnull(x)
                 return false
-            elseif y.isnull
+            elseif isnull(y)
                 return true
             else
                 return isless(x.value, y.value)
@@ -150,5 +156,5 @@ if !method_exists(isless, (Nullable, Nullable))
     end
     isless(x::Nullable{Union{}}, y::Nullable{Union{}}) = false
     isless(x::Nullable{Union{}}, y::Nullable) = false
-    isless(x::Nullable, y::Nullable{Union{}}) = !x.isnull
+    isless(x::Nullable, y::Nullable{Union{}}) = !isnull(x)
 end

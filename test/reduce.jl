@@ -4,7 +4,8 @@ module TestReduce
 
     srand(1)
     f(x) = 5 * x
-    f{T<:Number}(x::Nullable{T}) = Nullable(5 * x.value, x.isnull)
+    f{T<:Number}(x::Nullable{T}) = ifelse(isnull(x), Nullable{typeof(5 * x.value)}(),
+                                                     Nullable(5 * x.value))
 
     for N in (10, 2050)
         A = rand(N)
@@ -24,13 +25,13 @@ module TestReduce
         @test isequal(mapreduce(f, +, Y), Nullable{Float64}())
         v = mapreduce(f, +, Y, skipnull=true)
         @test_approx_eq v.value mapreduce(f, +, B)
-        @test !v.isnull
+        @test !isnull(v)
 
         @test isequal(reduce(+, X), Nullable(reduce(+, X.values)))
         @test isequal(reduce(+, Y), Nullable{Float64}())
         v = reduce(+, Y, skipnull=true)
         @test_approx_eq v.value reduce(+, B)
-        @test !v.isnull
+        @test !isnull(v)
 
         for method in (
             sum,
@@ -43,11 +44,11 @@ module TestReduce
             @test isequal(method(Y), Nullable{Float64}())
             v = method(Y, skipnull=true)
             @test_approx_eq v.value method(B)
-            @test !v.isnull
+            @test !isnull(v)
             @test isequal(method(f, Y), Nullable{Float64}())
             v = method(f, Y, skipnull=true)
             @test_approx_eq v.value method(f, B)
-            @test !v.isnull
+            @test !isnull(v)
         end
 
         for method in (
@@ -58,7 +59,7 @@ module TestReduce
             @test isequal(method(Y), Nullable{Float64}())
             v = method(Y, skipnull=true)
             @test_approx_eq v.value method(B)
-            @test v.isnull == false
+            @test !isnull(v)
         end
 
         H = rand(Bool, N)

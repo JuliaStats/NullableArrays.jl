@@ -12,7 +12,8 @@ D = DataArray(A)
 E = DataArray(A, B)
 
 f(x) = 5 * x
-f{T<:Number}(x::Nullable{T}) = Nullable(5 * x.value, x.isnull)
+f{T<:Number}(x::Nullable{T}) =
+    ifelse(isnull(x), Nullable{typeof(5 * x.value)}(), Nullable(5 * x.value))
 
 #-----------------------------------------------------------------------------#
 
