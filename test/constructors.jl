@@ -75,6 +75,19 @@ module TestConstructors
         @test isequal(X3, NullableArray(Array{Int}(dims...), fill(true, dims...)))
     end
 
+    # test NullableArray{T}(dims::Int...)
+    d1, d2 = rand(1:100), rand(1:100)
+    X1 = NullableArray{Int,1}(d1)
+    X2 = NullableArray{Int,2}(d1, d2)
+    @test isequal(X1, NullableArray(Array{Int,1}(d1), fill(true, d1)))
+    @test isequal(X2, NullableArray(Array{Int,2}(d1, d2), fill(true, d1, d2)))
+    for i in 1:5
+        m = rand(3:5)
+        dims = [ rand(1:5) for i in 1:m ]
+        X3 = NullableArray{Int,length(dims)}(dims...)
+        @test isequal(X3, NullableArray(Array{Int}(dims...), fill(true, dims...)))
+    end
+
     # test (A::AbstractArray, ::Type{T}, ::Type{U}) constructor
     z = NullableArray([1, nothing, 2, nothing, 3], Int, Void)
     @test isa(z, NullableVector{Int})
