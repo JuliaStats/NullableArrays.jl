@@ -34,6 +34,7 @@ end
 
 @compat (::Type{NullableArray{T}}){T}(dims::Dims) = NullableArray(T, dims)
 @compat (::Type{NullableArray{T}}){T}(dims::Int...) = NullableArray(T, dims)
+@compat (::Type{NullableArray{T,N}}){T,N}(dims::Vararg{Int,N}) = NullableArray(T, dims)
 
 # The following method constructs a NullableArray from an Array{Any} argument
 # 'A' that contains some placeholder of type 'T' for null values.
