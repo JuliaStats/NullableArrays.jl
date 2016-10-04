@@ -80,10 +80,16 @@ end
 function unsafe_getindex_notnull(X::NullableArray, I::Int...)
     return Nullable(getindex(X.values, I...))
 end
+function unsafe_getindex_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+    return getindex(X, I...)
+end
 
 # return the value of non-null X element
 function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
     return getindex(X.values, I...)
+end
+function unsafe_getvalue_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+    return get(getindex(X, I...))
 end
 
 if VERSION >= v"0.5.0-dev+4697"
