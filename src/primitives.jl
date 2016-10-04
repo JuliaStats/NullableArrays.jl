@@ -1,4 +1,5 @@
 Base.isnull(X::NullableArray, I::Int...) = X.isnull[I...]
+Base.isnull{T}(X::AbstractArray{Nullable{T}}, I::Int...) = isnull(X[I...]) # fallback method
 Base.values(X::NullableArray, I::Int...) = X.values[I...]
 
 """
