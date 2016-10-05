@@ -7,15 +7,14 @@ module TestReduce
     f{T<:Number}(x::Nullable{T}) = ifelse(isnull(x), Nullable{typeof(5 * x.value)}(),
                                                      Nullable(5 * x.value))
 
-    for N in (10, 2050)
+    for N in (2, 10, 2050)
         A = rand(N)
         M = rand(Bool, N)
         i = rand(1:N)
+        # should have at least one null and at least one non-null
         M[i] = true
-        j = rand(1:N)
-        while j == i
-            j = rand(1:N)
-        end
+        j = rand(1:(N-1))
+        (j == i) && (j += 1)
         M[j] = false
         X = NullableArray(A)
         Y = NullableArray(A, M)
