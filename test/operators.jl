@@ -46,6 +46,8 @@ module TestOperators
             # safe unary operators
             for op in (+, -, ~, abs, abs2, cbrt)
                 S <: AbstractFloat && op == (~) && continue
+                # Temporary workaround until JuliaLang/julia#18803
+                S === Float16 && op == cbrt && continue
 
                 @test op(Nullable(u0)) === Nullable(op(u0))
                 @test op(Nullable(u1)) === Nullable(op(u1))
