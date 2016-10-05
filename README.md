@@ -2,6 +2,7 @@
 NullableArrays.jl
 =================
 [![Build Status](https://travis-ci.org/JuliaStats/NullableArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/NullableArrays.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/r6grjnpthfp3bfe5?svg=true)](https://ci.appveyor.com/project/nalimilan/nullablearrays-jl)
 [![Coveralls](https://coveralls.io/repos/github/JuliaStats/NullableArrays.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![codecov.io](http://codecov.io/github/JuliaStats/NullableArrays.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaStats/NullableArrays.jl?branch=master)
 [![NullableArrays](http://pkg.julialang.org/badges/NullableArrays_0.4.svg)](http://pkg.julialang.org/?pkg=NullableArrays)
