@@ -136,7 +136,7 @@ function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
 end
 
 """
-    mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])
+    reduce(op::Function, X::NullableArray; [skipnull::Bool=false])
 
 Reduce `X`under the operation `op`. One can set the behavior of this method to
 skip the null entries of `X` by setting the keyword argument `skipnull` equal
