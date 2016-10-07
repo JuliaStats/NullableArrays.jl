@@ -76,7 +76,7 @@ function _mapreduce_skipnull{T}(f, op, X::NullableArray{T}, missingdata::Bool)
 
     nnull = countnz(X.isnull)
     nnull == n && return Base.mr_empty(f, op, T)
-    nnull == n - 1 && return Base.r_promote(op, f(X.values[findnext(x -> x == false), X, 1]))
+    nnull == n - 1 && return Nullable(Base.r_promote(op, f(X.values[findfirst(X.isnull, false)])))
     # nnull == 0 && return Base.mapreduce_impl(f, op, X, 1, n)
 
     return mapreduce_impl_skipnull(f, op, X)
