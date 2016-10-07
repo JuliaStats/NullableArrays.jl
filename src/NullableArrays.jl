@@ -7,9 +7,8 @@ using Compat.view
 using Reexport
 @reexport using Base.Cartesian
 
-export NullableArray,
-       NullableVector,
-       NullableMatrix,
+export AbstractNullableArray, AbstractNullableVector, AbstractNullableMatrix,
+       NullableArray, NullableVector, NullableMatrix,
 
        # Macros
 
