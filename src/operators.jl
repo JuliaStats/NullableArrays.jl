@@ -66,6 +66,9 @@ if VERSION >= v"0.5.0-dev"
     null_safe_op{T<:SafeInts}(::typeof(~), ::Type{T}) = true
     null_safe_op{T<:SafeTypes}(::typeof(cbrt), ::Type{T}) = true
     null_safe_op(::typeof(!), ::Type{Bool}) = true
+
+    # Temporary workaround until JuliaLang/julia#18803
+    null_safe_op(::typeof(cbrt), ::Type{Float16}) = false
 end
 
 for op in (:+, :-, :!, :~, :abs, :abs2, :sqrt, :cbrt)
