@@ -68,8 +68,9 @@ if VERSION < v"0.5.0-dev+5434"
     end
 
     @eval let cache = Dict{Any, Dict{Bool, Dict{Int, Dict{Int, Any}}}}()
-        @doc """
-        `broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)`
+        """
+            broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)
+
         This method implements the same behavior as that of `broadcast!` when called on
         regular `Array` arguments. It also includes the `lift` keyword argument, which
         when set to true will lift `f` over the entries of the `As`.
@@ -79,7 +80,7 @@ if VERSION < v"0.5.0-dev+5434"
         `NullableArray`s. Thus, calling `broadcast!` on a arguments consisting
         of both `Array`s and `NullableArray`s will fall back to the implementation
         of `broadcast!` in `base/broadcast.jl`.
-        """ ->
+        """
         function Base.broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)
             nd = ndims(B)
             narrays = length(As)
@@ -148,8 +149,8 @@ else
         end
     end
 
-    @doc """
-    `broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)`
+    """
+        broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)
 
     This method implements the same behavior as that of `broadcast!` when called
     on regular `Array` arguments. It also includes the `lift` keyword argument,
@@ -160,7 +161,7 @@ else
     `NullableArray`s. Thus, calling `broadcast!` on a arguments consisting of
     both `Array`s and `NullableArray`s will fall back to the implementation of
     `broadcast!` in `base/broadcast.jl`.
-    """ ->
+    """
     # Required to solve dispatch ambiguity between
     #   broadcast!(f, X::AbstractArray, x::Number...)
     #   broadcast!(f, Z::NullableArrays.NullableArray, Xs::NullableArrays.NullableArray...)
@@ -178,8 +179,8 @@ else
     end
 end
 
-@doc """
-`broadcast(f, As::NullableArray...;lift::Bool=false)`
+"""
+    broadcast(f, As::NullableArray...;lift::Bool=false)
 
 This method implements the same behavior as that of `broadcast` when called on
 regular `Array` arguments. It also includes the `lift` keyword argument, which
@@ -189,7 +190,7 @@ Lifting is disabled by default. Note that this method's signature specifies the
 source `As` arrays as all `NullableArray`s. Thus, calling `broadcast!` on
 arguments consisting of both `Array`s and `NullableArray`s will fall back to the
 implementation of `broadcast` in `base/broadcast.jl`.
-""" ->
+"""
 @inline function Base.broadcast(f, Xs::NullableArray...;lift::Bool=false)
     return broadcast!(f, NullableArray(eltype(promote_eltype(Xs...)),
                                        _to_shape(broadcast_shape(Xs...))),

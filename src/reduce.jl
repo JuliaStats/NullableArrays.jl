@@ -105,8 +105,8 @@ else
     const specialized_binary = Base.specialized_binary
 end
 
-@doc """
-`mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])`
+"""
+    mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])
 
 Map a function `f` over the elements of `X` and reduce the result under the
 operation `op`. One can set the behavior of this method to skip the null entries
@@ -114,7 +114,7 @@ of `X` by setting the keyword argument `skipnull` equal to true. If `skipnull`
 behavior is enabled, `f` will be automatically lifted over the elements of `X`.
 Note that, in general, mapreducing over a `NullableArray` will return a
 `Nullable` object regardless of whether `skipnull` is set to `true` or `false`.
-""" ->
+"""
 function Base.mapreduce(f, op::Function, X::NullableArray;
                         skipnull::Bool = false)
     missingdata = anynull(X)
@@ -135,8 +135,8 @@ function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
     end
 end
 
-@doc """
-`mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])`
+"""
+    mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])
 
 Reduce `X`under the operation `op`. One can set the behavior of this method to
 skip the null entries of `X` by setting the keyword argument `skipnull` equal
@@ -144,7 +144,7 @@ to true. If `skipnull` behavior is enabled, `f` will be automatically lifted
 over the elements of `X`. Note that, in general, mapreducing over a
 `NullableArray` will return a `Nullable` object regardless of whether `skipnull`
 is set to `true` or `false`.
-""" ->
+"""
 Base.reduce(op, X::NullableArray; skipnull::Bool = false) =
     mapreduce(@functorize(identity), op, X; skipnull = skipnull)
 
