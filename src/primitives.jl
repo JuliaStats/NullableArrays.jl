@@ -206,7 +206,7 @@ null entries of `X` will be reflected by null entries of the resultant
 `NullableArray`.
 """ ->
 function Base.isnan(X::NullableArray) # -> NullableArray{Bool}
-    return NullableArray(isnan(X.values), copy(X.isnull))
+    return NullableArray(@compat(isnan.(X.values)), copy(X.isnull))
 end
 
 @doc """
