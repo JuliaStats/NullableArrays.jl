@@ -1,6 +1,12 @@
 using Base: promote_eltype
-using Base.Broadcast: check_broadcast_shape, broadcast_shape
 using Base.Cartesian
+if VERSION >= v"0.6.0-dev.693"
+    using Base.Broadcast: check_broadcast_indices, broadcast_indices
+else
+    using Base.Broadcast: check_broadcast_shape, broadcast_shape
+    const check_broadcast_indices = check_broadcast_shape
+    const broadcast_indices = broadcast_shape
+end
 
 if VERSION >= v"0.5.0-dev+5189"
     _to_shape(dims::Base.DimsOrInds) = map(_to_shape, dims)
@@ -171,7 +177,7 @@ else
                                      lift=false)
         nargs = length(Xs)
         shape = indices(Z)
-        check_broadcast_shape(shape, Xs...)
+        check_broadcast_indices(shape, Xs...)
         keeps, Idefaults = map_newindexer(shape, Xs)
         Base.Broadcast._broadcast!(f, Z, keeps, Idefaults, Xs, Val{nargs}; lift=lift)
         return Z
@@ -192,7 +198,7 @@ implementation of `broadcast` in `base/broadcast.jl`.
 """ ->
 @inline function Base.broadcast(f, Xs::NullableArray...;lift::Bool=false)
     return broadcast!(f, NullableArray(eltype(promote_eltype(Xs...)),
-                                       _to_shape(broadcast_shape(Xs...))),
+                                       _to_shape(broadcast_indices(Xs...))),
                       Xs...; lift=lift)
 end
 
