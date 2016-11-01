@@ -34,14 +34,13 @@ end
 
 @compat (::Type{NullableArray{T}}){T}(dims::Dims) = NullableArray(T, dims)
 @compat (::Type{NullableArray{T}}){T}(dims::Int...) = NullableArray(T, dims)
-if VERSION >= v"0.5.0-dev"
-    (::Type{NullableArray{T,N}}){T,N}(dims::Vararg{Int,N}) = NullableArray(T, dims)
+if VERSION >= v"0.5.0-"
+    @compat (::Type{NullableArray{T,N}}){T,N}(dims::Vararg{Int,N}) = NullableArray(T, dims)
 else
-    @compat (::Type{NullableArray{T,1}}){T,N}(x1) = NullableArray(T, x1)
-    @compat (::Type{NullableArray{T,2}}){T,N}(x1, x2) = NullableArray(T, x1, x2)
-    @compat (::Type{NullableArray{T,3}}){T,N}(x1, x2, x3) = NullableArray(T, x1, x2, x3)
-    @compat (::Type{NullableArray{T,3}}){T,N}(x1, x2, x3, x4) = NullableArray(T, x1, x2, x3, x4)
-    @compat (::Type{NullableArray{T,3}}){T,N}(x1, x2, x3, x4, x5) = NullableArray(T, x1, x2, x3, x4, x5)
+  function Base.convert{T,N}(::Type{NullableArray{T,N}}, dims::Int...)
+      length(dims) == N || throw(ArgumentError("Wrong number of arguments. Expected $N, got $(length(dims))."))
+      NullableArray(T, dims)
+  end
 end
 
 # The following method constructs a NullableArray from an Array{Any} argument
