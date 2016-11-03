@@ -111,8 +111,8 @@ function Base.convert{T, N}(::Type{NullableArray},
 end
 
 #----- Conversion from arrays of Nullables -----------------------------------#
-function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
-                               A::AbstractArray{Nullable{S}, N}) # -> NullableArray{T, N}
+function Base.convert{S<:Nullable, T, N}(::Type{NullableArray{T, N}},
+                                         A::AbstractArray{S, N}) # -> NullableArray{T, N}
    out = NullableArray{T, N}(Array(T, size(A)), Array(Bool, size(A)))
    for i = 1:length(A)
        if !(out.isnull[i] = isnull(A[i]))
@@ -133,6 +133,11 @@ end
 function Base.convert{T, N}(::Type{NullableArray},
                             A::AbstractArray{Nullable{T}, N}) # -> NullableArray{T, N}
     convert(NullableArray{T, N}, A)
+end
+
+function Base.convert{N}(::Type{NullableArray},
+                         A::AbstractArray{Nullable, N}) # -> NullableArray{Any, N}
+    convert(NullableArray{Any, N}, A)
 end
 
 function Base.convert{S, T, N}(::Type{NullableArray{T, N}},

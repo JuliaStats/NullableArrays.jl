@@ -124,6 +124,15 @@ module TestConstructors
         @test isequal(convert(NullableArray{Float64,1}, a), NullableArray{Float64,1}([1.0,2.0,3.0,4.0],miss))
     end
 
+    # test conversion from Array{Nullable} without element type (issue #145)
+    @test isa(NullableArray(Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Any})
+    @test isa(NullableArray{Int}(Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Int})
+    @test isa(NullableArray{Float64}(Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Float64})
+
+    @test isa(convert(NullableArray, Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Any})
+    @test isa(convert(NullableArray{Int}, Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Int})
+    @test isa(convert(NullableArray{Float64}, Nullable[Nullable(1), Nullable(2), Nullable(3), Nullable()]), NullableArray{Float64})
+
     # converting a NullableArray to unqualified type NullableArray should be no-op
     m = rand(10:100)
     A = rand(m)
