@@ -37,10 +37,10 @@ end
 if VERSION >= v"0.5.0-"
     @compat (::Type{NullableArray{T,N}}){T,N}(dims::Vararg{Int,N}) = NullableArray(T, dims)
 else
-  function Base.convert{T,N}(::Type{NullableArray{T,N}}, dims::Int...)
-      length(dims) == N || throw(ArgumentError("Wrong number of arguments. Expected $N, got $(length(dims))."))
-      NullableArray(T, dims)
-  end
+    function Base.convert{T,N}(::Type{NullableArray{T,N}}, dims::Int...)
+        length(dims) == N || throw(ArgumentError("Wrong number of arguments. Expected $N, got $(length(dims))."))
+        NullableArray(T, dims)
+    end
 end
 
 # The following method constructs a NullableArray from an Array{Any} argument
