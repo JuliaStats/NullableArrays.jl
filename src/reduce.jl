@@ -70,19 +70,19 @@ mapreduce_impl_skipnull(f, op::typeof(@functorize(+)), X::NullableArray) =
 
 # general mapreduce interface
 
-function _mapreduce_skipnull{T}(f, op, X::NullableArray{T}, missingdata::Bool)
+function _mapreduce_skipnull{T}(f, op, X::NullableArray{T})
     n = length(X)
-    !missingdata && return Nullable(Base.mapreduce_impl(f, op, X.values, 1, n))
-
     nnull = countnz(X.isnull)
-    nnull == n && return Base.mr_empty(f, op, T)
-    nnull == n - 1 && return Base.r_promote(op, f(X.values[findnext(x -> x == false), X, 1]))
+
+    (nnull == 0) && return Nullable(Base.mapreduce_impl(f, op, X.values, 1, n))
+    (nnull == n) && return Nullable(Base.mr_empty(f, op, T))
+    (nnull == n - 1) && return Nullable(Base.r_promote(op, f(X.values[findfirst(X.isnull, false)])))
     # nnull == 0 && return Base.mapreduce_impl(f, op, X, 1, n)
 
     return mapreduce_impl_skipnull(f, op, X)
 end
 
-function Base._mapreduce(f, op, X::NullableArray, missingdata)
+function Base._mapreduce(f, op, X::NullableArray, missingdata::Bool)
     missingdata && return Base._mapreduce(f, op, X)
     Nullable(Base._mapreduce(f, op, X.values))
 end
@@ -90,11 +90,10 @@ end
 # to fix ambiguity warnings
 function Base.mapreduce(f, op::Union{typeof(@functorize(&)), typeof(@functorize(|))},
                         X::NullableArray, skipnull::Bool = false)
-    missingdata = anynull(X)
     if skipnull
-        return _mapreduce_skipnull(f, op, X, missingdata)
+        return _mapreduce_skipnull(f, op, X)
     else
-        return Base._mapreduce(f, op, X, missingdata)
+        return Base._mapreduce(f, op, X, anynull(X))
     end
 end
 
@@ -117,26 +116,23 @@ Note that, in general, mapreducing over a `NullableArray` will return a
 """ ->
 function Base.mapreduce(f, op::Function, X::NullableArray;
                         skipnull::Bool = false)
-    missingdata = anynull(X)
     if skipnull
-        return _mapreduce_skipnull(f, specialized_binary(op),
-                                   X, missingdata)
+        return _mapreduce_skipnull(f, specialized_binary(op), X)
     else
-        return Base._mapreduce(f, specialized_binary(op), X, missingdata)
+        return Base._mapreduce(f, specialized_binary(op), X, anynull(X))
     end
 end
 
 function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
-    missingdata = anynull(X)
     if skipnull
-        return _mapreduce_skipnull(f, op, X, missingdata)
+        return _mapreduce_skipnull(f, op, X)
     else
-        return Base._mapreduce(f, op, X, missingdata)
+        return Base._mapreduce(f, op, X, anynull(X))
     end
 end
 
 @doc """
-`mapreduce(f, op::Function, X::NullableArray; [skipnull::Bool=false])`
+`reduce(op::Function, X::NullableArray; [skipnull::Bool=false])`
 
 Reduce `X`under the operation `op`. One can set the behavior of this method to
 skip the null entries of `X` by setting the keyword argument `skipnull` equal
