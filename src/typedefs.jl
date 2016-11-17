@@ -13,11 +13,11 @@
 #
 # TODO: Ensure that size(values) == size(isnull) using inner constructor.
 # TODO: Implement outer constructor required once we add an inner constructor.
-@doc """
+"""
 `NullableArray{T, N}` is an efficient alternative to `Array{Nullable{T}, N}`.
 It allows users to easily define operations on arrays with null values by
 reusing operations that only work on arrays without any null values.
-""" ->
+"""
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     values::Array{T, N}
     isnull::Array{Bool, N}

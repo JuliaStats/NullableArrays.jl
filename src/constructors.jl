@@ -10,7 +10,7 @@ function NullableArray{T, N}(A::AbstractArray{T, N},
 end
 
 # TODO: Uncomment this doc entry when Base Julia can parse it correctly.
-# @doc """
+# """
 # Allow users to construct a quasi-uninitialized `NullableArray` object by
 # specifing:
 #
@@ -20,7 +20,7 @@ end
 # NOTE: The `values` field will be truly uninitialized, but the `isnull` field
 # will be initialized to `true` everywhere, making every entry of a new
 # `NullableArray` a null value by default.
-# """ ->
+# """
 function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
     return NullableArray(Array(T, dims), fill(true, dims))
 end

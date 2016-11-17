@@ -1,20 +1,20 @@
-@doc """
-`push!{T, V}(X::NullableVector{T}, v::V)`
+"""
+    push!{T, V}(X::NullableVector{T}, v::V)
 
 Insert `v` at the end of `X`, which registers `v` as a present value.
-""" ->
+"""
 function Base.push!{T, V}(X::NullableVector{T}, v::V)
     push!(X.values, v)
     push!(X.isnull, false)
     return X
 end
 
-@doc """
-`push!{T, V}(X::NullableVector{T}, v::Nullable{V})`
+"""
+    push!{T, V}(X::NullableVector{T}, v::Nullable{V})
 
 Insert a value at the end of `X` from a `Nullable` value `v`. If `v` is null
 then this method adds a null entry at the end of `X`. Returns `X`.
-""" ->
+"""
 function Base.push!{T, V}(X::NullableVector{T}, v::Nullable{V})
     if isnull(v)
         resize!(X.values, length(X.values) + 1)
@@ -26,23 +26,23 @@ function Base.push!{T, V}(X::NullableVector{T}, v::Nullable{V})
     return X
 end
 
-@doc """
-`pop!{T}(X::NullableVector{T})`
+"""
+    pop!{T}(X::NullableVector{T})
 
 Remove the last entry from `X` and return it. If the value in that entry is
 missing, then this method returns `Nullable{T}()`.
-""" ->
+"""
 function Base.pop!{T}(X::NullableVector{T}) # -> T
     val, isnull = pop!(X.values), pop!(X.isnull)
     isnull ? Nullable{T}() : Nullable(val)
 end
 
-@doc """
-`unshift!(X::NullableVector, v::Nullable)`
+"""
+    unshift!(X::NullableVector, v::Nullable)
 
 Insert a value at the beginning of `X` from a `Nullable` value `v`. If `v` is
 null then this method inserts a null entry at the beginning of `X`. Returns `X`.
-""" ->
+"""
 function Base.unshift!(X::NullableVector, v::Nullable) # -> NullableVector{T}
     if isnull(v)
         ccall(:jl_array_grow_beg, Void, (Any, UInt), X.values, 1)
@@ -54,22 +54,22 @@ function Base.unshift!(X::NullableVector, v::Nullable) # -> NullableVector{T}
     return X
 end
 
-@doc """
-`unshift!(X::NullableVector, v)`
+"""
+    unshift!(X::NullableVector, v)
 
 Insert a value `v` at the beginning of `X` and return `X`.
-""" ->
+"""
 function Base.unshift!(X::NullableVector, v) # -> NullableVector{T}
     unshift!(X.values, v)
     unshift!(X.isnull, false)
     return X
 end
 
-@doc """
-`shift!{T}(X::NullableVector{T})`
+"""
+    shift!{T}(X::NullableVector{T})
 
 Remove the first entry from `X` and return it as a `Nullable` object.
-""" ->
+"""
 function Base.shift!{T}(X::NullableVector{T}) # -> Nullable{T}
     val, isnull = shift!(X.values), shift!(X.isnull)
     if isnull
@@ -81,13 +81,13 @@ end
 
 const _default_splice = []
 
-@doc """
-`splice!(X::NullableVector, i::Integer, [ins])`
+"""
+    splice!(X::NullableVector, i::Integer, [ins])
 
 Remove the item at index `i` and return the removed item. Subsequent items
 are shifted down to fill the resulting gap. If specified, replacement values from
 an ordered collection will be spliced in place of the removed item.
-""" ->
+"""
 function Base.splice!(X::NullableVector, i::Integer, ins=_default_splice)
     v = X[i]
     m = length(ins)
@@ -106,8 +106,8 @@ function Base.splice!(X::NullableVector, i::Integer, ins=_default_splice)
     return v
 end
 
-@doc """
-`splice!{T<:Integer}(X::NullableVector, rng::UnitRange{T}, [ins])`
+"""
+    splice!{T<:Integer}(X::NullableVector, rng::UnitRange{T}, [ins])
 
 Remove items in the specified index range, and return a collection containing
 the removed items. Subsequent items are shifted down to fill the resulting gap.
@@ -116,7 +116,7 @@ place of the removed items.
 
 To insert `ins` before an index `n` without removing any items, use
 `splice!(X, n:n-1, ins)`.
-""" ->
+"""
 function Base.splice!{T<:Integer}(X::NullableVector,
                                   rng::UnitRange{T},
                                   ins=_default_splice) # ->
@@ -173,29 +173,29 @@ function Base.splice!{T<:Integer}(X::NullableVector,
     return vs
 end
 
-@doc """
-`deleteat!(X::NullableVector, inds)`
+"""
+    deleteat!(X::NullableVector, inds)
 
 Delete the entry at `inds` from `X` and then return `X`. Note that `inds` may
 be either a single scalar index or a collection of sorted, pairwise unique
 indices. Subsequent items after deleted entries are shifted down to fill the
 resulting gaps.
-""" ->
+"""
 function Base.deleteat!(X::NullableVector, inds)
     deleteat!(X.values, inds)
     deleteat!(X.isnull, inds)
     return X
 end
 
-@doc """
-`append!(X::NullableVector, items::AbstractVector)`
+"""
+    append!(X::NullableVector, items::AbstractVector)
 
 Add the elements of `items` to the end of `X`.
 
 Note that `append!(X, [1, 2, 3])` is equivalent to `push!(X, 1, 2, 3)`,
 where the items to be added to `X` are passed individually to `push!` and as a
 collection to `append!`.
-""" ->
+"""
 function Base.append!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
@@ -204,15 +204,15 @@ function Base.append!(X::NullableVector, items::AbstractVector)
     return X
 end
 
-@doc """
-`prepend!(X::NullableVector, items::AbstractVector)`
+"""
+    prepend!(X::NullableVector, items::AbstractVector)
 
 Add the elements of `items` to the beginning of `X`.
 
 Note that `prepend!(X, [1, 2, 3])` is equivalent to `unshift!(X, 1, 2, 3)`,
 where the items to be added to `X` are passed individually to `unshift!` and as a
 collection to `prepend!`.
-""" ->
+"""
 function Base.prepend!(X::NullableVector, items::AbstractVector)
     old_length = length(X)
     nitems = length(items)
@@ -226,46 +226,46 @@ function Base.prepend!(X::NullableVector, items::AbstractVector)
     return X
 end
 
-@doc """
-`sizehint!(X::NullableVector, newsz::Integer)`
+"""
+    sizehint!(X::NullableVector, newsz::Integer)
 
 Suggest that collection `X` reserve capacity for at least `newsz` elements.
 This can improve performance.
-""" ->
+"""
 function Base.sizehint!(X::NullableVector, newsz::Integer)
     sizehint!(X.values, newsz)
     sizehint!(X.isnull, newsz)
 end
 
-@doc """
-`padnull!(X::NullableVector, front::Integer, back::Integer)`
+"""
+    padnull!(X::NullableVector, front::Integer, back::Integer)
 
 Insert `front` null entries at the beginning of `X` and add `back` null entries
 at the end of `X`. Returns `X`.
-""" ->
+"""
 function padnull!{T}(X::NullableVector{T}, front::Integer, back::Integer)
     prepend!(X, fill(Nullable{T}(), front))
     append!(X, fill(Nullable{T}(), back))
     return X
 end
 
-@doc """
-`padnull(X::NullableVector, front::Integer, back::Integer)`
+"""
+    padnull(X::NullableVector, front::Integer, back::Integer)
 
 return a copy of `X` with `front` null entries inserted at the beginning of
 the copy and `back` null entries inserted at the end.
-""" ->
+"""
 function padnull(X::NullableVector, front::Integer, back::Integer)
     return padnull!(copy(X), front, back)
 end
 
-@doc """
-`reverse!(X::NullableVector, [s], [n])`
+"""
+    reverse!(X::NullableVector, [s], [n])
 
 Modify `X` by reversing the first `n` elements starting at index `s`
 (inclusive). If unspecified, `s` and `n` will default to `1` and `length(X)`,
 respectively.
-""" ->
+"""
 function Base.reverse!(X::NullableVector, s=1, n=length(X))
     if isbits(eltype(X)) || !anynull(X)
         reverse!(X.values, s, n)
@@ -289,19 +289,19 @@ function Base.reverse!(X::NullableVector, s=1, n=length(X))
     return X
 end
 
-@doc """
-`reverse(X::NullableVector, [s], [n])`
+"""
+    reverse(X::NullableVector, [s], [n])
 
 Return a copy of `X` with the first `n` elements starting at index `s`
 (inclusive) reversed. If unspecified, `s` and `n` will default to `1` and
 `length(X)`, respectively.
-""" ->
+"""
 function Base.reverse(X::NullableVector, s=1, n=length(X))
     return reverse!(copy(X), s, n)
 end
 
-@doc """
-`empty!(X::NullableVector) -> NullableVector`
+"""
+    empty!(X::NullableVector) -> NullableVector
 
 Remove all elements from a `NullableVector`. Returns `NullableVector{T}()`,
 where `T` is the `eltype` of `X`.
