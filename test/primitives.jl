@@ -164,6 +164,27 @@ module TestPrimitives
     @test endof(NullableArray(collect(1:10))) == 10
     @test endof(NullableArray([1, 2, nothing, 4, nothing])) == 5
 
+# ----- test Base.== ------------------------------------------------------#
+    x = collect(1:3)
+    xn = NullableArray(x)
+    y = [1.0, 2.0, 3.0]
+    yn = NullableArray(y, [false, false, true])
+    z = [1.1, 2.0, 3.0]
+    zn = NullableArray(z, [false, true, false])
+    @test get(x == NullableArray(x))
+    @test get(y == NullableArray(y))
+    @test get(x != NullableArray(z))
+    @test get(x != yn[1:2])
+    @test get(x != zn[1:2])
+
+    @test isnull(xn == yn)
+    @test get(xn == y)
+    @test isnull(x == yn)
+
+    @test get(xn != zn)
+    @test get(xn != z)
+    @test get(x != zn)
+
 # ----- test Base.find -------------------------------------------------------#
 
     z = NullableArray(rand(Bool, 10))
