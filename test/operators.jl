@@ -1,6 +1,7 @@
 module TestOperators
     using NullableArrays
     using Base.Test
+    using Compat
 
     A = rand(10) .+ fill(1, 10)
     B = rand(10) .+ fill(1, 10)
@@ -33,7 +34,7 @@ module TestOperators
         for S in NullableArrays.SafeTypes.types,
             T in NullableArrays.SafeTypes.types
             # mixing signed and unsigned types is unsafe (slow path tested below)
-            ((S <: Signed) $ (T <: Signed)) && continue
+            ((S <: Signed) ⊻ (T <: Signed)) && continue
 
             u0 = zero(S)
             u1 = one(S)
