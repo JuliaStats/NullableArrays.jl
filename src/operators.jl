@@ -20,8 +20,7 @@ if VERSION < v"0.5.0-dev+5096"
 end
 
 """
-    null_safe_op(f::Any, ::Type)::Bool
-    null_safe_op(f::Any, ::Type, ::Type)::Bool
+    null_safe_op(f::Any, ::Type...)::Bool
 
 Returns whether an operation `f` can safely be applied to any value of the passed type(s).
 Returns `false` by default.
@@ -37,8 +36,7 @@ Types declared as safe can benefit from higher performance for operations on nul
 always computing the result even for null values, a branch is avoided, which helps
 vectorization.
 """
-null_safe_op(f::Any, ::Type) = false
-null_safe_op(f::Any, ::Type, ::Type) = false
+null_safe_op(f::Any, ::Type...) = false
 
 typealias SafeSignedInts Union{Int128,Int16,Int32,Int64,Int8}
 typealias SafeUnsignedInts Union{Bool,UInt128,UInt16,UInt32,UInt64,UInt8}
