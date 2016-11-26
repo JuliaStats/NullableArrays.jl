@@ -31,28 +31,33 @@ else
     using Base.Broadcast: ziptype
 end
 
-@inline function broadcast_lift(f, x)
-    if null_safe_op(f, eltype(x))
-        return @compat Nullable(f(x.value), !isnull(x))
+@inline @generated function broadcast_lift{F, T}(f::F, x::NTuple{1, T})
+    if null_safe_op(f.instance, eltype(T))
+        return :( Nullable(f(unsafe_get(x[1])), !isnull(x[1])) )
     else
-        U = Core.Inference.return_type(f, Tuple{eltype(x)})
-        if isnull(x)
-            return Nullable{U}()
-        else
-            return Nullable(f(unsafe_get(x)))
+        U = Core.Inference.return_type(f.instance, Tuple{eltype(T)})
+        return quote
+            if isnull(x)
+                return Nullable{$U}()
+            else
+                return Nullable(f(unsafe_get(x[1])))
+            end
         end
     end
 end
 
-@inline function broadcast_lift(f, x1, x2)
-    if null_safe_op(f, eltype(x1), eltype(x2))
-        return @compat Nullable(f(x1.value, x2.value), !(isnull(x1) | isnull(x2)))
+@inline @generated function broadcast_lift{F, S, T}(f::F, x::Tuple{S, T})
+    if null_safe_op(f.instance, eltype(S), eltype(T))
+        return :( Nullable(f(unsafe_get(x[1]), unsafe_get(x[2])),
+                           !(isnull(x[1]) | isnull(x[2]))) )
     else
-        U = Core.Inference.return_type(f, Tuple{eltype(x1), eltype(x2)})
-        if isnull(x1) | isnull(x2)
-            return Nullable{U}()
-        else
-            return Nullable(f(unsafe_get(x1), unsafe_get(x2)))
+        U = Core.Inference.return_type(f.instance, Tuple{eltype(S), eltype(T)})
+        return quote
+            if isnull(x[1]) | isnull(x[2])
+                return Nullable{$U}()
+            else
+                return Nullable(f(unsafe_get(x[1]), unsafe_get(x[2])))
+            end
         end
     end
 end
@@ -62,28 +67,33 @@ eltypes(x) = Tuple{eltype(x)}
 eltypes(x, xs...) = Tuple{eltype(x), eltypes(xs...).parameters...}
 
 """
-  broadcast_lift(f, xs...)
+  broadcast_lift(f, x)
 
-Lift function `f`, passing it arguments `xs...`, using standard lifting semantics:
-for a function call `f(xs...)`, return null if any `x` in `xs` is null; otherwise,
-return `f` applied to values of `xs`.
+Lift function `f`, passing it arguments from the tuple `x`, using standard lifting semantics:
+for a function call `f(x...)`, return null if any `x` in `x` is null; otherwise,
+return `f` applied to values of `x`.
 """
-@inline function broadcast_lift(f, xs...)
-    if null_safe_op(f, eltypes(xs).parameters...)
+@inline @generated function broadcast_lift{F}(f::F, x::Tuple)
+    if null_safe_op(f.instance, eltypes(x).parameters...)
         # TODO: find a more efficient approach than mapreduce
         # (i.e. one which gets lowered to just isnull(x1) | isnull(x2) | ...)
-        return @compat Nullable(f(unsafe_get.(xs)...), !mapreduce(isnull, |, xs))
+        return :( Nullable(f(unsafe_get.(x)), !mapreduce(isnull, |, x)) )
     else
-        U = Core.Inference.return_type(f, eltypes(xs...))
-        # TODO: find a more efficient approach than mapreduce
-        # (i.e. one which gets lowered to just isnull(x1) | isnull(x2) | ...)
-        if mapreduce(isnull, |, xs)
-            return Nullable{U}()
-        else
-            return Nullable(f(map(unsafe_get, xs)...))
+        U = Core.Inference.return_type(f.instance, eltypes(x))
+        return quote
+            # TODO: find a more efficient approach than mapreduce
+            # (i.e. one which gets lowered to just isnull(x1) | isnull(x2) | ...)
+            if mapreduce(isnull, |, x)
+                return Nullable{$U}()
+            else
+                return Nullable(f(map(unsafe_get, x)...))
+            end
         end
     end
 end
+
+call_broadcast{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
+    invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
 """
     broadcast(f, As::NullableArray...)
@@ -97,15 +107,19 @@ Note that this method's signature specifies the source `As` arrays as all
 of both `Array`s and `NullableArray`s will fall back to the standard implementation
 of `broadcast` (i.e. without lifting).
 """
-function Base.broadcast{N}(f, As::Vararg{NullableArray, N})
-    f2(x...) = broadcast_lift(f, x...)
+function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
+    # These definitions are needed to avoid allocation due to splatting
+    f2(x1) = broadcast_lift(f, (x1,))
+    f2(x1, x2) = broadcast_lift(f, (x1, x2))
+    f2(x...) = broadcast_lift(f, x)
+
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
     if isleaftype(T) && !(T <: Nullable)
         dest = similar(Array{eltype(T)}, broadcast_indices(As...))
     else
         dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
     end
-    invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f2, dest, As...)
+    call_broadcast(f2, dest, As...)
 end
 
 """
@@ -120,15 +134,18 @@ source `As` arrays as all `NullableArray`s. Thus, calling `broadcast!` on a argu
 consisting of both `Array`s and `NullableArray`s will fall back to the standard implementation
 of `broadcast!` (i.e. without lifting).
 """
-function Base.broadcast!{N}(f, dest::NullableArray, As::Vararg{NullableArray, N})
-    f2(x...) = broadcast_lift(f, x...)
-    invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f2, dest, As...)
+function Base.broadcast!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArray, N})
+    # These definitions are needed to avoid allocation due to splatting
+    f2(x1) = broadcast_lift(f, (x1,))
+    f2(x1, x2) = broadcast_lift(f, (x1, x2))
+    f2(x...) = broadcast_lift(f, x)
+    call_broadcast(f2, dest, As...)
 end
 
 # To fix ambiguity
-function Base.broadcast!(f, dest::NullableArray)
-    f2(x...) = broadcast_lift(f, x...)
-    invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, 0}}, f2, dest)
+function Base.broadcast!{F}(f::F, dest::NullableArray)
+    f2() = broadcast_lift(f, ())
+    call_broadcast(f2, dest)
 end
 
 # broadcasted ops
