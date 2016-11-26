@@ -62,6 +62,10 @@ eltypes() = Tuple{}
 eltypes(x) = Tuple{eltype(x)}
 eltypes(x, xs...) = Tuple{eltype(x), eltypes(xs...).parameters...}
 
+hasnulls() = false
+hasnulls(x) = isnull(x)
+hasnulls(x, xs...) = hasnulls(x) | hasnulls(xs...)
+
 """
   broadcast_lift(f, xs...)
 
@@ -71,14 +75,10 @@ return `f` applied to values of `xs`.
 """
 @inline function broadcast_lift(f, xs...)
     if null_safe_op(f, eltypes(xs).parameters...)
-        # TODO: find a more efficient approach than mapreduce
-        # (i.e. one which gets lowered to just isnull(x1) | isnull(x2) | ...)
-        return @compat Nullable(f(unsafe_get.(xs)...), !mapreduce(isnull, |, xs))
+        return @compat Nullable(f(unsafe_get.(xs)...), !hasnulls(xs...))
     else
-        U = Core.Inference.return_type(f, eltypes(xs...))
-        # TODO: find a more efficient approach than mapreduce
-        # (i.e. one which gets lowered to just isnull(x1) | isnull(x2) | ...)
-        if mapreduce(isnull, |, xs)
+        U = Core.Inference.return_type(f, eltypes(xs))
+        if hasnulls(xs...)
             return Nullable{U}()
         else
             return Nullable(f(map(unsafe_get, xs)...))
