@@ -58,9 +58,11 @@ end
     end
 end
 
+eltype_nullable(x::Nullable) = eltype(x)
+eltype_nullable(x) = typeof(x)
 eltypes() = Tuple{}
-eltypes(x) = Tuple{eltype(x)}
-eltypes(x, xs...) = Tuple{eltype(x), eltypes(xs...).parameters...}
+eltypes(x) = Tuple{eltype_nullable(x)}
+eltypes(x, xs...) = Tuple{eltype_nullable(x), eltypes(xs...).parameters...}
 
 hasnulls() = false
 hasnulls(x) = isnull(x)
@@ -74,10 +76,10 @@ for a function call `f(xs...)`, return null if any `x` in `xs` is null; otherwis
 return `f` applied to values of `xs`.
 """
 @inline function broadcast_lift(f, xs...)
-    if null_safe_op(f, eltypes(xs).parameters...)
+    if null_safe_op(f, eltypes(xs...).parameters...)
         return @compat Nullable(f(unsafe_get.(xs)...), !hasnulls(xs...))
     else
-        U = Core.Inference.return_type(f, eltypes(xs))
+        U = Core.Inference.return_type(f, eltypes(xs...))
         if hasnulls(xs...)
             return Nullable{U}()
         else
