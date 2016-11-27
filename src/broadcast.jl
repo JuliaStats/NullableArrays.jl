@@ -111,6 +111,11 @@ function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
     # These definitions are needed to avoid allocation due to splatting
     f2(x1) = broadcast_lift(f, x1)
     f2(x1, x2) = broadcast_lift(f, x1, x2)
+    f2(x1, x2, x3) = broadcast_lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = broadcast_lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = broadcast_lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = broadcast_lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = broadcast_lift(f, x1, x2, x3, x4, x5, x6, x7)
     f2(x...) = broadcast_lift(f, x...)
 
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
@@ -138,6 +143,11 @@ function Base.broadcast!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArr
     # These definitions are needed to avoid allocation due to splatting
     f2(x1) = broadcast_lift(f, x1)
     f2(x1, x2) = broadcast_lift(f, x1, x2)
+    f2(x1, x2, x3) = broadcast_lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = broadcast_lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = broadcast_lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = broadcast_lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = broadcast_lift(f, x1, x2, x3, x4, x5, x6, x7)
     f2(x...) = broadcast_lift(f, x...)
     call_broadcast(f2, dest, As...)
 end
