@@ -4,7 +4,7 @@
     else
         U = Core.Inference.return_type(f, Tuple{eltype(x)})
         if isnull(x)
-            return Nullable{U}()
+            return isleaftype(U) ? Nullable{U}() : Nullable()
         else
             return Nullable(f(unsafe_get(x)))
         end
@@ -18,7 +18,7 @@ end
     else
         U = Core.Inference.return_type(f, Tuple{eltype(x1), eltype(x2)})
         if isnull(x1) | isnull(x2)
-            return Nullable{U}()
+            return isleaftype(U) ? Nullable{U}() : Nullable()
         else
             return Nullable(f(unsafe_get(x1), unsafe_get(x2)))
         end
@@ -53,7 +53,7 @@ return `f` applied to values of `xs`.
     else
         U = Core.Inference.return_type(f, eltypes(xs...))
         if hasnulls(xs...)
-            return Nullable{U}()
+            return isleaftype(U) ? Nullable{U}() : Nullable()
         else
             return Nullable(f(_unsafe_get(xs...)...))
         end

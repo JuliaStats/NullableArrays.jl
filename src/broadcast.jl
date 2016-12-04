@@ -32,7 +32,7 @@ else
 end
 
 invoke_broadcast!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
-    invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
+    invoke(broadcast!, Tuple{F, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
 """
     broadcast(f, As::NullableArray...)
@@ -58,11 +58,7 @@ function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
     f2(x...) = lift(f, x...)
 
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
-    if isleaftype(T) && !(T <: Nullable)
-        dest = similar(Array{eltype(T)}, broadcast_indices(As...))
-    else
-        dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
-    end
+    dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
     invoke_broadcast!(f2, dest, As...)
 end
 

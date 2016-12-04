@@ -1,7 +1,7 @@
 using Base: collect_similar, Generator
 
 invoke_map!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
-    invoke(map!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
+    invoke(map!, Tuple{F, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
 """
     map(f, As::NullableArray...)
@@ -27,11 +27,7 @@ function Base.map{F, N}(f::F, As::Vararg{NullableArray, N})
     f2(x...) = lift(f, x...)
 
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
-    if isleaftype(T) && !(T <: Nullable)
-        dest = similar(Array{eltype(T)}, size(As[1]))
-    else
-        dest = similar(NullableArray{eltype(T)}, size(As[1]))
-    end
+    dest = similar(NullableArray{eltype(T)}, size(As[1]))
     invoke_map!(f2, dest, As...)
 end
 
