@@ -88,6 +88,10 @@ module TestOperators
         v1 = one(T)
         v2 = T <: Union{BigInt, BigFloat} ? T(rand(Int128)) : rand(T)
 
+        # abs(typemin(x)) is negative (bad luck)
+        abs(u2) < 0 && (u2 = S(u2 + 1))
+        abs(v2) < 0 && (v2 = T(v2 + 1))
+
         (v2 > 5 || v2 < -5) && (v2 = T(5)) # Work around JuliaLang/julia#16989
 
         # safe unary operators
