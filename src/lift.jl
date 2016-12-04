@@ -36,6 +36,7 @@ hasnulls() = false
 hasnulls(x) = isnull(x)
 hasnulls(x, xs...) = hasnulls(x) | hasnulls(xs...)
 
+_unsafe_get() = ()
 _unsafe_get(x) = (unsafe_get(x),)
 _unsafe_get(x, xs...) = (unsafe_get(x), _unsafe_get(xs...)...)
 
@@ -47,7 +48,7 @@ for a function call `f(xs...)`, return null if any `x` in `xs` is null; otherwis
 return `f` applied to values of `xs`.
 """
 @inline function lift(f, xs...)
-    if null_safe_op(f, eltype_nullable.(xs)...)
+    if null_safe_op(f, map(eltype_nullable, xs)...)
         return @compat Nullable(f(_unsafe_get(xs...)...), !hasnulls(xs...))
     else
         U = Core.Inference.return_type(f, eltypes(xs...))
