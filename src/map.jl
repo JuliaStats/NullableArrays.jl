@@ -1,6 +1,6 @@
 using Base: collect_similar, Generator
 
-call_map{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
+invoke_map!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
     invoke(map!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
 """
@@ -32,7 +32,7 @@ function Base.map{F, N}(f::F, As::Vararg{NullableArray, N})
     else
         dest = similar(NullableArray{eltype(T)}, size(As[1]))
     end
-    call_map(f2, dest, As...)
+    invoke_map!(f2, dest, As...)
 end
 
 """
@@ -57,11 +57,11 @@ function Base.map!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArray, N}
     f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
     f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
     f2(x...) = lift(f, x...)
-    call_map(f2, dest, As...)
+    invoke_map!(f2, dest, As...)
 end
 
 # This definition is needed to avoid dispatch loops going back to the above one
 function Base.map!{F}(f::F, dest::NullableArray)
     f2(x1) = lift(f, x1)
-    call_map(f2, dest, dest)
+    invoke_map!(f2, dest, dest)
 end

@@ -31,7 +31,7 @@ else
     using Base.Broadcast: ziptype
 end
 
-call_broadcast{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
+invoke_broadcast!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
     invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
 """
@@ -63,7 +63,7 @@ function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
     else
         dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
     end
-    call_broadcast(f2, dest, As...)
+    invoke_broadcast!(f2, dest, As...)
 end
 
 """
@@ -88,13 +88,13 @@ function Base.broadcast!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArr
     f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
     f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
     f2(x...) = lift(f, x...)
-    call_broadcast(f2, dest, As...)
+    invoke_broadcast!(f2, dest, As...)
 end
 
 # To fix ambiguity
 function Base.broadcast!{F}(f::F, dest::NullableArray)
     f2() = lift(f)
-    call_broadcast(f2, dest)
+    invoke_broadcast!(f2, dest)
 end
 
 # broadcasted ops
