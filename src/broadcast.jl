@@ -31,67 +31,6 @@ else
     using Base.Broadcast: ziptype
 end
 
-@inline function broadcast_lift(f, x)
-    if null_safe_op(f, eltype(x))
-        return @compat Nullable(f(unsafe_get(x)), !isnull(x))
-    else
-        U = Core.Inference.return_type(f, Tuple{eltype(x)})
-        if isnull(x)
-            return Nullable{U}()
-        else
-            return Nullable(f(unsafe_get(x)))
-        end
-    end
-end
-
-@inline function broadcast_lift(f, x1, x2)
-    if null_safe_op(f, eltype(x1), eltype(x2))
-        return @compat Nullable(f(unsafe_get(x1), unsafe_get(x2)),
-                                !(isnull(x1) | isnull(x2)))
-    else
-        U = Core.Inference.return_type(f, Tuple{eltype(x1), eltype(x2)})
-        if isnull(x1) | isnull(x2)
-            return Nullable{U}()
-        else
-            return Nullable(f(unsafe_get(x1), unsafe_get(x2)))
-        end
-    end
-end
-
-eltype_nullable(x::Nullable) = eltype(x)
-eltype_nullable(x) = typeof(x)
-
-eltypes() = Tuple{}
-eltypes(x) = Tuple{eltype_nullable(x)}
-eltypes(x, xs...) = Tuple{eltype_nullable(x), eltypes(xs...).parameters...}
-
-hasnulls() = false
-hasnulls(x) = isnull(x)
-hasnulls(x, xs...) = hasnulls(x) | hasnulls(xs...)
-
-_unsafe_get(x) = (unsafe_get(x),)
-_unsafe_get(x, xs...) = (unsafe_get(x), _unsafe_get(xs...)...)
-
-"""
-  broadcast_lift(f, xs...)
-
-Lift function `f`, passing it arguments `xs...`, using standard lifting semantics:
-for a function call `f(xs...)`, return null if any `x` in `xs` is null; otherwise,
-return `f` applied to values of `xs`.
-"""
-@inline function broadcast_lift(f, xs...)
-    if null_safe_op(f, eltype_nullable.(xs)...)
-        return @compat Nullable(f(_unsafe_get(xs...)...), !hasnulls(xs...))
-    else
-        U = Core.Inference.return_type(f, eltypes(xs...))
-        if hasnulls(xs...)
-            return Nullable{U}()
-        else
-            return Nullable(f(_unsafe_get(xs...)...))
-        end
-    end
-end
-
 call_broadcast{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
     invoke(broadcast!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
@@ -109,14 +48,14 @@ of `broadcast` (i.e. without lifting).
 """
 function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
     # These definitions are needed to avoid allocation due to splatting
-    f2(x1) = broadcast_lift(f, x1)
-    f2(x1, x2) = broadcast_lift(f, x1, x2)
-    f2(x1, x2, x3) = broadcast_lift(f, x1, x2, x3)
-    f2(x1, x2, x3, x4) = broadcast_lift(f, x1, x2, x3, x4)
-    f2(x1, x2, x3, x4, x5) = broadcast_lift(f, x1, x2, x3, x4, x5)
-    f2(x1, x2, x3, x4, x5, x6) = broadcast_lift(f, x1, x2, x3, x4, x5, x6)
-    f2(x1, x2, x3, x4, x5, x6, x7) = broadcast_lift(f, x1, x2, x3, x4, x5, x6, x7)
-    f2(x...) = broadcast_lift(f, x...)
+    f2(x1) = lift(f, x1)
+    f2(x1, x2) = lift(f, x1, x2)
+    f2(x1, x2, x3) = lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
+    f2(x...) = lift(f, x...)
 
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
     if isleaftype(T) && !(T <: Nullable)
@@ -141,20 +80,20 @@ of `broadcast!` (i.e. without lifting).
 """
 function Base.broadcast!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArray, N})
     # These definitions are needed to avoid allocation due to splatting
-    f2(x1) = broadcast_lift(f, x1)
-    f2(x1, x2) = broadcast_lift(f, x1, x2)
-    f2(x1, x2, x3) = broadcast_lift(f, x1, x2, x3)
-    f2(x1, x2, x3, x4) = broadcast_lift(f, x1, x2, x3, x4)
-    f2(x1, x2, x3, x4, x5) = broadcast_lift(f, x1, x2, x3, x4, x5)
-    f2(x1, x2, x3, x4, x5, x6) = broadcast_lift(f, x1, x2, x3, x4, x5, x6)
-    f2(x1, x2, x3, x4, x5, x6, x7) = broadcast_lift(f, x1, x2, x3, x4, x5, x6, x7)
-    f2(x...) = broadcast_lift(f, x...)
+    f2(x1) = lift(f, x1)
+    f2(x1, x2) = lift(f, x1, x2)
+    f2(x1, x2, x3) = lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
+    f2(x...) = lift(f, x...)
     call_broadcast(f2, dest, As...)
 end
 
 # To fix ambiguity
 function Base.broadcast!{F}(f::F, dest::NullableArray)
-    f2() = broadcast_lift(f)
+    f2() = lift(f)
     call_broadcast(f2, dest)
 end
 

@@ -1,248 +1,67 @@
-# if VERSION < v"0.5.0-dev+3294"
-#     include("map0_4.jl")
-# else
-using Base: ith_all
-if VERSION < v"0.5.0-dev+3294"
-    include("map0_4.jl")
-else
-    using Base: collect_similar, Generator
-end
+using Base: collect_similar, Generator
 
-function _return_type(f, Xs...)
-    rtypes = Base.return_types(f, tuple([ inner_eltype(X) for X in Xs ]...))
-    T = isempty(rtypes) ? Union{} : rtypes[1]
-end
+call_map{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
+    invoke(map!, Tuple{Function, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
-macro nullcheck(Xs, nargs)
-    res = :($(Xs)[1].isnull[i])
-    for i = 2:nargs
-        e = :($(Xs)[$i].isnull[i])
-        res = Expr(:||, res, e)
-    end
-    return res
-end
+"""
+    map(f, As::NullableArray...)
 
-macro fcall(Xs, nargs)
-    res = Expr(:call, :f)
-    for i in 1:nargs
-        push!(res.args, :($(Xs)[$i].values[i]))
-    end
-    return res
-end
+Call `map` with nullable lifting semantics and return a `NullableArray`.
+Lifting means calling function `f` on the the values wrapped inside `Nullable` entries
+of the input arrays, and returning null if any entry is missing.
 
-inner_eltype{T}(X::NullableArray{T}) = T
+Note that this method's signature specifies the source `As` arrays as all
+`NullableArray`s. Thus, calling `map` on arguments consisting
+of both `Array`s and `NullableArray`s will fall back to the standard implementation
+of `map` (i.e. without lifting).
+"""
+function Base.map{F, N}(f::F, As::Vararg{NullableArray, N})
+    # These definitions are needed to avoid allocation due to splatting
+    f2(x1) = lift(f, x1)
+    f2(x1, x2) = lift(f, x1, x2)
+    f2(x1, x2, x3) = lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
+    f2(x...) = lift(f, x...)
 
-# Base.map!
-
-Base.map!{F}(f::F, X::NullableArray; lift=false) = map!(f, X, X; lift=lift)
-function Base.map!{F}(f::F, dest::NullableArray, X::NullableArray; lift=false)
-    if lift
-        for (i, j) in zip(eachindex(dest), eachindex(X))
-            if X.isnull[j]
-                dest.isnull[i] = true
-            else
-                dest.isnull[i] = false
-                dest.values[i] = f(X.values[j])
-            end
-        end
+    T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
+    if isleaftype(T) && !(T <: Nullable)
+        dest = similar(Array{eltype(T)}, size(As[1]))
     else
-        for (i, j) in zip(eachindex(dest), eachindex(X))
-            dest[i] = f(X[j])
-        end
+        dest = similar(NullableArray{eltype(T)}, size(As[1]))
     end
-    return dest
+    call_map(f2, dest, As...)
 end
 
-function Base.map!{F}(f::F, dest::NullableArray, X1::NullableArray,
-                      X2::NullableArray; lift=false)
-    if lift
-        for (i, j, k) in zip(eachindex(dest), eachindex(X1), eachindex(X2))
-            if X1.isnull[j] | X2.isnull[k]
-                dest.isnull[i] = true
-            else
-                dest.isnull[i] = false
-                dest.values[i] = f(X1.values[j], X2.values[k])
-            end
-        end
-    else
-        for (i, j, k) in zip(eachindex(dest), eachindex(X1), eachindex(X2))
-            dest[i] = f(X1[j], X2[k])
-        end
-    end
-    return dest
+"""
+    map!(f, dest::NullableArray, As::NullableArray...)
+
+Call `map!` with nullable lifting semantics.
+Lifting means calling function `f` on the the values wrapped inside `Nullable` entries
+of the input arrays, and returning null if any entry is missing.
+
+Note that this method's signature specifies the destination `dest` array as well as the
+source `As` arrays as all `NullableArray`s. Thus, calling `map!` on a arguments
+consisting of both `Array`s and `NullableArray`s will fall back to the standard implementation
+of `map!` (i.e. without lifting).
+"""
+function Base.map!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArray, N})
+    # These definitions are needed to avoid allocation due to splatting
+    f2(x1) = lift(f, x1)
+    f2(x1, x2) = lift(f, x1, x2)
+    f2(x1, x2, x3) = lift(f, x1, x2, x3)
+    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
+    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
+    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
+    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
+    f2(x...) = lift(f, x...)
+    call_map(f2, dest, As...)
 end
 
-function Base.map!{F}(f::F, dest::NullableArray, Xs::NullableArray...; lift=false)
-    _mapn!(f, dest, Xs, lift)
-end
-
-@generated function _mapn!{F, N}(f::F, dest::NullableArray, Xs::NTuple{N, NullableArray}, lift)
-    return quote
-        if lift
-            for i in eachindex(dest)
-                if @nullcheck Xs $N
-                    dest.isnull[i] = true
-                else
-                    dest.isnull[i] = false
-                    dest.values[i] = @fcall Xs $N
-                end
-            end
-        else
-            for i in eachindex(dest)
-                dest[i] = f(ith_all(i, Xs)...)
-            end
-        end
-        return dest
-    end
-end
-
-# Base.map
-
-if VERSION < v"0.5.0-dev+3294"
-    function Base.map(f, X::NullableArray; lift=false)
-        lift ? _liftedmap(f, X) : _map(f, X)
-    end
-    function Base.map(f, X1::NullableArray, X2::NullableArray; lift=false)
-        lift ? _liftedmap(f, X1, X2) : _map(f, X1, X2)
-    end
-    function Base.map(f, Xs::NullableArray...; lift=false)
-        lift ? _liftedmap(f, Xs) : _map(f, Xs...)
-    end
-else
-    function Base.map(f, X::NullableArray; lift=false)
-        lift ? _liftedmap(f, X) : collect_similar(X, Generator(f, X))
-    end
-    function Base.map(f, X1::NullableArray, X2::NullableArray; lift=false)
-        lift ? _liftedmap(f, X1, X2) : collect(Generator(f, X1, X2))
-    end
-    function Base.map(f, Xs::NullableArray...; lift=false)
-        lift ? _liftedmap(f, Xs) : collect(Generator(f, Xs...))
-    end
-end
-
-function _liftedmap(f, X::NullableArray)
-    len = length(X)
-    # if X is empty, fall back on type inference
-    len > 0 || return NullableArray(_return_type(f, X), 0)
-    i = 1
-    while X.isnull[i] & (i < len)
-        i += 1
-    end
-    # if X is all null, fall back on type inference
-    if X.isnull[i]
-        T = _return_type(f, X)
-        return similar(X, T)
-    end
-    # otherwise, initialize and map to destination array
-    v = f(X.values[i])
-    dest = similar(X, typeof(v))
-    dest[i] = v
-    _liftedmap_to!(f, dest, X, i+1, len)
-end
-
-function _liftedmap(f, X1::NullableArray, X2::NullableArray)
-    len = prod(promote_shape(size(X1), size(X2)))
-    len > 0 || return NullableArray(_return_type(f, X1, X2), 0)
-    i = 1
-    while (X1.isnull[i] | X2.isnull[i]) & (i < len)
-        i += 1
-    end
-    if X1.isnull[i] | X2.isnull[i]
-        T = _return_type(f, X1, X2)
-        return similar(X1, T)
-    end
-    v = f(X1.values[i], X2.values[i])
-    dest = similar(X1, typeof(v))
-    dest[i] = v
-    _liftedmap_to!(f, dest, X1, X2, i+1, len)
-end
-
-@generated function _liftedmap{N}(f, Xs::NTuple{N, NullableArray})
-    return quote
-        shp = mapreduce(size, promote_shape, Xs)
-        len = prod(shp)
-        len > 0 || return NullableArray(_return_type(f, Xs...), 0)
-        i = 1
-        while (@nullcheck Xs $N) & (i < len)
-            i += 1
-        end
-        if @nullcheck Xs $N
-            T = _return_type(f, Xs...)
-            return similar(Xs[1], T)
-        end
-        v = @fcall Xs $N
-        dest = similar(Xs[1], typeof(v))
-        dest[i] = v
-        _liftedmap_to!(f, dest, Xs, i+1, len)
-    end
-end
-
-function _liftedmap_to!{T}(f, dest::NullableArray{T}, X, offs, len)
-    # map to dest array, checking the type of each result. if a result does not
-    # match, widen the result type and re-dispatch.
-    i = offs
-    while i <= len
-        @inbounds if X.isnull[i]
-            i += 1; continue
-        end
-        @inbounds el = f(X.values[i])
-        S = typeof(el)
-        if S === T || S <: T
-            @inbounds dest[i] = el::T
-            i += 1
-        else
-            R = typejoin(T, S)
-            new = similar(dest, R)
-            copy!(new, 1, dest, 1, i-1)
-            @inbounds new[i] = el
-            return map_to!(f, new, X, i+1, len)
-        end
-    end
-    return dest
-end
-
-function _liftedmap_to!{T}(f, dest::NullableArray{T}, X1, X2, offs, len)
-    i = offs
-    while i <= len
-        @inbounds if X1.isnull[i] | X2.isnull[i]
-            i += 1; continue
-        end
-        @inbounds el = f(X1.values[i], X2.values[i])
-        S = typeof(el)
-        if S === T || S <: T
-            @inbounds dest[i] = el::T
-            i += 1
-        else
-            R = typejoin(T, S)
-            new = similar(dest, R)
-            copy!(new, 1, dest, 1, i-1)
-            @inbounds new[i] = el
-            return map_to!(f, new, X1, X2, i+1, len)
-        end
-    end
-    return dest
-end
-
-@generated function _liftedmap_to!{T, N}(f, dest::NullableArray{T}, Xs::NTuple{N,NullableArray}, offs, len)
-    return quote
-        i = offs
-        while i <= len
-            @inbounds if @nullcheck Xs $N
-                i += 1; continue
-            end
-            @inbounds el = @fcall Xs $N
-            S = typeof(el)
-            if S === T || S <: T
-                @inbounds dest[i] = el::T
-                i += 1
-            else
-                R = typejoin(T, S)
-                new = similar(dest, R)
-                copy!(new, 1, dest, 1, i-1)
-                @inbounds new[i] = el
-                return map_to!(f, new, Xs, i+1, len)
-            end
-        end
-        return dest
-    end
+# This definition is needed to avoid dispatch loops going back to the above one
+function Base.map!{F}(f::F, dest::NullableArray)
+    f2(x1) = lift(f, x1)
+    call_map(f2, dest, dest)
 end
