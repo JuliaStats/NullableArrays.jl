@@ -46,16 +46,16 @@ Note that this method's signature specifies the source `As` arrays as all
 of both `Array`s and `NullableArray`s will fall back to the standard implementation
 of `broadcast` (i.e. without lifting).
 """
-function Base.broadcast{F, N}(f::F, As::Vararg{NullableArray, N})
+function Base.broadcast{F}(f::F, As::NullableArray...)
     # These definitions are needed to avoid allocation due to splatting
-    f2(x1) = lift(f, x1)
-    f2(x1, x2) = lift(f, x1, x2)
-    f2(x1, x2, x3) = lift(f, x1, x2, x3)
-    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
-    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
-    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
-    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
-    f2(x...) = lift(f, x...)
+    @inline f2(x1) = lift(f, (x1,))
+    @inline f2(x1, x2) = lift(f, (x1, x2))
+    @inline f2(x1, x2, x3) = lift(f, (x1, x2, x3))
+    @inline f2(x1, x2, x3, x4) = lift(f, (x1, x2, x3, x4))
+    @inline f2(x1, x2, x3, x4, x5) = lift(f, (x1, x2, x3, x4, x5))
+    @inline f2(x1, x2, x3, x4, x5, x6) = lift(f, (x1, x2, x3, x4, x5, x6))
+    @inline f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, (x1, x2, x3, x4, x5, x6, x7))
+    @inline f2(x...) = lift(f, x)
 
     T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
     dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
@@ -74,16 +74,17 @@ source `As` arrays as all `NullableArray`s. Thus, calling `broadcast!` on a argu
 consisting of both `Array`s and `NullableArray`s will fall back to the standard implementation
 of `broadcast!` (i.e. without lifting).
 """
-function Base.broadcast!{F, N}(f::F, dest::NullableArray, As::Vararg{NullableArray, N})
+function Base.broadcast!{F}(f::F, dest::NullableArray, As::NullableArray...)
     # These definitions are needed to avoid allocation due to splatting
-    f2(x1) = lift(f, x1)
-    f2(x1, x2) = lift(f, x1, x2)
-    f2(x1, x2, x3) = lift(f, x1, x2, x3)
-    f2(x1, x2, x3, x4) = lift(f, x1, x2, x3, x4)
-    f2(x1, x2, x3, x4, x5) = lift(f, x1, x2, x3, x4, x5)
-    f2(x1, x2, x3, x4, x5, x6) = lift(f, x1, x2, x3, x4, x5, x6)
-    f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, x1, x2, x3, x4, x5, x6, x7)
-    f2(x...) = lift(f, x...)
+    @inline f2(x1) = lift(f, (x1,))
+    @inline f2(x1, x2) = lift(f, (x1, x2))
+    @inline f2(x1, x2, x3) = lift(f, (x1, x2, x3))
+    @inline f2(x1, x2, x3, x4) = lift(f, (x1, x2, x3, x4))
+    @inline f2(x1, x2, x3, x4, x5) = lift(f, (x1, x2, x3, x4, x5))
+    @inline f2(x1, x2, x3, x4, x5, x6) = lift(f, (x1, x2, x3, x4, x5, x6))
+    @inline f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, (x1, x2, x3, x4, x5, x6, x7))
+    @inline f2(x...) = lift(f, x)
+
     invoke_broadcast!(f2, dest, As...)
 end
 
