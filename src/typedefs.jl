@@ -19,7 +19,7 @@ It allows users to easily define operations on arrays with null values by
 reusing operations that only work on arrays without any null values.
 """
 immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
-    values::Array{T, N}
+    values::AbstractArray{T, N}
     isnull::Array{Bool, N}
     # extra field for potentially holding a reference to a parent memory block
     # (think mmapped file, for example) that `values` is actually derived from
