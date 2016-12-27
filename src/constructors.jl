@@ -83,8 +83,7 @@ end
 #
 function NullableArray{T}(A::AbstractArray,
                              ::Type{T},
-                             na::Any;
-                             conversion::Base.Callable=Base.convert) # -> NullableArray{T, N}
+                             na::Any) # -> NullableArray{T, N}
     res = NullableArray(T, size(A))
     for i in 1:length(A)
         if !isequal(A[i], na)
