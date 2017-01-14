@@ -3,9 +3,9 @@
 
 # The following provides an outer constructor whose argument signature matches
 # that of the inner constructor provided in typedefs.jl: constructs a NullableArray
-# from an Array of values and an Array{Bool} mask.
+# from an AbstractArray of values and an AbstractArray{Bool} mask.
 function NullableArray{T, N}(A::AbstractArray{T, N},
-                             m::Array{Bool, N}) # -> NullableArray{T, N}
+                             m::AbstractArray{Bool, N}) # -> NullableArray{T, N}
     return NullableArray{T, N}(A, m)
 end
 

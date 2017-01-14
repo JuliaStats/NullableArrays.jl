@@ -12,7 +12,6 @@
 # an exception for any other type.
 #
 # TODO: Ensure that size(values) == size(isnull) using inner constructor.
-# TODO: Implement outer constructor required once we add an inner constructor.
 """
 `NullableArray{T, N}` is an efficient alternative to `Array{Nullable{T}, N}`.
 It allows users to easily define operations on arrays with null values by
@@ -25,7 +24,7 @@ immutable NullableArray{T, N} <: AbstractArray{Nullable{T}, N}
     # (think mmapped file, for example) that `values` is actually derived from
     parent::Vector{UInt8}
 
-    function NullableArray(d::AbstractArray{T, N}, m::Array{Bool, N}, parent::Vector{UInt8}=Vector{UInt8}())
+    function NullableArray(d::AbstractArray{T, N}, m::AbstractArray{Bool, N}, parent::Vector{UInt8}=Vector{UInt8}())
         if size(d) != size(m)
             msg = "values and missingness arrays must be the same size"
             throw(ArgumentError(msg))
