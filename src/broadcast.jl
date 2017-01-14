@@ -204,15 +204,17 @@ implementation of `broadcast` in `base/broadcast.jl`.
 end
 
 # broadcasted ops
-for (op, scalar_op) in (
-    (:(@compat Base.:(.==)), :(==)),
-    (:(@compat Base.:.!=), :!=),
-    (:(@compat Base.:.<), :<),
-    (:(@compat Base.:.>), :>),
-    (:(@compat Base.:.<=), :<=),
-    (:(@compat Base.:.>=), :>=)
-)
-    @eval begin
-        ($op)(X::NullableArray, Y::NullableArray) = broadcast($scalar_op, X, Y)
+if VERSION < v"0.6.0-dev.1632"
+    for (op, scalar_op) in (
+        (:(@compat Base.:(.==)), :(==)),
+        (:(@compat Base.:.!=), :!=),
+        (:(@compat Base.:.<), :<),
+        (:(@compat Base.:.>), :>),
+        (:(@compat Base.:.<=), :<=),
+        (:(@compat Base.:.>=), :>=)
+    )
+        @eval begin
+            ($op)(X::NullableArray, Y::NullableArray) = broadcast($scalar_op, X, Y)
+        end
     end
 end
