@@ -24,13 +24,13 @@ module TestReduce
         @test isequal(mapreduce(f, +, X), Nullable(mapreduce(f, +, X.values)))
         @test isequal(mapreduce(f, +, Y), Nullable{Float64}())
         v = mapreduce(f, +, Y, skipnull=true)
-        @test_approx_eq v.value mapreduce(f, +, B)
+        @test v.value ≈ mapreduce(f, +, B)
         @test !isnull(v)
 
         @test isequal(reduce(+, X), Nullable(reduce(+, X.values)))
         @test isequal(reduce(+, Y), Nullable{Float64}())
         v = reduce(+, Y, skipnull=true)
-        @test_approx_eq v.value reduce(+, B)
+        @test v.value ≈ reduce(+, B)
         @test !isnull(v)
 
         for method in (
@@ -43,22 +43,11 @@ module TestReduce
             @test isequal(method(f, X), Nullable(method(f, A)))
             @test isequal(method(Y), Nullable{Float64}())
             v = method(Y, skipnull=true)
-            @test_approx_eq v.value method(B)
+            @test v.value ≈ method(B)
             @test !isnull(v)
             @test isequal(method(f, Y), Nullable{Float64}())
             v = method(f, Y, skipnull=true)
-            @test_approx_eq v.value method(f, B)
-            @test !isnull(v)
-        end
-
-        for method in (
-            sumabs,
-            sumabs2,
-        )
-            @test isequal(method(X), Nullable(method(A)))
-            @test isequal(method(Y), Nullable{Float64}())
-            v = method(Y, skipnull=true)
-            @test_approx_eq v.value method(B)
+            @test v.value ≈ method(f, B)
             @test !isnull(v)
         end
 
