@@ -9,16 +9,12 @@ else
     const broadcast_indices = broadcast_shape
 end
 
-if !isdefined(Base.Broadcast, :ftype) # Julia < 0.6
+if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
     ftype(f, A) = typeof(f)
     ftype(f, A...) = typeof(a -> f(a...))
     ftype(T::DataType, A) = Type{T}
     ftype(T::DataType, A...) = Type{T}
-else
-    using Base.Broadcast: ftype
-end
 
-if !isdefined(Base.Broadcast, :ziptype) # Julia < 0.6
     if isdefined(Base, :Iterators)
         using Base.Iterators: Zip2
     else
@@ -27,8 +23,19 @@ if !isdefined(Base.Broadcast, :ziptype) # Julia < 0.6
     ziptype(A) = Tuple{eltype(A)}
     ziptype(A, B) = Zip2{Tuple{eltype(A)}, Tuple{eltype(B)}}
     @inline ziptype(A, B, C, D...) = Zip{Tuple{eltype(A)}, ziptype(B, C, D...)}
+
+    nullable_broadcast_eltype(f, As...) =
+        _default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)})
 else
-    using Base.Broadcast: ziptype
+    Base.@pure nullable_eltypestuple(a) = Tuple{eltype(eltype(a))}
+    Base.@pure nullable_eltypestuple(T::Type) = Tuple{Type{eltype(T)}}
+    Base.@pure nullable_eltypestuple(a, b...) =
+        Tuple{nullable_eltypestuple(a).types..., nullable_eltypestuple(b...).types...}
+
+    Base.@pure function nullable_broadcast_eltype(f, As...)
+        T = Core.Inference.return_type(f, nullable_eltypestuple(As...))
+        T === Union{} ? Any : T
+    end
 end
 
 invoke_broadcast!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
@@ -57,7 +64,7 @@ function Base.broadcast{F}(f::F, As::NullableArray...)
     @inline f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, (x1, x2, x3, x4, x5, x6, x7))
     @inline f2(x...) = lift(f, x)
 
-    T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
+    T = nullable_broadcast_eltype(f, As...)
     dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
     invoke_broadcast!(f2, dest, As...)
 end

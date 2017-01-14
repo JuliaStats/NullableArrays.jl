@@ -1,5 +1,3 @@
-using Base: collect_similar, Generator
-
 invoke_map!{F, N}(f::F, dest, As::Vararg{NullableArray, N}) =
     invoke(map!, Tuple{F, AbstractArray, Vararg{AbstractArray, N}}, f, dest, As...)
 
@@ -26,7 +24,7 @@ function Base.map{F}(f::F, As::NullableArray...)
     @inline f2(x1, x2, x3, x4, x5, x6, x7) = lift(f, (x1, x2, x3, x4, x5, x6, x7))
     @inline f2(x...) = lift(f, x)
 
-    T = _default_eltype(Base.Generator{ziptype(As...), ftype(f2, As...)})
+    T = nullable_broadcast_eltype(f, As...)
     dest = similar(NullableArray{eltype(T)}, size(As[1]))
     invoke_map!(f2, dest, As...)
 end
