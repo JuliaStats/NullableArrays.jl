@@ -33,8 +33,8 @@ module TestMap
     )
         for i in 1:m
             # map!
-            map!(f, args[1][i]) # map!(f, As[i])
-            map!(f, args[2][i]) # map!(f, Xs[i])
+            map!(f, args[1][i], args[1][i]) # map!(f, As[i], As[i])
+            map!(f, args[2][i], args[2][i]) # map!(f, Xs[i], Xs[i])
             @test isequal(args[2][i], NullableArray(args[1][i], masks[i]...))
             # map
             A = map(f, args[1][i])
