@@ -76,22 +76,24 @@ module TestBroadcast
     M = rand(Bool, 10, dims...)
     Y = NullableArray(B, M)
 
-    for op in (
-        (.+),
-        (.-),
-        (.*),
-        (./),
-        (.%),
-        (.^),
-        (.==),
-        (.!=),
-        (.<),
-        (.>),
-        (.<=),
-        (.>=),
-    )
-        @test isequal(op(X1, X2), NullableArray(op(A, B)))
-        @test isequal(op(X1, Y), NullableArray(op(A, B), M))
+    if VERSION < v"0.6.0-dev.1632"
+        for op in (
+            (.+),
+            (.-),
+            (.*),
+            (./),
+            (.%),
+            (.^),
+            (.==),
+            (.!=),
+            (.<),
+            (.>),
+            (.<=),
+            (.>=),
+        )
+            @test isequal(op(X1, X2), NullableArray(op(A, B)))
+            @test isequal(op(X1, Y), NullableArray(op(A, B), M))
+        end
     end
 
     A = rand(Bool, 100)
@@ -100,7 +102,7 @@ module TestBroadcast
     M2 = rand(Bool, 100)
     X = NullableArray(A, M1)
     Y = NullableArray(B, M2)
-    @test isequal(broadcast(&, X, Y), NullableArray(A & B, M1 | M2))
-    @test isequal(broadcast(|, X, Y), NullableArray(A | B, M1 | M2))
+    @test isequal(broadcast(&, X, Y), NullableArray(A .& B, M1 .| M2))
+    @test isequal(broadcast(|, X, Y), NullableArray(A .| B, M1 .| M2))
 
 end # module
