@@ -138,7 +138,7 @@ function Base.find(X::NullableArray{Bool}) # -> Array{Int}
     @inbounds for (i, isnull) in enumerate(X.isnull)
         ntrue += !isnull && X.values[i]
     end
-    res = Array(Int, ntrue)
+    res = Array{Int}(ntrue)
     ind = 1
     @inbounds for (i, isnull) in enumerate(X.isnull)
         if !isnull && X.values[i]
@@ -215,7 +215,7 @@ null entries of `X` will be reflected by null entries of the resultant
 `NullableArray`.
 """
 function Base.isfinite(X::NullableArray) # -> NullableArray{Bool}
-    res = Array(Bool, size(X))
+    res = Array{Bool}(size(X))
     for i in eachindex(X)
         if !X.isnull[i]
             res[i] = isfinite(X.values[i])
@@ -272,7 +272,7 @@ function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N},
                                replacement::Any) # -> Array{S, N}
     replacementS = convert(S, replacement)
-    res = Array(S, size(X))
+    res = Array{S}(size(X))
     for i in 1:length(X)
         if X.isnull[i]
             res[i] = replacementS

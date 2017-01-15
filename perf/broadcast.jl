@@ -10,7 +10,7 @@ B1 = rand(Bool, 5_000_000)
 B2 = rand(Bool, 5_000_000, 2)
 C1 = rand(1:10, 5_000_000)
 C2 = rand(Int, 5_000_000, 2)
-L = Array(Float64, 5_000_000, 2)
+L = Array{Float64}(5_000_000, 2)
 
 U = NullableArray(Float64, 5_000_000, 2)
 X1 = NullableArray(A1)

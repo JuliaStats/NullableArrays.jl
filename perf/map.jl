@@ -4,7 +4,7 @@ srand(1)
 N = 5_000_000
 A = rand(N)
 B = rand(Bool, N)
-C = Array(Float64, N)
+C = Array{Float64}(N)
 
 
 X = NullableArray(A)
