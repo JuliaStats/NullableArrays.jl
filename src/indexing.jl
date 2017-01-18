@@ -77,18 +77,18 @@ to store `v` at `I`.
 end
 
 # return the value of non-null X element wrapped in Nullable
-function unsafe_getindex_notnull(X::NullableArray, I::Int...)
+@inline function unsafe_getindex_notnull(X::NullableArray, I::Int...)
     return Nullable(getindex(X.values, I...))
 end
-function unsafe_getindex_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+@inline function unsafe_getindex_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
     return getindex(X, I...)
 end
 
 # return the value of non-null X element
-function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
+@inline function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
     return getindex(X.values, I...)
 end
-function unsafe_getvalue_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+@inline function unsafe_getvalue_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
     return get(getindex(X, I...))
 end
 
@@ -142,6 +142,6 @@ end
 
 This is a convenience method to set the entry of `X` at index `I` to be null
 """
-function nullify!(X::NullableArray, I...)
+@inline function nullify!(X::NullableArray, I...)
     setindex!(X, Nullable{eltype(X)}(), I...)
 end
