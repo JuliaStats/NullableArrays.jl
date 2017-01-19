@@ -25,7 +25,7 @@ function Base.map{F}(f::F, As::NullableArray...)
     @inline f2(x...) = lift(f, x)
 
     T = nullable_broadcast_eltype(f, As...)
-    dest = similar(NullableArray{eltype(T)}, size(As[1]))
+    dest = similar(NullableArray{T}, size(As[1]))
     invoke_map!(f2, dest, As...)
 end
 

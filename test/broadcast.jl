@@ -1,6 +1,7 @@
 module TestBroadcast
     using NullableArrays
     using Base.Test
+    using Compat
 
     A1 = rand(10)
     M1 = rand(Bool, 10)

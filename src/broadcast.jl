@@ -65,7 +65,7 @@ function Base.broadcast{F}(f::F, As::NullableArray...)
     @inline f2(x...) = lift(f, x)
 
     T = nullable_broadcast_eltype(f, As...)
-    dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
+    dest = similar(NullableArray{T}, broadcast_indices(As...))
     invoke_broadcast!(f2, dest, As...)
 end
 
