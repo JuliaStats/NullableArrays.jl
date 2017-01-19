@@ -25,7 +25,7 @@ if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
     @inline ziptype(A, B, C, D...) = Zip{Tuple{eltype(A)}, ziptype(B, C, D...)}
 
     nullable_broadcast_eltype(f, As...) =
-        _default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)})
+        eltype(_default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)}))
 else
     Base.@pure nullable_eltypestuple(a) = Tuple{eltype(eltype(a))}
     Base.@pure nullable_eltypestuple(T::Type) = Tuple{Type{eltype(T)}}
