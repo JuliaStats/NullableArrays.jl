@@ -216,3 +216,25 @@ function Base.mapreduce_impl{T}(f, op::typeof(@functorize(scalarmax)), X::Nullab
     end
     return v
 end
+
+function Base.extrema{T}(X::NullableArray{T}; skipnull::Bool = false)
+    length(X) > 0 || throw(ArgumentError("collection must be non-empty"))
+    vmin = Nullable{T}()
+    vmax = Nullable{T}()
+    @inbounds for i in 1:length(X)
+        x = X.values[i]
+        null = X.isnull[i]
+        if skipnull && null
+            continue
+        elseif null
+            return (Nullable{T}(), Nullable{T}())
+        elseif isnull(vmax) # Equivalent to isnull(vmin)
+            vmax = vmin = Nullable(x)
+        elseif x > vmax.value
+            vmax = Nullable(x)
+        elseif x < vmin.value
+            vmin = Nullable(x)
+        end
+    end
+    return (vmin, vmax)
+end
