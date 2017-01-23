@@ -1,6 +1,7 @@
 module TestBroadcast
     using NullableArrays
     using Base.Test
+    using Compat
 
     A1 = rand(10)
     M1 = rand(Bool, 10)
@@ -31,15 +32,10 @@ module TestBroadcast
     Z3 = NullableArray(Float64, 10, [dims; i]...)
 
     f() = 5
-    f(x) = Nullable(5) * x
-    f(x, y) = x + y
-    f(x, y, z) = x + y + z
-    g() = 5
-    g(x::Float64) = 5 * x
-    g(x::Float64, y::Float64) = x * y
-    g(x::Float64, y::Float64, z::Float64) = x * y * z
+    f(x::Float64) = 5 * x
+    f(x::Float64, y::Float64) = x * y
+    f(x::Float64, y::Float64, z::Float64) = x * y * z
 
-    i = 1
     for (dests, arrays, nullablearrays, mask) in
         ( ((C2, Z2), (A1, A2), (U1, U2), ()),
           ((C3, Z3), (A2, A3), (U2, U3), ()),
@@ -50,36 +46,24 @@ module TestBroadcast
           ((C3, Z3), (A1, A2, A3), (V1, V2, V3), (Q3,)),
     )
 
-    # Base.broadcast!(f, B::NullableArray, As::NullableArray...; lift::Bool=false)
+        # Base.broadcast!(f, B::NullableArray, As::NullableArray...)
         broadcast!(f, dests[1], arrays...)
         broadcast!(f, dests[2], nullablearrays...)
         @test isequal(dests[2], NullableArray(dests[1], mask...))
 
-        broadcast!(g, dests[1], arrays...)
-        broadcast!(g, dests[2], nullablearrays...; lift=true)
-        @test isequal(dests[2], NullableArray(dests[1], mask...))
-
-        # Base.broadcast(f, As::NullableArray...;lift::Bool=false)
+        # Base.broadcast(f, As::NullableArray...)
         D = broadcast(f, arrays...)
         X = broadcast(f, nullablearrays...)
         @test isequal(X, NullableArray(D, mask...))
-
-        D = broadcast(g, arrays...)
-        X = broadcast(g, nullablearrays...; lift=true)
-        @test isequal(X, NullableArray(D, mask...))
     end
 
-    # Base.broadcast!(f, X::NullableArray; lift::Bool=false)
+    # Base.broadcast!(f, X::NullableArray)
     for (array, nullablearray, mask) in
         ( (A1, U1, ()), (A2, U2, ()), (A3, U3, ()),
           (A1, V1, (M1,)), (A2, V2, (M2,)), (A3, V3, (M3,)),
     )
         broadcast!(f, array)
         broadcast!(f, nullablearray)
-        @test isequal(nullablearray, NullableArray(array, mask...))
-
-        broadcast!(g, array)
-        broadcast!(g, nullablearray; lift=true)
         @test isequal(nullablearray, NullableArray(array, mask...))
     end
 
@@ -93,23 +77,33 @@ module TestBroadcast
     M = rand(Bool, 10, dims...)
     Y = NullableArray(B, M)
 
-    for op in (
-        (.+),
-        (.-),
-        (.*),
-        (./),
-        (.%),
-        (.^),
-        (.==),
-        (.!=),
-        (.<),
-        (.>),
-        (.<=),
-        (.>=),
-    )
-        @test isequal(op(X1, X2), NullableArray(op(A, B)))
-        @test isequal(op(X1, Y), NullableArray(op(A, B), M))
+    if VERSION < v"0.6.0-dev.1632"
+        for op in (
+            (.+),
+            (.-),
+            (.*),
+            (./),
+            (.%),
+            (.^),
+            (.==),
+            (.!=),
+            (.<),
+            (.>),
+            (.<=),
+            (.>=),
+        )
+            @test isequal(op(X1, X2), NullableArray(op(A, B)))
+            @test isequal(op(X1, Y), NullableArray(op(A, B), M))
+        end
     end
 
+    A = rand(Bool, 100)
+    B = rand(Bool, 100)
+    M1 = rand(Bool, 100)
+    M2 = rand(Bool, 100)
+    X = NullableArray(A, M1)
+    Y = NullableArray(B, M2)
+    @test isequal(broadcast(&, X, Y), NullableArray(A .& B, M1 .| M2))
+    @test isequal(broadcast(|, X, Y), NullableArray(A .| B, M1 .| M2))
 
 end # module

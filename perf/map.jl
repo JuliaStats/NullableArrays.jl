@@ -15,33 +15,33 @@ f(x::Float64) = 5 * x
 
 function profile_map()
 
-    println("Method: map!(f, dest, src) (0 missing entries, lift=true)")
+    println("Method: map!(f, dest, src) (0 missing entries)")
     print("  for Array{Float64}:          ")
     map!(f, C, A);
     @time map!(f, C, A);
     print("  for NullableArray{Float64}:  ")
-    map!(f, Z, X; lift=true);
-    @time map!(f, Z, X; lift=true);
+    map!(f, Z, X);
+    @time map!(f, Z, X);
     println()
 
-    println("Method: map!(f, dest, src) (~half missing entries, lift=true)")
+    println("Method: map!(f, dest, src) (~half missing entries)")
     print("  for NullableArray{Float64}:  ")
-    map!(f, Z, Y; lift=true);
-    @time map!(f, Z, Y; lift=true);
+    map!(f, Z, Y);
+    @time map!(f, Z, Y);
     println()
 
-    println("Method: map(f, src) (0 missing entries, lift=true)")
+    println("Method: map(f, src) (0 missing entries)")
     print("  for Array{Float64}:          ")
     map(f, A);
     @time map(f, A);
     print("  for NullableArray{Float64}:  ")
-    map(f, X; lift=true);
-    @time map(f, X; lift=true);
+    map(f, X);
+    @time map(f, X);
     println()
 
-    println("Method: map(f, src) (~half missing entries, lift=true)")
+    println("Method: map(f, src) (~half missing entries)")
     print("  for NullableArray{Float64}:  ")
-    map(f, Y; lift=true);
-    @time map(f, Y; lift=true);
+    map(f, Y);
+    @time map(f, Y);
     println()
 end
