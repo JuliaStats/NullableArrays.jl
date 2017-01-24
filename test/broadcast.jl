@@ -3,7 +3,7 @@ module TestBroadcast
     using Base.Test
     using Compat
 
-    A1 = rand(10)
+    A1 = rand(Int, 10)
     M1 = rand(Bool, 10)
     n = rand(2:5)
     dims = [ rand(2:5) for i in 1:n]
@@ -32,9 +32,9 @@ module TestBroadcast
     Z3 = NullableArray(Float64, 10, [dims; i]...)
 
     f() = 5
-    f(x::Float64) = 5 * x
-    f(x::Float64, y::Float64) = x * y
-    f(x::Float64, y::Float64, z::Float64) = x * y * z
+    f(x::Real) = 5 * x
+    f(x::Real, y::Real) = x * y
+    f(x::Real, y::Real, z::Real) = x * y * z
 
     for (dests, arrays, nullablearrays, mask) in
         ( ((C2, Z2), (A1, A2), (U1, U2), ()),

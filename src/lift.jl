@@ -13,7 +13,8 @@ Lift function `f`, passing it arguments `xs...`, using standard lifting semantic
 for a function call `f(xs...)`, return null if any `x` in `xs` is null; otherwise,
 return `f` applied to values of `xs`.
 """
-@inline @generated function lift{F, N, T}(f::F, xs::NTuple{N, T})
+@inline @generated function lift{F}(f::F, xs::Tuple)
+    N = nfields(xs)
     args = (:(unsafe_get(xs[$i])) for i in 1:N)
     checknull = (:(!isnull(xs[$i])) for i in 1:N)
     if null_safe_op(f.instance, map(eltype_nullable, xs.parameters)...)
