@@ -6,15 +6,16 @@ module TestMap
     # dimension i for i=1:N
     N = rand(2:5)
     dims = Int[ rand(3:8) for i in 1:N ]
-    m = rand(3:5)
-    As = [ rand(dims...) for i in 1:m ]
+    m = rand(4:6)
+    n = rand(1:3)
+    As = Array[ [rand(dims...) for i in 1:n] ; [rand(Int, dims...) for i in n+1:m] ]
 
     Ms = [ rand(Bool, dims...) for i in 1:m ]
-    Xs = Array{NullableArray{Float64, N}, 1}()
+    Xs = Array{NullableArray, 1}()
     for i in 1:m
         push!(Xs, NullableArray(As[i]))
     end
-    Ys = Array{NullableArray{Float64, N}, 1}()
+    Ys = Array{NullableArray, 1}()
     for i in 1:m
         push!(Ys, NullableArray(As[i], Ms[i]))
     end
