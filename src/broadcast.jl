@@ -1,4 +1,3 @@
-using Base: _default_eltype
 using Compat
 
 if VERSION >= v"0.6.0-dev.693"
@@ -10,6 +9,8 @@ else
 end
 
 if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
+    using Base: _default_eltype
+
     ftype(f, A) = typeof(f)
     ftype(f, A...) = typeof(a -> f(a...))
     ftype(T::DataType, A) = Type{T}
@@ -20,12 +21,12 @@ if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
     else
         using Base: Zip2
     end
-    ziptype(A) = Tuple{eltype(A)}
-    ziptype(A, B) = Zip2{Tuple{eltype(A)}, Tuple{eltype(B)}}
+    ziptype(A) = Tuple{eltype(eltype(A))}
+    ziptype(A, B) = Zip2{Tuple{eltype(eltype(A))}, Tuple{eltype(eltype(B))}}
     @inline ziptype(A, B, C, D...) = Zip{Tuple{eltype(A)}, ziptype(B, C, D...)}
 
     nullable_broadcast_eltype(f, As...) =
-        eltype(_default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)}))
+        _default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)})
 else
     Base.@pure nullable_eltypestuple(a) = Tuple{eltype(eltype(a))}
     Base.@pure nullable_eltypestuple(T::Type) = Tuple{Type{eltype(T)}}

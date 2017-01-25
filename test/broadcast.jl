@@ -36,6 +36,10 @@ module TestBroadcast
     f(x::Real, y::Real) = x * y
     f(x::Real, y::Real, z::Real) = x * y * z
 
+    @inferred NullableArrays.lift(f, (1,))
+    @inferred NullableArrays.lift(f, (1, 2.0))
+    @inferred NullableArrays.lift(f, (1, 2.0, 3.0))
+
     for (dests, arrays, nullablearrays, mask) in
         ( ((C2, Z2), (A1, A2), (U1, U2), ()),
           ((C3, Z3), (A2, A3), (U2, U3), ()),
@@ -105,5 +109,16 @@ module TestBroadcast
     Y = NullableArray(B, M2)
     @test isequal(broadcast(&, X, Y), NullableArray(A .& B, M1 .| M2))
     @test isequal(broadcast(|, X, Y), NullableArray(A .| B, M1 .| M2))
+
+    # Test broadcasting with constructor
+    immutable SurvEvent
+        time::Float64
+        censored::Bool
+    end
+    t = NullableArray(rand(3))
+    c = NullableArray(rand(Bool, 3))
+    @test isequal(SurvEvent.(t, c), NullableArray([SurvEvent(get(t[i]), get(c[i])) for i in 1:3]))
+    @test isa(SurvEvent.(t, c), NullableVector{SurvEvent})
+    @inferred NullableArrays.lift(SurvEvent, (1, true))
 
 end # module
