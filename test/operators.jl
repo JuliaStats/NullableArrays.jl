@@ -31,8 +31,12 @@ module TestOperators
 
     # check for fast path (null-safe combinations of operators and types)
     if VERSION >= v"0.5.0-dev" # Some functors are missing on 0.4.0, don't check fast path
-        for S in NullableArrays.SafeTypes.types,
-            T in NullableArrays.SafeTypes.types
+        if isdefined(Base, :uniontypes)
+            testtypes = Base.uniontypes(NullableArrays.SafeTypes)
+        else
+            testtypes = NullableArrays.SafeTypes.types
+        end
+        for S in testtypes, T in testtypes
             # mixing signed and unsigned types is unsafe (slow path tested below)
             ((S <: Signed) ⊻ (T <: Signed)) && continue
 
@@ -78,8 +82,12 @@ module TestOperators
     end
 
     # test all types and operators (including null-unsafe ones)
-    for S in Union{NullableArrays.SafeTypes, BigInt, BigFloat}.types,
-        T in Union{NullableArrays.SafeTypes, BigInt, BigFloat}.types
+    if isdefined(Base, :uniontypes)
+        testtypes = Base.uniontypes(NullableArrays.SafeTypes)
+    else
+        testtypes = NullableArrays.SafeTypes.types
+    end
+    for S in testtypes, T in testtypes
         u0 = zero(S)
         u1 = one(S)
         u2 = S <: Union{BigInt, BigFloat} ? S(rand(Int128)) : rand(S)
