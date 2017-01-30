@@ -12,7 +12,7 @@ module TestConstructors
     m = [1 2; 3 4]
     dm = NullableArray(m, fill(false, size(m)))
 
-    t = Array(Int, 2, 2, 2)
+    t = Array{Int}(2, 2, 2)
     t[1:2, 1:2, 1:2] = 1
 
     dt = NullableArray(t, fill(false, size(t)))

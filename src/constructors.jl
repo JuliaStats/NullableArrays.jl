@@ -22,7 +22,7 @@ end
 # `NullableArray` a null value by default.
 # """
 function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
-    return NullableArray(Array(T, dims), fill(true, dims))
+    return NullableArray(Array{T}(dims), fill(true, dims))
 end
 
 # Constructs an empty NullableArray of type parameter T and number of dimensions
@@ -121,7 +121,7 @@ end
 #----- Conversion from arrays of Nullables -----------------------------------#
 function Base.convert{S<:Nullable, T, N}(::Type{NullableArray{T, N}},
                                          A::AbstractArray{S, N}) # -> NullableArray{T, N}
-   out = NullableArray{T, N}(Array(T, size(A)), Array(Bool, size(A)))
+   out = NullableArray{T, N}(Array{T}(size(A)), Array{Bool}(size(A)))
    for i = 1:length(A)
        if !(out.isnull[i] = isnull(A[i]))
            out.values[i] = A[i].value

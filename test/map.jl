@@ -20,7 +20,7 @@ module TestMap
         push!(Ys, NullableArray(As[i], Ms[i]))
     end
 
-    C = Array(Float64, dims...)
+    C = Array{Float64}(dims...)
     Z = NullableArray(Float64, dims...)
 
     R = map(|, Ms...)
