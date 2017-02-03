@@ -174,16 +174,16 @@ module TestPrimitives
 
 # ----- test dropnull --------------------------------------------------------#
 
-    # dropnull(X::NullableArray)
+    # dropnull(X::NullableVector)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test dropnull(z) == [1, 2, 3, 5, 7]
 
-    # dropnull(X::AbstractArray)
+    # dropnull(X::AbstractVector)
     A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
             Nullable(), Nullable(7), Nullable()]
     @test dropnull(A) == [1, 2, 3, 5, 7]
 
-    # dropnull(X::AbstractArray{<:Nullable})
+    # dropnull(X::AbstractVector{<:Nullable})
     B = convert(Vector{Nullable}, A)
     @test dropnull(B) == [1, 2, 3, 5, 7]
 
