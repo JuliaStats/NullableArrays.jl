@@ -179,6 +179,13 @@ end
 dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 
 """
+    dropnull!(X::AbstractVector)
+
+Remove the null entries of `X` inplace.
+"""
+dropnull!(X::AbstractVector) = convert(Vector, deleteat!(X, find(isnull, X)))
+
+"""
     anynull(X)
 
 Returns whether or not any entries of `X` are null.
