@@ -182,7 +182,7 @@ module TestPrimitives
     # dropnull(X::AbstractVector{<:Nullable})
     B = convert(Vector{Nullable}, A)
     @test dropnull(z) == dropnull!(z) == [1, 2, 3, 5, 7]
-    @test dropnull(A) == dropnull!(A) == Any[1, 2, 3, 5, 7]
+    @test dropnull(A) == dropnull!(A) == [1, 2, 3, 5, 7]
     @test dropnull(B) == dropnull!(B) == [1, 2, 3, 5, 7]
 
 # ----- test anynull ---------------------------------------------------------#
