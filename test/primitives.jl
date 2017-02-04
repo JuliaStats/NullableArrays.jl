@@ -185,10 +185,15 @@ module TestPrimitives
     @test dropnull(z) == [1, 2, 3, 5, 7]
     @test dropnull(A) == [1, 2, 3, 5, 7]
     @test dropnull(B) == [1, 2, 3, 5, 7]
-    @test isequal(dropnull!(z), Nullable[1, 2, 3, 5, 7])
+    # for each inplace, assert both proper return value and inplace change
+    @test isequal(dropnull!(z), [1, 2, 3, 5, 7])
+    @test isequal(z, Nullable[1, 2, 3, 5, 7])
     @test isequal(dropnull!(A), Any[Nullable(1), Nullable(2), Nullable(3),
                                         Nullable(5), Nullable(7)])
+    @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3),
+                                    Nullable(5), Nullable(7)])
     @test isequal(dropnull!(B),  Nullable[1, 2, 3, 5, 7])
+    @test isequal(B,  Nullable[1, 2, 3, 5, 7])
 
 # ----- test anynull ---------------------------------------------------------#
 
