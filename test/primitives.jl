@@ -180,14 +180,20 @@ module TestPrimitives
     A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
             Nullable(), Nullable(7), Nullable()]
     # dropnull(X::AbstractVector{<:Nullable})
-    B = convert(Vector{Nullable}, A)
-    @test dropnull(z) == dropnull!(z) == [1, 2, 3, 5, 7]
-    @test dropnull(A) == dropnull!(A) == [1, 2, 3, 5, 7]
-    @test dropnull(B) == dropnull!(B) == [1, 2, 3, 5, 7]
+    B = [Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
+            Nullable(), Nullable(7), Nullable()]
+    @test dropnull(z) == [1, 2, 3, 5, 7]
+    @test dropnull(A) == [1, 2, 3, 5, 7]
+    @test dropnull(B) == [1, 2, 3, 5, 7]
+    @test isequal(dropnull!(z), Nullable[1, 2, 3, 5, 7])
+    @test isequal(dropnull!(A), Any[Nullable(1), Nullable(2), Nullable(3),
+                                        Nullable(5), Nullable(7)])
+    @test isequal(dropnull!(B),  Nullable[1, 2, 3, 5, 7])
 
 # ----- test anynull ---------------------------------------------------------#
 
     # anynull(X::NullableArray)
+    z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test anynull(z) == true
     @test anynull(dropnull(z)) == false
     z = NullableArray(Int, 10)
