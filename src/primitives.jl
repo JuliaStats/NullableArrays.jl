@@ -161,6 +161,9 @@ unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
 function dropnull(X::AbstractVector)                 # -> AbstractVector
+    if !(Nullable <: eltype(X))
+        return X
+    end
     Y = filter(x->!_isnull(x), X)
     for i in eachindex(Y)
         Y[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
@@ -180,12 +183,20 @@ dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 """
     dropnull!(X::AbstractVector)
 
-Remove null entries of `X` inplace, and return the updated `Vector` of the same
-type as the input vector. No-op if no nulls are present. If `X` is
-a `NullableVector` then a view of the unwrapped values is returned for
-convenience, although `X` itself will still be a `NullableVector`
+Remove null entries of `X` in-place and return the updated vector. No-op
+if no nulls are present. If `X` is a `NullableVector`, a view of the
+unwrapped values is returned for convenience, although `X` itself will still
+be a `NullableVector`.
 """
-dropnull!(X::AbstractVector) = deleteat!(X, find(isnull, X))
+function dropnull!(X::AbstractVector)
+	if !(Nullable <: eltype(X))
+		return X
+	end
+	deleteat!(X, find(isnull, X))
+end
+function dropnull!{T<:Nullable}(X::AbstractVector{T})
+	deleteat!(X, find(isnull, X))
+end
 dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values
 
 """
