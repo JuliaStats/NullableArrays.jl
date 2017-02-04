@@ -162,11 +162,10 @@ unwrapping `Nullable` entries. A copy is always returned, even when
 """
 function dropnull(X::AbstractVector)                 # -> AbstractVector
     Y = filter(x->!_isnull(x), X)
-    res = similar(Y)
-    for i in eachindex(Y, res)
-        res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+    for i in eachindex(Y)
+        Y[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
     end
-    res
+    Y
 end
 function dropnull{T<:Nullable}(X::AbstractVector{T}) # -> AbstractVector
     Y = filter(x->!_isnull(x), X)
@@ -181,9 +180,11 @@ dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 """
     dropnull!(X::AbstractVector)
 
-Remove the null entries of `X` inplace.
+Remove null entries of `X` inplace. No-op if no nulls are present. Does not
+unwrap `Nullable` entries. Use `dropnull` to remove nulls AND unwrap nullables.
 """
-dropnull!(X::AbstractVector) = convert(Vector, deleteat!(X, find(isnull, X)))
+dropnull!(X::AbstractVector) = deleteat!(X, find(isnull, X))
+dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull))
 
 """
     anynull(X)
