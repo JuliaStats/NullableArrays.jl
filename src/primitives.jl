@@ -180,11 +180,13 @@ dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 """
     dropnull!(X::AbstractVector)
 
-Remove null entries of `X` inplace. No-op if no nulls are present. Does not
-unwrap `Nullable` entries. Use `dropnull` to remove nulls AND unwrap nullables.
+Remove null entries of `X` inplace, and return the updated `Vector` of the same
+type as the input vector. No-op if no nulls are present. If `X` is
+a `NullableVector` then a view of the unwrapped values is returned for
+convenience, although `X` itself will still be a `NullableVector`
 """
 dropnull!(X::AbstractVector) = deleteat!(X, find(isnull, X))
-dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull))
+dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values
 
 """
     anynull(X)
