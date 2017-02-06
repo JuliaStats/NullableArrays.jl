@@ -195,7 +195,7 @@ module TestPrimitives
     @test isequal(dropnull!(B),  Nullable[1, 2, 3, 5, 7])
     @test isequal(B,  Nullable[1, 2, 3, 5, 7])
     # when no nulls present, dropnull returns copy and dropnull! returns X
-    nullfree = [1,2,3,4]
+    nullfree = [1, 2, 3, 4]
     out_copy = dropnull(nullfree)
     out_inplace = dropnull!(nullfree)
     @test nullfree == out_copy && !(nullfree === out_copy)
