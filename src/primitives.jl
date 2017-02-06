@@ -162,7 +162,7 @@ unwrapping `Nullable` entries. A copy is always returned, even when
 """
 function dropnull(X::AbstractVector)                 # -> AbstractVector
     if !(Nullable <: eltype(X))
-        return X
+        return copy(X)
     end
     Y = filter(x->!_isnull(x), X)
     for i in eachindex(Y)
