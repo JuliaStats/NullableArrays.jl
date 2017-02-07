@@ -257,7 +257,7 @@ null entries will result in an error.
 Currently supported return type arguments include: `Array`, `Array{T}`,
 `Vector`, `Matrix`.
 
-`convert(T, X::NullableArray, replacement)`
+    convert(T, X::NullableArray, replacement)
 
 Convert `X` to an `AbstractArray` of type `T` and replace all null entries of
 `X` with `replacement` in the result.
