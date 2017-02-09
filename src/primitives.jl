@@ -199,6 +199,9 @@ end
 function dropnull!{T<:Nullable}(X::AbstractVector{T})
     deleteat!(X, find(isnull, X))
 end
+# TODO: replace `find(X.isnull)` with `X.isnull` when
+# https://github.com/JuliaLang/julia/pull/20465 is merged and part of
+# current release (either v0.6 or v1.0)
 dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values
 
 """
