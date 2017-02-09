@@ -199,7 +199,8 @@ end
 """
     dropnull!(X::NullableVector)
 
-Remove null entries of `X` in-place and return a `Vector` view of `X.values`
+Remove null entries of `X` in-place and return a `Vector` view of the
+unwrapped `Nullable` entries.
 """
 # TODO: replace `find(X.isnull)` with `X.isnull` when
 # https://github.com/JuliaLang/julia/pull/20465 is merged and part of
