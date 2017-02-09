@@ -185,10 +185,6 @@ dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 
 Remove null entries of `X` in-place and return the updated vector. This is a
 no-op if no nulls are present.
-
-    dropnull!(X::NullableVector)
-
-Remove null entries of `X` in-place and return a `Vector` view of `X.values`
 """
 function dropnull!(X::AbstractVector)
     if !(Nullable <: eltype(X))
@@ -199,6 +195,12 @@ end
 function dropnull!{T<:Nullable}(X::AbstractVector{T})
     deleteat!(X, find(isnull, X))
 end
+
+"""
+    dropnull!(X::NullableVector)
+
+Remove null entries of `X` in-place and return a `Vector` view of `X.values`
+"""
 # TODO: replace `find(X.isnull)` with `X.isnull` when
 # https://github.com/JuliaLang/julia/pull/20465 is merged and part of
 # current release (either v0.6 or v1.0)
