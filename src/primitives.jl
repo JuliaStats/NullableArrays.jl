@@ -183,17 +183,28 @@ dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
 """
     dropnull!(X::AbstractVector)
 
-Remove null entries of `X` in-place and return the updated vector. This is a
-no-op if no nulls are present.
+Remove null entries of `X` in-place and return a `Vector` view of the
+unwrapped `Nullable` entries. If no nulls are present, this is a no-op
+and `X` is returned.
 """
 function dropnull!(X::AbstractVector)
     if !(Nullable <: eltype(X))
         return X
     end
     deleteat!(X, find(isnull, X))
+    res = similar(X)
+    for i in eachindex(X, res)
+        res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
+    end
+    res
 end
 function dropnull!{T<:Nullable}(X::AbstractVector{T})
     deleteat!(X, find(isnull, X))
+    res = similar(X, eltype(T))
+    for i in eachindex(X, res)
+        res[i] = X[i].value
+    end
+    res
 end
 
 """
