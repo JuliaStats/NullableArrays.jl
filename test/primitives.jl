@@ -172,34 +172,47 @@ module TestPrimitives
     z = NullableArray([false, true, false, true, false, true])
     @test isequal(find(z), [2, 4, 6])
 
-# ----- test dropnull & dropnull! ---------------------------------------------#
+# ----- test dropnull --------------------------------------------------------#
 
     # dropnull(X::NullableVector)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
+    @test dropnull(z) == [1, 2, 3, 5, 7]
     # dropnull(X::AbstractVector)
     A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
-            Nullable(), Nullable(7), Nullable()]
+           Nullable(), Nullable(7), Nullable()]
+    @test dropnull(A) == [1, 2, 3, 5, 7]
     # dropnull(X::AbstractVector{<:Nullable})
     B = [Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
-            Nullable(), Nullable(7), Nullable()]
-    @test dropnull(z) == [1, 2, 3, 5, 7]
-    @test dropnull(A) == [1, 2, 3, 5, 7]
+        Nullable(), Nullable(7), Nullable()]
     @test dropnull(B) == [1, 2, 3, 5, 7]
-    # for each inplace, assert both proper return value and inplace change
+    # assert dropnull returns copy for !(Nullable <: eltype(X))
+    nullfree = [1, 2, 3, 4]
+    returned_copy = dropnull(nullfree)
+    @test nullfree == returned_copy && !(nullfree === returned_copy)
+
+# ----- test dropnull! -------------------------------------------------------#
+
+    # for each, assert returned values are unwrapped and inplace change
+    # dropnull!(X::NullableVector)
     @test isequal(dropnull!(z), [1, 2, 3, 5, 7])
     @test isequal(z, Nullable[1, 2, 3, 5, 7])
-    @test isequal(dropnull!(A), Any[Nullable(1), Nullable(2), Nullable(3),
-                                        Nullable(5), Nullable(7)])
-    @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3),
-                                    Nullable(5), Nullable(7)])
-    @test isequal(dropnull!(B),  Nullable[1, 2, 3, 5, 7])
-    @test isequal(B,  Nullable[1, 2, 3, 5, 7])
-    # when no nulls present, dropnull returns copy and dropnull! returns X
-    nullfree = [1, 2, 3, 4]
-    out_copy = dropnull(nullfree)
+    # dropnull!(X::AbstractVector)
+    @test isequal(dropnull!(A), [1, 2, 3, 5, 7])
+    @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3), Nullable(5),
+                        Nullable(7)])
+    # dropnull!(X::AbstractVector{<:Nullable})
+    @test isequal(dropnull!(B), [1, 2, 3, 5, 7])
+    @test isequal(B, Nullable[1, 2, 3, 5, 7])
+    # when no nulls present, dropnull! returns input vector
     out_inplace = dropnull!(nullfree)
-    @test nullfree == out_copy && !(nullfree === out_copy)
     @test nullfree == out_inplace && nullfree === out_inplace
+    # test that dropnull! returns unwrapped values when nullables are present
+    X = [false, 1, :c, "string", Nullable("I am a null"), Nullable()]
+    @test any(map(x -> isa(x, Nullable), dropnull!(X))) == false
+    @test any(map(x -> isa(x, Nullable), X)) == true
+    Y = Any[false, 1, :c, "string", Nullable("I am a null"), Nullable()]
+    @test any(map(x -> isa(x, Nullable), dropnull!(Y))) == false
+    @test any(map(x -> isa(x, Nullable), Y)) == true
 
 # ----- test anynull ---------------------------------------------------------#
 
