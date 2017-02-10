@@ -209,8 +209,8 @@ module TestPrimitives
     @test isequal(B, Nullable[1, 2, 3, 5, 7])
 
     # when no nulls present, dropnull! returns input vector
-    out_inplace = dropnull!(nullfree)
-    @test nullfree == out_inplace && nullfree === out_inplace
+    returned_view = dropnull!(nullfree)
+    @test nullfree == returned_view && nullfree === returned_view
 
     # test that dropnull! returns unwrapped values when nullables are present
     X = [false, 1, :c, "string", Nullable("I am a null"), Nullable()]
