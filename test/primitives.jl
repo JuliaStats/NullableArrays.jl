@@ -196,17 +196,18 @@ module TestPrimitives
 
     # for each, assert returned values are unwrapped and inplace change
     # dropnull!(X::NullableVector)
-    @test isequal(dropnull!(z), [1, 2, 3, 5, 7])
-    @test isequal(z, Nullable[1, 2, 3, 5, 7])
+    @test dropnull!(z) == [1, 2, 3, 5, 7]
+    @test isequal(z, NullableArray([1, 2, 3, 5, 7]))
 
     # dropnull!(X::AbstractVector)
-    @test isequal(dropnull!(A), [1, 2, 3, 5, 7])
+    @test dropnull!(A) == [1, 2, 3, 5, 7]
     @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3), Nullable(5),
                          Nullable(7)])
 
     # dropnull!(X::AbstractVector{<:Nullable})
-    @test isequal(dropnull!(B), [1, 2, 3, 5, 7])
-    @test isequal(B, Nullable[1, 2, 3, 5, 7])
+    @test dropnull!(B) == [1, 2, 3, 5, 7]
+    @test isequal(B, [Nullable(1), Nullable(2), Nullable(3), Nullable(5),
+                      Nullable(7)])
 
     # when no nulls present, dropnull! returns input vector
     returned_view = dropnull!(nullfree)
