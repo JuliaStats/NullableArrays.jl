@@ -177,10 +177,12 @@ module TestPrimitives
     # dropnull(X::NullableVector)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test dropnull(z) == [1, 2, 3, 5, 7]
+
     # dropnull(X::AbstractVector)
     A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
            Nullable(), Nullable(7), Nullable()]
     @test dropnull(A) == [1, 2, 3, 5, 7]
+
     # dropnull(X::AbstractVector{<:Nullable})
     B = [Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
         Nullable(), Nullable(7), Nullable()]
@@ -196,16 +198,20 @@ module TestPrimitives
     # dropnull!(X::NullableVector)
     @test isequal(dropnull!(z), [1, 2, 3, 5, 7])
     @test isequal(z, Nullable[1, 2, 3, 5, 7])
+
     # dropnull!(X::AbstractVector)
     @test isequal(dropnull!(A), [1, 2, 3, 5, 7])
     @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3), Nullable(5),
                         Nullable(7)])
+
     # dropnull!(X::AbstractVector{<:Nullable})
     @test isequal(dropnull!(B), [1, 2, 3, 5, 7])
     @test isequal(B, Nullable[1, 2, 3, 5, 7])
+
     # when no nulls present, dropnull! returns input vector
     out_inplace = dropnull!(nullfree)
     @test nullfree == out_inplace && nullfree === out_inplace
+
     # test that dropnull! returns unwrapped values when nullables are present
     X = [false, 1, :c, "string", Nullable("I am a null"), Nullable()]
     @test any(map(x -> isa(x, Nullable), dropnull!(X))) == false
