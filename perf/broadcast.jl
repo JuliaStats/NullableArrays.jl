@@ -74,7 +74,7 @@ function profile_ops_nonulls(A1, A2, X1, X2, E1, E2)
         :(.%),
         :(.^),
     )
-        _op = symbol("$op")
+        _op = Symbol("$op")
         println("Method: $_op (no empty entries)")
         @eval begin
             $_op(A1, A2)
@@ -97,7 +97,7 @@ function profile_ops_nonulls(A1, A2, X1, X2, E1, E2)
         :(.<=),
         :(.>=),
     )
-        _op = symbol("$op")
+        _op = Symbol("$op")
         println("Method: $_op (no empty entries)")
         @eval begin
             $_op(A1, A2)
@@ -148,7 +148,7 @@ function profile_ops_halfnulls(A1, A2, Y1, Y2, F1, F2)
         :(.%),
         :(.^),
     )
-        _op = symbol("$op")
+        _op = Symbol("$op")
         println("Method: $_op (~half empty entries)")
         @eval begin
             $_op(A1, A2)
@@ -171,7 +171,7 @@ function profile_ops_halfnulls(A1, A2, Y1, Y2, F1, F2)
         :(.<=),
         :(.>=),
     )
-        _op = symbol("$op")
+        _op = Symbol("$op")
         println("Method: $_op (~half empty entries)")
         @eval begin
             $_op(A1, A2)
