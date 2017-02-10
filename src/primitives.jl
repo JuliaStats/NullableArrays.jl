@@ -166,7 +166,7 @@ function dropnull(X::AbstractVector)                 # -> AbstractVector
     end
     Y = filter(x->!_isnull(x), X)
     for i in eachindex(Y)
-        Y[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+        @inbounds Y[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
     end
     Y
 end
@@ -174,7 +174,7 @@ function dropnull{T<:Nullable}(X::AbstractVector{T}) # -> AbstractVector
     Y = filter(x->!_isnull(x), X)
     res = similar(Y, eltype(T))
     for i in eachindex(Y, res)
-        res[i] = Y[i].value
+        @inbounds res[i] = Y[i].value
     end
     res
 end
@@ -194,7 +194,7 @@ function dropnull!(X::AbstractVector)
     deleteat!(X, find(isnull, X))
     res = similar(X)
     for i in eachindex(X, res)
-        res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
+        @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
     end
     res
 end
@@ -202,7 +202,7 @@ function dropnull!{T<:Nullable}(X::AbstractVector{T})
     deleteat!(X, find(isnull, X))
     res = similar(X, eltype(T))
     for i in eachindex(X, res)
-        res[i] = X[i].value
+        @inbounds res[i] = X[i].value
     end
     res
 end
