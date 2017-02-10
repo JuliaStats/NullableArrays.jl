@@ -160,25 +160,19 @@ Return a vector containing only the non-null entries of `X`,
 unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
-function dropnull(X::AbstractVector)                 # -> AbstractVector
-    if !(Nullable <: eltype(X))
+function dropnull{T}(X::AbstractVector{T})
+    if !(Nullable <: T) && !(T <: Nullable)
         return copy(X)
+    else
+        Y = filter(x->!_isnull(x), X)
+        res = similar(Y, eltype(T))
+        for i in eachindex(Y, res)
+            @inbounds res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+        end
+        res
     end
-    Y = filter(x->!_isnull(x), X)
-    for i in eachindex(Y)
-        @inbounds Y[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
-    end
-    Y
 end
-function dropnull{T<:Nullable}(X::AbstractVector{T}) # -> AbstractVector
-    Y = filter(x->!_isnull(x), X)
-    res = similar(Y, eltype(T))
-    for i in eachindex(Y, res)
-        @inbounds res[i] = Y[i].value
-    end
-    res
-end
-dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
+dropnull(X::NullableVector) = X.values[!X.isnull]
 
 """
     dropnull!(X::AbstractVector)
@@ -187,24 +181,17 @@ Remove null entries of `X` in-place and return a `Vector` view of the
 unwrapped `Nullable` entries. If no nulls are present, this is a no-op
 and `X` is returned.
 """
-function dropnull!(X::AbstractVector)
-    if !(Nullable <: eltype(X))
+function dropnull!{T}(X::AbstractVector{T})
+    if !(Nullable <: T) && !(T <: Nullable)
         return X
+    else
+        deleteat!(X, find(isnull, X))
+        res = similar(X, eltype(T))
+        for i in eachindex(X, res)
+            @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
+        end
+        res
     end
-    deleteat!(X, find(isnull, X))
-    res = similar(X)
-    for i in eachindex(X, res)
-        @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
-    end
-    res
-end
-function dropnull!{T<:Nullable}(X::AbstractVector{T})
-    deleteat!(X, find(isnull, X))
-    res = similar(X, eltype(T))
-    for i in eachindex(X, res)
-        @inbounds res[i] = X[i].value
-    end
-    res
 end
 
 """
