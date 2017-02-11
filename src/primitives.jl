@@ -160,7 +160,7 @@ Return a vector containing only the non-null entries of `X`,
 unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
-function dropnull{T}(X::AbstractVector{T})
+function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
     if !(Nullable <: T) && !(T <: Nullable)
         return copy(X)
     else
@@ -172,7 +172,7 @@ function dropnull{T}(X::AbstractVector{T})
         res
     end
 end
-dropnull(X::NullableVector) = X.values[!X.isnull]
+dropnull(X::NullableVector) = X.values[!X.isnull]                   # -> Vector
 
 """
     dropnull!(X::AbstractVector)
@@ -181,7 +181,7 @@ Remove null entries of `X` in-place and return a `Vector` view of the
 unwrapped `Nullable` entries. If no nulls are present, this is a no-op
 and `X` is returned.
 """
-function dropnull!{T}(X::AbstractVector{T})
+function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
     if !(Nullable <: T) && !(T <: Nullable)
         return X
     else
@@ -203,7 +203,7 @@ unwrapped `Nullable` entries.
 # TODO: replace `find(X.isnull)` with `X.isnull` when
 # https://github.com/JuliaLang/julia/pull/20465 is merged and part of
 # current release (either v0.6 or v1.0)
-dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values
+dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values # -> Vector
 
 """
     anynull(X)
