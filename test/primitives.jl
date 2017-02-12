@@ -206,8 +206,7 @@ module TestPrimitives
 
     # dropnull!(X::AbstractVector{<:Nullable})
     @test dropnull!(B) == [1, 2, 3, 5, 7]
-    @test isequal(B, [Nullable(1), Nullable(2), Nullable(3), Nullable(5),
-                      Nullable(7)])
+    @test isequal(B, Nullable[1, 2, 3, 5, 7])
 
     # when no nulls present, dropnull! returns input vector
     returned_view = dropnull!(nullfree)
