@@ -179,13 +179,11 @@ module TestPrimitives
     @test dropnull(z) == [1, 2, 3, 5, 7]
 
     # dropnull(X::AbstractVector)
-    A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
-            Nullable(), Nullable(7), Nullable()]
+    A = Any[1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
     @test dropnull(A) == [1, 2, 3, 5, 7]
 
     # dropnull(X::AbstractVector{<:Nullable})
-    B = [Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
-         Nullable(), Nullable(7), Nullable()]
+    B = Nullable[1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
     @test dropnull(B) == [1, 2, 3, 5, 7]
     # assert dropnull returns copy for !(Nullable <: eltype(X))
     nullfree = [1, 2, 3, 4]
@@ -201,8 +199,7 @@ module TestPrimitives
 
     # dropnull!(X::AbstractVector)
     @test dropnull!(A) == [1, 2, 3, 5, 7]
-    @test isequal(A, Any[Nullable(1), Nullable(2), Nullable(3), Nullable(5),
-                         Nullable(7)])
+    @test isequal(A, Any[1, 2, 3, 5, 7])
 
     # dropnull!(X::AbstractVector{<:Nullable})
     @test dropnull!(B) == [1, 2, 3, 5, 7]
