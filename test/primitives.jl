@@ -183,7 +183,7 @@ module TestPrimitives
     @test dropnull(A) == [1, 2, 3, 5, 7]
 
     # dropnull(X::AbstractVector{<:Nullable})
-    B = Nullable[1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
+    B = [1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
     @test dropnull(B) == [1, 2, 3, 5, 7]
     # assert dropnull returns copy for !(Nullable <: eltype(X))
     nullfree = [1, 2, 3, 4]

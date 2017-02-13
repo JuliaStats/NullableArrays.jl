@@ -169,7 +169,7 @@ function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
         for i in eachindex(Y, res)
             @inbounds res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
         end
-        res
+        return res
     end
 end
 dropnull(X::NullableVector) = X.values[!X.isnull]                   # -> Vector
@@ -190,7 +190,7 @@ function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
         for i in eachindex(X, res)
             @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
         end
-        res
+        return res
     end
 end
 
