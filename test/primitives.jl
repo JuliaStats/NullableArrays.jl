@@ -174,22 +174,53 @@ module TestPrimitives
 
 # ----- test dropnull --------------------------------------------------------#
 
-    # dropnull(X::NullableArray)
+    # dropnull(X::NullableVector)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test dropnull(z) == [1, 2, 3, 5, 7]
 
-    # dropnull(X::AbstractArray)
-    A = Any[Nullable(1), Nullable(2), Nullable(3), Nullable(), Nullable(5),
-            Nullable(), Nullable(7), Nullable()]
+    # dropnull(X::AbstractVector)
+    A = Any[1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
     @test dropnull(A) == [1, 2, 3, 5, 7]
 
-    # dropnull(X::AbstractArray{<:Nullable})
-    B = convert(Vector{Nullable}, A)
+    # dropnull(X::AbstractVector{<:Nullable})
+    B = [1, 2, 3, Nullable(), 5, Nullable(), 7, Nullable()]
     @test dropnull(B) == [1, 2, 3, 5, 7]
+    # assert dropnull returns copy for !(Nullable <: eltype(X))
+    nullfree = [1, 2, 3, 4]
+    returned_copy = dropnull(nullfree)
+    @test nullfree == returned_copy && !(nullfree === returned_copy)
+
+# ----- test dropnull! -------------------------------------------------------#
+
+    # for each, assert returned values are unwrapped and inplace change
+    # dropnull!(X::NullableVector)
+    @test dropnull!(z) == [1, 2, 3, 5, 7]
+    @test isequal(z, NullableArray([1, 2, 3, 5, 7]))
+
+    # dropnull!(X::AbstractVector)
+    @test dropnull!(A) == [1, 2, 3, 5, 7]
+    @test isequal(A, Any[1, 2, 3, 5, 7])
+
+    # dropnull!(X::AbstractVector{<:Nullable})
+    @test dropnull!(B) == [1, 2, 3, 5, 7]
+    @test isequal(B, Nullable[1, 2, 3, 5, 7])
+
+    # when no nulls present, dropnull! returns input vector
+    returned_view = dropnull!(nullfree)
+    @test nullfree == returned_view && nullfree === returned_view
+
+    # test that dropnull! returns unwrapped values when nullables are present
+    X = [false, 1, :c, "string", Nullable("I am not null"), Nullable()]
+    @test !any(x -> isa(x, Nullable), dropnull!(X))
+    @test any(x -> isa(x, Nullable), X)
+    Y = Any[false, 1, :c, "string", Nullable("I am not null"), Nullable()]
+    @test !any(x -> isa(x, Nullable), dropnull!(Y))
+    @test any(x -> isa(x, Nullable), Y)
 
 # ----- test anynull ---------------------------------------------------------#
 
     # anynull(X::NullableArray)
+    z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
     @test anynull(z) == true
     @test anynull(dropnull(z)) == false
     z = NullableArray(Int, 10)

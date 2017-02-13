@@ -160,23 +160,50 @@ Return a vector containing only the non-null entries of `X`,
 unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
-function dropnull(X::AbstractVector)                 # -> AbstractVector
-    Y = filter(x->!_isnull(x), X)
-    res = similar(Y)
-    for i in eachindex(Y, res)
-        res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
+    if !(Nullable <: T) && !(T <: Nullable)
+        return copy(X)
+    else
+        Y = filter(x->!_isnull(x), X)
+        res = similar(Y, eltype(T))
+        for i in eachindex(Y, res)
+            @inbounds res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
+        end
+        return res
     end
-    res
 end
-function dropnull{T<:Nullable}(X::AbstractVector{T}) # -> AbstractVector
-    Y = filter(x->!_isnull(x), X)
-    res = similar(Y, eltype(T))
-    for i in eachindex(Y, res)
-        res[i] = Y[i].value
+dropnull(X::NullableVector) = X.values[!X.isnull]                   # -> Vector
+
+"""
+    dropnull!(X::AbstractVector)
+
+Remove null entries of `X` in-place and return a `Vector` view of the
+unwrapped `Nullable` entries. If no nulls are present, this is a no-op
+and `X` is returned.
+"""
+function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
+    if !(Nullable <: T) && !(T <: Nullable)
+        return X
+    else
+        deleteat!(X, find(isnull, X))
+        res = similar(X, eltype(T))
+        for i in eachindex(X, res)
+            @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
+        end
+        return res
     end
-    res
 end
-dropnull(X::NullableVector) = X.values[!X.isnull]    # -> Vector
+
+"""
+    dropnull!(X::NullableVector)
+
+Remove null entries of `X` in-place and return a `Vector` view of the
+unwrapped `Nullable` entries.
+"""
+# TODO: replace `find(X.isnull)` with `X.isnull` when
+# https://github.com/JuliaLang/julia/pull/20465 is merged and part of
+# current release (either v0.6 or v1.0)
+dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values # -> Vector
 
 """
     anynull(X)
@@ -234,7 +261,7 @@ null entries will result in an error.
 Currently supported return type arguments include: `Array`, `Array{T}`,
 `Vector`, `Matrix`.
 
-`convert(T, X::NullableArray, replacement)`
+    convert(T, X::NullableArray, replacement)
 
 Convert `X` to an `AbstractArray` of type `T` and replace all null entries of
 `X` with `replacement` in the result.

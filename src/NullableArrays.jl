@@ -15,6 +15,7 @@ export NullableArray,
 
        # Methods
        dropnull,
+       dropnull!,
        anynull,
        allnull,
        nullify!,
