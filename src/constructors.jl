@@ -83,8 +83,7 @@ end
 #
 function NullableArray{T}(A::AbstractArray,
                              ::Type{T},
-                             na::Any;
-                             conversion::Base.Callable=Base.convert) # -> NullableArray{T, N}
+                             na::Any) # -> NullableArray{T, N}
     res = NullableArray(T, size(A))
     for i in 1:length(A)
         if !isequal(A[i], na)
@@ -105,7 +104,7 @@ end
 #----- Conversion from arrays (of non-Nullables) -----------------------------#
 function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
                                A::AbstractArray{S, N}) # -> NullableArray{T, N}
-    NullableArray{T, N}(convert(Array{T, N}, A), fill(false, size(A)))
+    NullableArray{T, N}(convert(AbstractArray{T, N}, A), fill(false, size(A)))
 end
 
 function Base.convert{S, T, N}(::Type{NullableArray{T}},
@@ -150,5 +149,5 @@ end
 
 function Base.convert{S, T, N}(::Type{NullableArray{T, N}},
                                A::NullableArray{S, N}) # -> NullableArray{T, N}
-    NullableArray(convert(Array{T, N}, A.values), A.isnull)
+    NullableArray(convert(AbstractArray{T, N}, A.values), A.isnull)
 end
