@@ -9,7 +9,7 @@ if VERSION < v"0.5.0-dev+3610"
         Base.show_vector(io, X, "[", "]")
     end
 
-    abstract NULL
+    @compat abstract type NULL end
 
     Base.showcompact(io::IO, ::Type{NULL}) = show(io, NULL)
     Base.show(io::IO, ::Type{NULL}) = print(io, "#NULL")

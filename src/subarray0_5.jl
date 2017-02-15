@@ -1,4 +1,6 @@
-typealias NullableSubArray{T,N,P<:NullableArray,IV,LD} SubArray{T,N,P,IV,LD}
+using Compat
+
+@compat NullableSubArray{T,N,P<:NullableArray,IV,LD} = SubArray{T,N,P,IV,LD}
 
 @inline function Base.isnull(V::NullableSubArray, I::Int...)
     @boundscheck checkbounds(V, I...)
@@ -10,7 +12,7 @@ end
     @inbounds return V.parent.values[Base.reindex(V, V.indexes, I)...]
 end
 
-typealias FastNullableSubArray{T,N,P<:NullableArray,IV} SubArray{T,N,P,IV,true}
+@compat FastNullableSubArray{T,N,P<:NullableArray,IV} = SubArray{T,N,P,IV,true}
 
 @inline function Base.isnull(V::FastNullableSubArray, i::Int)
     @boundscheck checkbounds(V, i)
@@ -23,7 +25,7 @@ end
 end
 
 # We can avoid a multiplication if the first parent index is a Colon or UnitRange
-typealias FastNullableContiguousSubArray{T,N,P<:NullableArray,I<:Tuple{Union{Colon, UnitRange}, Vararg{Any}}} SubArray{T,N,P,I,true}
+@compat FastNullableContiguousSubArray{T,N,P<:NullableArray,I<:Tuple{Union{Colon, UnitRange}, Vararg{Any}}} = SubArray{T,N,P,I,true}
 
 @inline function Base.isnull(V::FastNullableContiguousSubArray, i::Int)
     @boundscheck checkbounds(V, i)
