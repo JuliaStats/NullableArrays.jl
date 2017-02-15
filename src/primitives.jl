@@ -172,7 +172,7 @@ function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
         return res
     end
 end
-dropnull(X::NullableVector) = X.values[!X.isnull]                   # -> Vector
+dropnull(X::NullableVector) = X.values[(!).(X.isnull)]      # -> Vector
 
 """
     dropnull!(X::AbstractVector)

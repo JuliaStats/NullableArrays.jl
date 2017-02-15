@@ -2,7 +2,7 @@
 
 importall Base.Operators
 import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
-using Compat: @functorize
+using Compat: @compat, @functorize
 
 if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
     _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, hasvalue)
@@ -38,16 +38,16 @@ vectorization.
 """
 null_safe_op(f::Any, ::Type...) = false
 
-typealias SafeSignedInts Union{Int128,Int16,Int32,Int64,Int8}
-typealias SafeUnsignedInts Union{Bool,UInt128,UInt16,UInt32,UInt64,UInt8}
-typealias SafeInts  Union{SafeSignedInts,SafeUnsignedInts}
-typealias SafeFloats Union{Float16,Float32,Float64}
+@compat const SafeSignedInts = Union{Int128,Int16,Int32,Int64,Int8}
+@compat const SafeUnsignedInts = Union{Bool,UInt128,UInt16,UInt32,UInt64,UInt8}
+@compat const SafeInts = Union{SafeSignedInts,SafeUnsignedInts}
+@compat const SafeFloats = Union{Float16,Float32,Float64}
 
 # Float types appear in both since they promote to themselves,
 # and therefore can't fail due to conversion of negative numbers
-typealias SafeSigned Union{SafeSignedInts,SafeFloats}
-typealias SafeUnsigned Union{SafeUnsignedInts,SafeFloats}
-typealias SafeTypes Union{SafeInts,SafeFloats}
+@compat const SafeSigned = Union{SafeSignedInts,SafeFloats}
+@compat const SafeUnsigned = Union{SafeUnsignedInts,SafeFloats}
+@compat const SafeTypes = Union{SafeInts,SafeFloats}
 
 # Unary operators
 
