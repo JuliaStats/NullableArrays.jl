@@ -23,7 +23,7 @@ return `f` applied to values of `xs`.
             nonull = (&)($(checknull...))
             @compat Nullable(val, nonull)
         end
-    elseif VERSION >= v"0.6.0-dev"
+    elseif VERSION >= v"0.6.0-dev.2544" # Commit known to work
       return quote
           U = Core.Inference.return_type(f, eltypes(xs...))
           if (&)($(checknull...))

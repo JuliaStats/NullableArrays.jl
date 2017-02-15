@@ -81,13 +81,9 @@ module TestMap
     Z1 = map(h1, X)
     Z2 = map(h2, X)
     @test isempty(Z1)
-    if VERSION >= v"0.6.0-dev"
-        @test isa(Z1, NullableArray{Float64})
-    end
+    @test isa(Z1, NullableArray{Float64})
     @test isempty(Z2)
-    if VERSION >= v"0.6.0-dev"
-        @test isa(Z2, NullableArray{Int})
-    end
+    @test isa(Z2, NullableArray{Int})
 
     # if a function has no method for inner eltype of empty NullableArray,
     # result should be empty NullableArray{Any}() for consistency with generic map()
@@ -108,17 +104,13 @@ module TestMap
 
     Z2 = map(h2, Ys[1])
     @test isequal(Z2, NullableArray(Int, n))
-    if VERSION >= v"0.6.0-dev"
-        @test isa(Z2, NullableArray{Int})
-    end
+    @test isa(Z2, NullableArray{Int})
     Z2 = map(h2, Ys[1], Ys[2])
     @test isequal(Z2, NullableArray(Int, n))
-    if VERSION >= v"0.6.0-dev"
-        @test isa(Z2, NullableArray{Int})
-    end
+    @test isa(Z2, NullableArray{Int})
     Z2 = map(h2, Ys...)
     @test isequal(Z2, NullableArray(Int, n))
-    if VERSION >= v"0.6.0-dev"
+    if VERSION >= v"0.6.0-dev.2544" # Commit known to work
         @test isa(Z2, NullableArray{Int})
     end
 end # module TestMap
