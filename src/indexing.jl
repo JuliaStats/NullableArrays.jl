@@ -1,7 +1,7 @@
 # NullableArray is dense and allows fast linear indexing.
 import Base: LinearFast
 
-Base.linearindexing{T <: NullableArray}(::Type{T}) = LinearFast()
+@compat Base.IndexStyle(::Type{<:NullableArray}) = IndexLinear()
 
 # resolve ambiguity created by the two definitions that follow.
 function Base.getindex{T, N}(X::NullableArray{T, N})
