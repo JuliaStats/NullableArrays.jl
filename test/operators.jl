@@ -236,10 +236,4 @@ module TestOperators
             @test isless(Nullable(), Nullable()) === false
         end
     end
-    @test promote_rule(Nullable{Int64}, Int64) == Nullable{Int64}
-    @test promote_rule(Int64, Nullable{Int64}) == Nullable{Int64}
-    @test typeof(hcat(NullableArray(1:2), 1:2)) == NullableArrays.NullableArray{Int64,2}
-    @test typeof(hcat(1:2, NullableArray(1:2))) == NullableArrays.NullableArray{Int64,2}
-    @test typeof(vcat(NullableArray(1:2), 1:2)) == NullableArrays.NullableArray{Int64,1}
-    @test typeof(vcat(1:2, NullableArray(1:2))) == NullableArrays.NullableArray{Int64,1}
 end
