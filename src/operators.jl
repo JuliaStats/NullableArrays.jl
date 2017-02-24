@@ -1,7 +1,17 @@
 ## Lifted operators
 
 importall Base.Operators
-import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
+import Base: abs,
+             abs2,
+             cbrt,
+             isless,
+             scalarmin,
+             scalarmax,
+             promote_op,
+             promote_rule,
+             sqrt,
+             typed_hcat,
+             typed_vcat
 using Compat: @compat, @functorize
 
 if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
@@ -158,4 +168,81 @@ if !method_exists(isless, Tuple{Nullable{Int}, Nullable{Int}})
     isless(x::Nullable{Union{}}, y::Nullable{Union{}}) = false
     isless(x::Nullable{Union{}}, y::Nullable) = false
     isless(x::Nullable, y::Nullable{Union{}}) = !isnull(x)
+end
+
+function promote_rule{T1,T2}(::Type{T1}, ::Type{Nullable{T2}})
+    promote_rule(Nullable{T2}, T1)
+end
+
+function typed_hcat{T}(::Type{T}, A::AbstractVecOrMat...)
+    nargs = length(A)
+    nrows = size(A[1], 1)
+    ncols = 0
+    dense = true
+    for j = 1:nargs
+        Aj = A[j]
+        if size(Aj, 1) != nrows
+            throw(ArgumentError("number of rows of each array must match (got $(map(x->size(x,1), A)))"))
+        end
+        dense &= isa(Aj,Array)
+        nd = ndims(Aj)
+        ncols += (nd==2 ? size(Aj,2) : 1)
+    end
+    i = findfirst(a -> isa(a, NullableArray), A)
+    B = similar(full(A[i == 0 ? 1 : i]), T, nrows, ncols)
+    pos = 1
+    if dense
+        for k=1:nargs
+            Ak = A[k]
+            n = length(Ak)
+            copy!(B, pos, Ak, 1, n)
+            pos += n
+        end
+    else
+        for k=1:nargs
+            Ak = A[k]
+            p1 = pos+(isa(Ak,AbstractMatrix) ? size(Ak, 2) : 1)-1
+            B[:, pos:p1] = Ak
+            pos = p1+1
+        end
+    end
+    return B
+end
+
+function typed_vcat{T}(::Type{T}, V::AbstractVector...)
+    n::Int = 0
+    for Vk in V
+        n += length(Vk)
+    end
+    i = findfirst(v -> isa(v, NullableArray), V)
+    a = similar(full(V[i == 0 ? 1 : i]), T, n)
+    pos = 1
+    for k=1:length(V)
+        Vk = V[k]
+        p1 = pos+length(Vk)-1
+        a[pos:p1] = Vk
+        pos = p1+1
+    end
+    a
+end
+
+function typed_vcat{T}(::Type{T}, A::AbstractMatrix...)
+    nargs = length(A)
+    nrows = sum(a->size(a, 1), A)::Int
+    ncols = size(A[1], 2)
+    for j = 2:nargs
+        if size(A[j], 2) != ncols
+            throw(ArgumentError("number of columns of each array must match (got $(map(x->size(x,2), A)))"))
+        end
+    end
+    i = findfirst(a -> isa(a, NullableArray), A)
+    B = similar(full(A[i == 0 ? 1 : i]), T, nrows, ncols)
+    pos = 1
+    for k=1:nargs
+        Ak = A[k]
+        p1 = pos+size(Ak,1)-1
+        B[pos:p1, :] = Ak
+        pos = p1+1
+    end
+    return B
 end
