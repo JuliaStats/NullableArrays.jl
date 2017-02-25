@@ -1,7 +1,7 @@
 ## Lifted operators
 
 importall Base.Operators
-import Base: abs, abs2, cbrt, isless, promote_op, scalarmin, scalarmax, sqrt
+import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
 using Compat: @compat, @functorize
 
 if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
