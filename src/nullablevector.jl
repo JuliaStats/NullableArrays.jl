@@ -335,7 +335,6 @@ vcat{T <: NotNullMatrix}(A::T, B::NullableMatrix, C::AbstractMatrix...) = vcat(N
 function vcat{T <: NotNullArray}(A::T, B::AbstractArray, C::AbstractArray...)
     any(c -> isa(c, NullableArray), C) ? vcat(NullableArray(A), B, C...) : vcat(A, B, C...)
 end
-
 function vcat{T <: NotNullMatrix}(A::T, B::AbstractMatrix, C::AbstractMatrix...)
     any(c -> isa(c, NullableArray), C) ? vcat(NullableArray(A), B, C...) : vcat(A, B, C...)
 end
@@ -344,7 +343,6 @@ hcat{T <: NotNullMatrix}(A::T, B::NullVecOrMat) = hcat(NullableArray(A), B)
 hcat{T <: NotNullVector}(A::T, B::NullVecOrMat) = hcat(NullableArray(A), B)
 hcat{T <: NotNullMatrix}(A::T, B::NullVecOrMat, C::AbstractVecOrMat...) = hcat(NullableArray(A), B, C...)
 hcat{T <: NotNullVector}(A::T, B::NullVecOrMat, C::AbstractVecOrMat...) = hcat(NullableArray(A), B, C...)
-
 function hcat{T <: NotNullMatrix}(A::T, B::AbstractVecOrMat, C::AbstractVecOrMat...)
     any(c -> isa(c, NullableArray), C) ? hcat(NullableArray(A), B, C...) : hcat(A, B, C...)
 end
