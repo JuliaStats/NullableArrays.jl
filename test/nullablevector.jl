@@ -228,6 +228,7 @@ module TestNullableVector
     @test typeof(hcat(1:2, NullableArray(3:4))) == NullableArrays.NullableArray{Int64,2}
     @test typeof(vcat(NullableArray(1:2), 3:4)) == NullableArrays.NullableArray{Int64,1}
     @test typeof(vcat(1:2, NullableArray(3:4))) == NullableArrays.NullableArray{Int64,1}
+    
     @test typeof(vcat(NullableArray([1 2]), [3 4])) == NullableArrays.NullableArray{Int64,2}
     @test typeof(vcat([1 2], NullableArray([3 4]))) == NullableArrays.NullableArray{Int64,2}
     @test typeof(hcat(NullableArray(1:2), 3:4, 5:6)) == NullableArrays.NullableArray{Int64,2}

@@ -312,26 +312,13 @@ function Base.empty!(X::NullableVector)
     return X
 end
 
-function Base.hcat(A::AbstractVecOrMat...)
-    if any(a -> isa(a, NullableArray), A)
-        A = [A...]
-        A[1] = NullableArray(A[1])
-    end
-    Base.typed_hcat(Base.promote_eltype(A...), A...)
-end
+notnullarray = Union{filter!(x -> !isa(x, Type{NullableArray}), subtypes(AbstractArray))...}
+notnullmatrix = typeintersect(notnullarray, AbstractMatrix)
+notnullvector = typeintersect(notnullarray, AbstractVector)
 
-function Base.vcat(V::AbstractVector...)
-    if any(v -> isa(v, NullableArray), V)
-        V = [V...]
-        V[1] = NullableArray(V[1])
-    end
-    Base.typed_vcat(Base.promote_eltype(V...), V...)
-end
+Base.vcat{T <: notnullarray}(A::T, B::NullableArray) = Base.vcat(NullableArray(A), B)
+Base.vcat{T <: notnullmatrix}(A::T, B::NullableArray) = Base.vcat(NullableArray(A), B)
+Base.vcat{T <: notnullvector}(A::T, B::NullableVector) = Base.vcat(NullableArray(A), B)
 
-function Base.vcat(A::AbstractMatrix...)
-    if any(a -> isa(a, NullableArray), A)
-        A = [A...]
-        A[1] = NullableArray(A[1])
-    end
-    Base.typed_vcat(Base.promote_eltype(A...), A...)
-end
+Base.hcat{T <: notnullvector}(A::T, B::NullableArray) = Base.hcat(NullableArray(A), B)
+Base.hcat{T <: notnullmatrix}(A::T, B::NullableArray) = Base.hcat(NullableArray(A), B)
