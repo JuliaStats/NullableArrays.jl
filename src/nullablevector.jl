@@ -323,19 +323,15 @@ NullVecOrMat = Union{NullableVector, NullableMatrix}
 # create an empty vector to avoid copy and secure promotion to NullableArray
 vcat{T <: NotNullVector}(A::T, B::NullableVector) = vcat(NullableVector{eltype(A)}(), A, B)
 vcat{T <: NotNullVector}(A::T, B::NullableVector, C::AbstractVector...) = vcat(NullableVector{eltype(A)}(), A, B, C...)
+function vcat{T <: NotNullVector}(A::T, B::AbstractVector, C::AbstractVector...)
+    any(c -> isa(c, NullableArray), C) ? vcat(NullableVector{eltype(A)}(), A, B, C...) : vcat(A, B, C...)
+end
 
 # needs to convert A directly to avoid dimension mismatch error
 vcat{T <: NotNullArray}(A::T, B::NullableArray) = vcat(NullableArray(A), B)
 vcat{T <: NotNullMatrix}(A::T, B::NullableMatrix) = vcat(NullableArray(A), B)
 vcat{T <: NotNullArray}(A::T, B::NullableArray, C::AbstractArray...) = vcat(NullableArray(A), B, C...)
 vcat{T <: NotNullMatrix}(A::T, B::NullableMatrix, C::AbstractMatrix...) = vcat(NullableArray(A), B, C...)
-
-# create an empty vector to avoid copy and secure promotion to NullableArray
-function vcat{T <: NotNullVector}(A::T, B::AbstractVector, C::AbstractVector...)
-    any(c -> isa(c, NullableArray), C) ? vcat(NullableVector{eltype(A)}(), A, B, C...) : vcat(A, B, C...)
-end
-
-# create an empty vector to avoid copy and secure promotion to NullableArray
 function vcat{T <: NotNullArray}(A::T, B::AbstractArray, C::AbstractArray...)
     any(c -> isa(c, NullableArray), C) ? vcat(NullableArray(A), B, C...) : vcat(A, B, C...)
 end
