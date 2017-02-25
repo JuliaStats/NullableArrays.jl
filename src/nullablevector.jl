@@ -312,79 +312,26 @@ function Base.empty!(X::NullableVector)
     return X
 end
 
-function Base.promote_rule{T1,T2}(::Type{T1}, ::Type{Nullable{T2}})
-    promote_rule(Nullable{T2}, T1)
+function Base.hcat(A::AbstractVecOrMat...)
+    if any(a -> isa(a, NullableArray), A)
+        A = [A...]
+        A[1] = NullableArray(A[1])
+    end
+    Base.typed_hcat(Base.promote_eltype(A...), A...)
 end
 
-function Base.typed_hcat{T}(::Type{T}, A::AbstractVecOrMat...)
-    nargs = length(A)
-    nrows = size(A[1], 1)
-    ncols = 0
-    dense = true
-    for j = 1:nargs
-        Aj = A[j]
-        if size(Aj, 1) != nrows
-            throw(ArgumentError("number of rows of each array must match (got $(map(x->size(x,1), A)))"))
-        end
-        dense &= isa(Aj,Array)
-        nd = ndims(Aj)
-        ncols += (nd==2 ? size(Aj,2) : 1)
+function Base.vcat(V::AbstractVector...)
+    if any(v -> isa(v, NullableArray), V)
+        V = [V...]
+        V[1] = NullableArray(V[1])
     end
-    i = findfirst(a -> isa(a, NullableArray), A)
-    B = similar(full(A[i == 0 ? 1 : i]), T, nrows, ncols)
-    pos = 1
-    if dense
-        for k=1:nargs
-            Ak = A[k]
-            n = length(Ak)
-            copy!(B, pos, Ak, 1, n)
-            pos += n
-        end
-    else
-        for k=1:nargs
-            Ak = A[k]
-            p1 = pos+(isa(Ak,AbstractMatrix) ? size(Ak, 2) : 1)-1
-            B[:, pos:p1] = Ak
-            pos = p1+1
-        end
-    end
-    return B
+    Base.typed_vcat(Base.promote_eltype(V...), V...)
 end
 
-function Base.typed_vcat{T}(::Type{T}, V::AbstractVector...)
-    n::Int = 0
-    for Vk in V
-        n += length(Vk)
+function Base.vcat(A::AbstractMatrix...)
+    if any(a -> isa(a, NullableArray), A)
+        A = [A...]
+        A[1] = NullableArray(A[1])
     end
-    i = findfirst(v -> isa(v, NullableArray), V)
-    a = similar(full(V[i == 0 ? 1 : i]), T, n)
-    pos = 1
-    for k=1:length(V)
-        Vk = V[k]
-        p1 = pos+length(Vk)-1
-        a[pos:p1] = Vk
-        pos = p1+1
-    end
-    a
-end
-
-function Base.typed_vcat{T}(::Type{T}, A::AbstractMatrix...)
-    nargs = length(A)
-    nrows = sum(a->size(a, 1), A)::Int
-    ncols = size(A[1], 2)
-    for j = 2:nargs
-        if size(A[j], 2) != ncols
-            throw(ArgumentError("number of columns of each array must match (got $(map(x->size(x,2), A)))"))
-        end
-    end
-    i = findfirst(a -> isa(a, NullableArray), A)
-    B = similar(full(A[i == 0 ? 1 : i]), T, nrows, ncols)
-    pos = 1
-    for k=1:nargs
-        Ak = A[k]
-        p1 = pos+size(Ak,1)-1
-        B[pos:p1, :] = Ak
-        pos = p1+1
-    end
-    return B
+    Base.typed_vcat(Base.promote_eltype(A...), A...)
 end
