@@ -1,4 +1,4 @@
-import Base: hcat, vcat
+import Base: vcat, hcat, typed_vcat, typed_hcat, promote_eltype
 
 """
     push!{T, V}(X::NullableVector{T}, v::V)
@@ -314,39 +314,26 @@ function Base.empty!(X::NullableVector)
     return X
 end
 
-# need to specify to avoid StackOverflow where vcat/hcat just keeps calling itself
-NotNullArray = Union{filter!(x -> !isa(x, Type{NullableArray}), subtypes(AbstractArray))...}
-NotNullMatrix = typeintersect(NotNullArray, AbstractMatrix)
-NotNullVector = typeintersect(NotNullArray, AbstractVector)
-NullVecOrMat = Union{NullableVector, NullableMatrix}
-
-# create an empty vector to avoid copy and secure promotion to NullableArray
-vcat{T <: NotNullVector}(A::T, B::NullableVector) = vcat(NullableVector{eltype(A)}(), A, B)
-vcat{T <: NotNullVector}(A::T, B::NullableVector, C::AbstractVector...) = vcat(NullableVector{eltype(A)}(), A, B, C...)
-function vcat{T <: NotNullVector}(A::T, B::AbstractVector, C::AbstractVector...)
-    any(c -> isa(c, NullableArray), C) ? vcat(NullableVector{eltype(A)}(), A, B, C...) : vcat(A, B, C...)
+function vcat(A::AbstractVector, B::AbstractVector...)
+    any(b -> isa(b, NullableArray), B) ?
+        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
+        typed_vcat(promote_eltype(A, B...), A, B...)
 end
 
-# needs to convert A directly to avoid dimension mismatch error
-vcat{T <: NotNullArray}(A::T, B::NullableArray) = vcat(NullableArray(A), B)
-vcat{T <: NotNullMatrix}(A::T, B::NullableMatrix) = vcat(NullableArray(A), B)
-vcat{T <: NotNullArray}(A::T, B::NullableArray, C::AbstractArray...) = vcat(NullableArray(A), B, C...)
-vcat{T <: NotNullMatrix}(A::T, B::NullableMatrix, C::AbstractMatrix...) = vcat(NullableArray(A), B, C...)
-function vcat{T <: NotNullArray}(A::T, B::AbstractArray, C::AbstractArray...)
-    any(c -> isa(c, NullableArray), C) ? vcat(NullableArray(A), B, C...) : vcat(A, B, C...)
-end
-function vcat{T <: NotNullMatrix}(A::T, B::AbstractMatrix, C::AbstractMatrix...)
-    any(c -> isa(c, NullableArray), C) ? vcat(NullableArray(A), B, C...) : vcat(A, B, C...)
+function vcat(A::AbstractMatrix, B::AbstractMatrix...)
+    any(b -> isa(b, NullableArray), B) ?
+        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
+        typed_vcat(promote_eltype(A, B...), A, B...)
 end
 
-hcat{T <: NotNullMatrix}(A::T, B::NullVecOrMat) = hcat(NullableArray(A), B)
-hcat{T <: NotNullVector}(A::T, B::NullVecOrMat) = hcat(NullableArray(A), B)
-hcat{T <: NotNullMatrix}(A::T, B::NullVecOrMat, C::AbstractVecOrMat...) = hcat(NullableArray(A), B, C...)
-hcat{T <: NotNullVector}(A::T, B::NullVecOrMat, C::AbstractVecOrMat...) = hcat(NullableArray(A), B, C...)
-function hcat{T <: NotNullMatrix}(A::T, B::AbstractVecOrMat, C::AbstractVecOrMat...)
-    any(c -> isa(c, NullableArray), C) ? hcat(NullableArray(A), B, C...) : hcat(A, B, C...)
+function vcat(A::AbstractArray, B::AbstractArray...)
+    any(b -> isa(b, NullableArray), B) ?
+        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
+        typed_vcat(promote_eltype(A, B...), A, B...)
 end
 
-function hcat{T <: NotNullVector}(A::T, B::AbstractVecOrMat, C::AbstractVecOrMat...)
-    any(c -> isa(c, NullableArray), C) ? hcat(NullableArray(A), B, C...) : hcat(A, B, C...)
+function hcat(A::AbstractVecOrMat, B::AbstractVecOrMat...)
+    any(b -> isa(b, NullableArray), B) ?
+        typed_hcat(promote_eltype(A, B...), NullableArray(A), B...) :
+        typed_hcat(promote_eltype(A, B...), A, B...)
 end
