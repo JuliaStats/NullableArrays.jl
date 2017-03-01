@@ -314,26 +314,19 @@ function Base.empty!(X::NullableVector)
     return X
 end
 
-function vcat(A::AbstractVector, B::AbstractVector...)
-    any(b -> isa(b, NullableArray), B) ?
-        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
-        typed_vcat(promote_eltype(A, B...), A, B...)
+function vcat(A::AbstractVector, B::NullableVector)
+        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
-function vcat(A::AbstractMatrix, B::AbstractMatrix...)
-    any(b -> isa(b, NullableArray), B) ?
-        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
-        typed_vcat(promote_eltype(A, B...), A, B...)
+function vcat(A::AbstractMatrix, B::NullableMatrix)
+        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
-function vcat(A::AbstractArray, B::AbstractArray...)
-    any(b -> isa(b, NullableArray), B) ?
-        typed_vcat(promote_eltype(A, B...), NullableArray(A), B...) :
-        typed_vcat(promote_eltype(A, B...), A, B...)
+function vcat(A::AbstractArray, B::NullableArray)
+        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
-function hcat(A::AbstractVecOrMat, B::AbstractVecOrMat...)
-    any(b -> isa(b, NullableArray), B) ?
-        typed_hcat(promote_eltype(A, B...), NullableArray(A), B...) :
-        typed_hcat(promote_eltype(A, B...), A, B...)
+NullableVecOrMat = Union{NullableVector, NullableMatrix}
+function hcat(A::AbstractVecOrMat, B::NullableVecOrMat)
+        typed_hcat(promote_eltype(A, B), NullableArray(A), B)
 end
