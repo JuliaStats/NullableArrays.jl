@@ -315,18 +315,18 @@ function Base.empty!(X::NullableVector)
 end
 
 function vcat(A::AbstractVector, B::NullableVector)
-        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
 function vcat(A::AbstractMatrix, B::NullableMatrix)
-        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
 function vcat(A::AbstractArray, B::NullableArray)
-        typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
 end
 
 NullableVecOrMat = Union{NullableVector, NullableMatrix}
 function hcat(A::AbstractVecOrMat, B::NullableVecOrMat)
-        typed_hcat(promote_eltype(A, B), NullableArray(A), B)
+    typed_hcat(promote_eltype(A, B), NullableArray(A), B)
 end
