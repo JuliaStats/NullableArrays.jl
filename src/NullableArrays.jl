@@ -35,4 +35,9 @@ include("reduce.jl")
 include("show.jl")
 include("subarray.jl")
 
+if VERSION ≥ v"0.5-"
+    include("functional.jl")
+    using .FunctionalNullableOperations
+end
+
 end

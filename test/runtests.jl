@@ -19,6 +19,10 @@ my_tests = [
     "show.jl",
 ]
 
+if VERSION ≥ v"0.5-"
+    push!(my_tests, "functional.jl")
+end
+
 println("Running tests:")
 
 for my_test in my_tests
