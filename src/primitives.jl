@@ -214,13 +214,16 @@ anynull(X::Any) = any(_isnull, X)                              # -> Bool
 anynull(X::NullableArray) = any(X.isnull)                      # -> Bool
 function anynull{T}(X::AbstractArray{T})                       # -> Bool
     u = isa(T, Union)
-    if u && !any(f -> eval(:($T.$f)) <: Nullable || Nullable <: eval(:($T.$f)), fieldnames(T))
+    if !u && !(Nullable <: T) && !(T <: Nullable)
         return false
-    elseif !u && !(Nullable <: T) && !(T <: Nullable)
-        return false
-    else
-        return any(_isnull, X)
+    if isa(T, Union)
+        if VERSION < v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, T.types)
+            return false
+        elseif VERSION >= v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, Base.uniontypes(T))
+            return false
+        end
     end
+    return any(_isnull, X)
 end
 
 """
