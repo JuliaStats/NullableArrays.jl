@@ -210,9 +210,10 @@ dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values # -> Vector
 
 Returns whether or not any entries of `X` are null.
 """
-anynull(X::Any) = any(_isnull, X)                                           # -> Bool
-anynull{T}(X::AbstractArray{T}) = T <: Nullable ? any(_isnull, X) : false   # -> Bool
-anynull(X::NullableArray) = any(X.isnull)                                   # -> Bool
+anynull(X::Any) = any(_isnull, X)                              # -> Bool
+anynull(X::NullableArray) = any(X.isnull)                      # -> Bool
+anynull{T<:Nullable}(X::AbstractArray{T}) = any(_isnull, X)    # -> Bool
+anynull(X::AbstractArray) = false                              # -> Bool
 
 """
     allnull(X)
