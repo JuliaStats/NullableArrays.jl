@@ -219,9 +219,8 @@ anynull(X::NullableArray) = any(X.isnull)                                   # ->
 
 Returns whether or not all the entries in `X` are null.
 """
-allnull(X::Any) = all(_isnull, X)                                          # -> Bool
-allnull{T}(X::AbstractArray{T}) = T <: Nullable ? all(_isnull, X) : false  # -> Bool
-allnull(X::NullableArray) = all(X.isnull)                                  # -> Bool
+allnull(X::Any) = all(_isnull, X)           # -> Bool
+allnull(X::NullableArray) = all(X.isnull)   # -> Bool
 
 """
     isnan(X::NullableArray)
