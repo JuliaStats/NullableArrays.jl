@@ -212,8 +212,16 @@ Returns whether or not any entries of `X` are null.
 """
 anynull(X::Any) = any(_isnull, X)                              # -> Bool
 anynull(X::NullableArray) = any(X.isnull)                      # -> Bool
-anynull{T<:Nullable}(X::AbstractArray{T}) = any(_isnull, X)    # -> Bool
-anynull(X::AbstractArray) = false                              # -> Bool
+function anynull{T}(X::AbstractArray{T})                       # -> Bool
+    u = isa(T, Union)
+    if u && !any(f -> eval(:($T.$f)) <: Nullable || Nullable <: eval(:($T.$f)), fieldnames(T))
+        return false
+    elseif !u && !(Nullable <: T) && !(T <: Nullable)
+        return false
+    else
+        return any(_isnull, X)
+    end
+end
 
 """
     allnull(X)

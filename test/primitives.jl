@@ -358,5 +358,27 @@ module TestPrimitives
     @assert isequal(unique(reverse(x)),
                     NullableArray([4, nothing, 1, -2], Int, Void))
 
-
+    @testset "anynull no-ops" begin
+        A = rand(10)
+        @test !anynull(A)
+        B = rand(10, 10)
+        @test !anynull(B)
+        C = rand([1, Nullable()], 10)
+        @test anynull(C)
+        D = rand([1, Nullable()], 10, 10)
+        @test anynull(D)
+        @test !anynull(NullableArray(1:10))
+        E = NullableArray(C)
+        @test anynull(E)
+        F = NullableArray(D)
+        @test anynull(F)
+        G = Array{Union{Nullable{Int}, Int}}(collect(1:10))
+        @test !anynull(G)
+        H = copy(G); H[1] = Nullable{Int}()
+        @test anynull(H)
+        I = convert(Array{Any}, A)
+        @test !anynull(I)
+        J = convert(Array{Any}, C)
+        @test anynull(J)
+    end
 end
