@@ -216,7 +216,7 @@ function anynull{T}(X::AbstractArray{T})                       # -> Bool
     u = isa(T, Union)
     if !u && !(Nullable <: T) && !(T <: Nullable)
         return false
-    if isa(T, Union)
+    elseif u
         if VERSION < v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, T.types)
             return false
         elseif VERSION >= v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, Base.uniontypes(T))
