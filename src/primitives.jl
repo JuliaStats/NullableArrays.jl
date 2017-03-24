@@ -153,6 +153,12 @@ end
 _isnull(x::Any) = false
 _isnull(x::Nullable) = isnull(x)
 
+if VERSION < v"0.6.0-dev.2107"
+    _uniontypes(T::Union) = T.types
+else
+    _uniontypes(T::Union) = Base.uniontypes(T)
+end
+
 """
     dropnull(X::AbstractVector)
 
@@ -216,14 +222,11 @@ function anynull{T}(X::AbstractArray{T})                       # -> Bool
     u = isa(T, Union)
     if !u && !(Nullable <: T) && !(T <: Nullable)
         return false
-    elseif u
-        @static if VERSION < v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, T.types)
-            return false
-        elseif VERSION >= v"0.6.0-" && !any(S -> S <: Nullable || Nullable <: S, Base.uniontypes(T))
-            return false
-        end
+    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+        return false
+    else
+        return any(_isnull, X)
     end
-    return any(_isnull, X)
 end
 
 """
