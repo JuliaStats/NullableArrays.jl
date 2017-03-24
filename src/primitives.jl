@@ -153,6 +153,12 @@ end
 _isnull(x::Any) = false
 _isnull(x::Nullable) = isnull(x)
 
+if VERSION < v"0.6.0-dev.2107"
+    _uniontypes(T::Union) = T.types
+else
+    _uniontypes(T::Union) = Base.uniontypes(T)
+end
+
 """
     dropnull(X::AbstractVector)
 
@@ -210,8 +216,18 @@ dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values # -> Vector
 
 Returns whether or not any entries of `X` are null.
 """
-anynull(X::Any) = any(_isnull, X)           # -> Bool
-anynull(X::NullableArray) = any(X.isnull)   # -> Bool
+anynull(X::Any) = any(_isnull, X)                              # -> Bool
+anynull(X::NullableArray) = any(X.isnull)                      # -> Bool
+function anynull{T}(X::AbstractArray{T})                       # -> Bool
+    u = isa(T, Union)
+    if !u && !(Nullable <: T) && !(T <: Nullable)
+        return false
+    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+        return false
+    else
+        return any(_isnull, X)
+    end
+end
 
 """
     allnull(X)

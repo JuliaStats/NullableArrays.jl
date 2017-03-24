@@ -358,5 +358,21 @@ module TestPrimitives
     @assert isequal(unique(reverse(x)),
                     NullableArray([4, nothing, 1, -2], Int, Void))
 
-
+    @testset "anynull" begin
+        srand(1)
+        @test !anynull(rand(100))
+        @test !anynull(rand(10, 10))
+        @test anynull(rand([1, Nullable()], 100))
+        @test anynull(rand([1, Nullable()], 10, 10))
+        @test !anynull(NullableArray(1:10))
+        @test !anynull(NullableArray(rand(10, 10)))
+        @test anynull(NullableArray(rand([1, Nullable()], 100)))
+        @test anynull(NullableArray(rand([1, Nullable()], 10, 10)))
+        @test !anynull(Nullable.(rand(100)))
+        @test !anynull(Nullable.(rand(10, 10)))
+        @test !anynull(Array{Union{Nullable{Int}, Int}}(collect(1:10)))
+        @test anynull(Array{Union{Nullable{Int}, Int}}(rand([1, Nullable()], 100)))
+        @test !anynull(NullableArray{Union{Nullable{Int}, Int}}(collect(1:10)))
+        @test anynull(NullableArray{Union{Nullable{Int}, Int}}(rand([1, Nullable()], 100)))
+    end
 end
