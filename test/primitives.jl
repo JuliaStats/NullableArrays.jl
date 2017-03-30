@@ -375,4 +375,31 @@ module TestPrimitives
         @test !anynull(NullableArray{Union{Nullable{Int}, Int}}(collect(1:10)))
         @test anynull(NullableArray{Union{Nullable{Int}, Int}}(rand([1, Nullable()], 100)))
     end
+
+    @testset "dropnull" begin
+        x = fill(1, 10)
+        @test dropnull!(x) == x && dropnull!(x) === x
+        @test dropnull(x) == x && !(dropnull(x) === x)
+        @test dropnull!(Nullable.(x)) == x
+        @test dropnull(Nullable.(x)) == x
+        @test dropnull!(NullableArray(x)) == x
+        @test dropnull(NullableArray(x)) == x
+        @test dropnull!(convert(Array{Union{Int, Nullable{Int}}}, x)) == x
+        @test dropnull(convert(Array{Union{Int, Nullable{Int}}}, x)) == x
+        x = convert(Array{Any}, fill(1, 10))
+        @test dropnull!(x) == x && !(dropnull!(x) === x)
+        @test dropnull(x) == x && !(dropnull(x) === x)
+        x = convert(Array{Union{Int, Float64}}, fill(1, 10))
+        @test dropnull!(x) == x && dropnull!(x) === x
+        @test dropnull(x) == x && !(dropnull(x) === x)
+        x = repmat([1, Nullable()], 5)
+        @test isequal(dropnull!(copy(x)), fill(1, 5))
+        @test isequal(dropnull(copy(x)), fill(1, 5))
+        @test isequal(dropnull!(NullableArray(x)), fill(1, 5))
+        @test isequal(dropnull(NullableArray(x)), fill(1, 5))
+        @test isequal(dropnull!(convert(Array{Union{Int, Nullable{Int}}}, x)), fill(1, 5))
+        @test isequal(dropnull(convert(Array{Union{Int, Nullable{Int}}}, x)), fill(1, 5))
+        @test isequal(dropnull!(convert(Array{Any}, x)), fill(1, 5))
+        @test isequal(dropnull(convert(Array{Any}, x)), fill(1, 5))
+    end
 end

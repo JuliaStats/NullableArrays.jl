@@ -167,7 +167,10 @@ unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
 function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
-    if !(Nullable <: T) && !(T <: Nullable)
+    u = isa(T, Union)
+    if !u && !(Nullable <: T) && !(T <: Nullable)
+        return copy(X)
+    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
         return copy(X)
     else
         Y = filter(x->!_isnull(x), X)
@@ -188,7 +191,10 @@ unwrapped `Nullable` entries. If no nulls are present, this is a no-op
 and `X` is returned.
 """
 function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
-    if !(Nullable <: T) && !(T <: Nullable)
+    u = isa(T, Union)
+    if !u && !(Nullable <: T) && !(T <: Nullable)
+        return X
+    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
         return X
     else
         deleteat!(X, find(isnull, X))
