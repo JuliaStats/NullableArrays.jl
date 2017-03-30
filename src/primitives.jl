@@ -174,7 +174,7 @@ function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
         return copy(X)
     else
         Y = filter(x->!_isnull(x), X)
-        res = similar(Y, eltype(T))
+        res = u ? similar(Y, T) : similar(Y, eltype(T))
         for i in eachindex(Y, res)
             @inbounds res[i] = isa(Y[i], Nullable) ? Y[i].value : Y[i]
         end
@@ -198,7 +198,7 @@ function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
         return X
     else
         deleteat!(X, find(isnull, X))
-        res = similar(X, eltype(T))
+        res = u ? similar(X, T) : similar(X, eltype(T))
         for i in eachindex(X, res)
             @inbounds res[i] = isa(X[i], Nullable) ? X[i].value : X[i]
         end
