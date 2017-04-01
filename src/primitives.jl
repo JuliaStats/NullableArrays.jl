@@ -152,12 +152,26 @@ end
 
 _isnull(x::Any) = false
 _isnull(x::Nullable) = isnull(x)
-
-if VERSION < v"0.6.0-dev.2107"
-    _uniontypes(T::Union) = T.types
-else
-    _uniontypes(T::Union) = Base.uniontypes(T)
+function _isnullable(T::Type)
+    if T <: AbstractArray
+        throw(ArgumentError("`_isnullable` takes the array eltype, not the array itself"))
+    end
+    U = isa(T, Union)
+    if !U && Nullable <: T || T <: Nullable
+        return true
+    elseif U && any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+        return true
+    else
+        return false
+    end
 end
+
+if isdefined(Base, :uniontypes)
+    _uniontypes(T::Union) = Base.uniontypes(T)
+else
+    _uniontypes(T::Union) = T.types
+end
+_dropnull(U::Union) = Union{map(T -> T <: Nullable ? eltype(T) : T, _uniontypes(U))...}
 
 """
     dropnull(X::AbstractVector)
@@ -167,15 +181,12 @@ unwrapping `Nullable` entries. A copy is always returned, even when
 `X` does not contain any null values.
 """
 function dropnull{T}(X::AbstractVector{T})                  # -> AbstractVector
-    u = isa(T, Union)
-    if !u && !(Nullable <: T) && !(T <: Nullable)
-        return copy(X)
-    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+    if !_isnullable(T)
         return copy(X)
     else
         Y = filter(x->!_isnull(x), X)
-        if u
-            res = similar(Y, Union{filter(t -> !(t <: Nullable), _uniontypes(T))...})
+        if isa(T, Union)
+            res = similar(Y, _dropnull(T))
         else
             res = similar(Y, eltype(T))
         end
@@ -195,15 +206,12 @@ unwrapped `Nullable` entries. If no nulls are present, this is a no-op
 and `X` is returned.
 """
 function dropnull!{T}(X::AbstractVector{T})                 # -> AbstractVector
-    u = isa(T, Union)
-    if !u && !(Nullable <: T) && !(T <: Nullable)
-        return X
-    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+    if !_isnullable(T)
         return X
     else
         deleteat!(X, find(isnull, X))
-        if u
-            res = similar(X, Union{filter(t -> !(t <: Nullable), _uniontypes(T))...})
+        if isa(T, Union)
+            res = similar(X, _dropnull(T))
         else
             res = similar(X, eltype(T))
         end
@@ -233,10 +241,7 @@ Returns whether or not any entries of `X` are null.
 anynull(X::Any) = any(_isnull, X)                              # -> Bool
 anynull(X::NullableArray) = any(X.isnull)                      # -> Bool
 function anynull{T}(X::AbstractArray{T})                       # -> Bool
-    u = isa(T, Union)
-    if !u && !(Nullable <: T) && !(T <: Nullable)
-        return false
-    elseif u && !any(S -> S <: Nullable || Nullable <: S, _uniontypes(T))
+    if !_isnullable(T)
         return false
     else
         return any(_isnull, X)

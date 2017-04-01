@@ -372,13 +372,13 @@ module TestPrimitives
         @test !anynull(Nullable.(rand(10, 10)))
         @test !anynull(Array{Union{Nullable{Int}, Int}}(collect(1:10)))
         @test anynull(Array{Union{Nullable{Int}, Int}}(rand([1, Nullable()], 100)))
-        @test !anynull(NullableArray{Union{Nullable{Int}, Int}}(collect(1:10)))
-        @test anynull(NullableArray{Union{Nullable{Int}, Int}}(rand([1, Nullable()], 100)))
+        @test !anynull(NullableArray{Union{Int, Float64}}(vcat(collect(1:10), rand(10))))
+        @test anynull(NullableArray{Union{Int, Float64}}(rand([1, 1.0, Nullable()], 100)))
     end
 
     @testset "dropnull" begin
         x = fill(1, 10)
-        @test dropnull!(x) == x && dropnull!(x) === x
+        @test dropnull!(x) === x
         @test dropnull(x) == x && !(dropnull(x) === x)
         @test dropnull!(Nullable.(x)) == x
         @test dropnull(Nullable.(x)) == x
@@ -390,16 +390,46 @@ module TestPrimitives
         @test dropnull!(x) == x && !(dropnull!(x) === x)
         @test dropnull(x) == x && !(dropnull(x) === x)
         x = convert(Array{Union{Int, Float64}}, fill(1, 10))
-        @test dropnull!(x) == x && dropnull!(x) === x
+        @test dropnull!(x) === x
         @test dropnull(x) == x && !(dropnull(x) === x)
         x = repmat([1, Nullable()], 5)
         @test isequal(dropnull!(copy(x)), fill(1, 5))
-        @test isequal(dropnull(copy(x)), fill(1, 5))
+        @test isequal(dropnull(x), fill(1, 5))
         @test isequal(dropnull!(NullableArray(x)), fill(1, 5))
         @test isequal(dropnull(NullableArray(x)), fill(1, 5))
         @test isequal(dropnull!(convert(Array{Union{Int, Nullable{Int}}}, x)), fill(1, 5))
         @test isequal(dropnull(convert(Array{Union{Int, Nullable{Int}}}, x)), fill(1, 5))
         @test isequal(dropnull!(convert(Array{Any}, x)), fill(1, 5))
         @test isequal(dropnull(convert(Array{Any}, x)), fill(1, 5))
+    end
+
+    import NullableArrays: _isnullable, _dropnull
+    @testset "dropnull return types" begin
+        e = @test_throws ArgumentError _isnullable(Array{Float64})
+        @test e.value.msg == "`_isnullable` takes the array eltype, not the array itself"
+        @test !_isnullable(Float64)
+        @test !_isnullable(Union{Float64, Int})
+        @test _isnullable(Nullable{Float64})
+        @test _isnullable(Union{Nullable{Float64}, Int})
+        @test _isnullable(Union{Nullable{Float64}, Nullable{Int}})
+        @test _isnullable(Any)
+        @test _dropnull(Union{Float64, Int}) == Union{Float64, Int}
+        @test _dropnull(Union{Nullable{Float64}, Int}) == Union{Float64, Int}
+        @test _dropnull(Union{Nullable{Float64}, Nullable{Int}}) == Union{Float64, Int}
+        @test _dropnull(Union{Nullable{Float64}, Nullable{Int}, Int}) == Union{Float64, Int}
+        @test typeof(dropnull!(Array{Int}(1))) == Vector{Int}
+        @test typeof(dropnull!(Array{Any}([1]))) == Vector{Any}
+        @test typeof(dropnull!(Array{Union{Float64, Int}}(1))) == Vector{Union{Float64, Int}}
+        @test typeof(dropnull!(Array{Nullable{Int}}(1))) == Vector{Int}
+        @test typeof(dropnull!(Array{Union{Float64, Nullable{Int}}}([1.0, 1]))) == Vector{Union{Float64, Int}}
+        @test typeof(dropnull!(NullableArray{Int}(1))) == Array{Int, 1}
+        @test typeof(dropnull!(NullableArray{Union{Float64, Int}}(1))) == Vector{Union{Float64, Int}}
+        @test typeof(dropnull(Array{Int}(1))) == Vector{Int}
+        @test typeof(dropnull(Array{Any}([1]))) == Vector{Any}
+        @test typeof(dropnull(Array{Union{Float64, Int}}(1))) == Vector{Union{Float64, Int}}
+        @test typeof(dropnull(Array{Nullable{Int}}(1))) == Vector{Int}
+        @test typeof(dropnull(Array{Union{Float64, Nullable{Int}}}([1.0, 1]))) == Vector{Union{Float64, Int}}
+        @test typeof(dropnull(NullableArray{Int}(1))) == Vector{Int}
+        @test typeof(dropnull(NullableArray{Union{Float64, Int}}(1))) == Vector{Union{Float64, Int}}
     end
 end
