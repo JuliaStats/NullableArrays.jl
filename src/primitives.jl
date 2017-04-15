@@ -206,22 +206,6 @@ unwrapped `Nullable` entries.
 dropnull!(X::NullableVector) = deleteat!(X, find(X.isnull)).values # -> Vector
 
 """
-    anynull(X)
-
-Returns whether or not any entries of `X` are null.
-"""
-anynull(X::Any) = any(_isnull, X)           # -> Bool
-anynull(X::NullableArray) = any(X.isnull)   # -> Bool
-
-"""
-    allnull(X)
-
-Returns whether or not all the entries in `X` are null.
-"""
-allnull(X::Any) = all(_isnull, X)           # -> Bool
-allnull(X::NullableArray) = all(X.isnull)   # -> Bool
-
-"""
     isnan(X::NullableArray)
 
 Test whether each entry of `X` is null and if not, test whether the entry is
@@ -268,7 +252,7 @@ Convert `X` to an `AbstractArray` of type `T` and replace all null entries of
 """
 function Base.convert{S, T, N}(::Type{Array{S, N}},
                                X::NullableArray{T, N}) # -> Array{S, N}
-    if anynull(X)
+    if any(isnull, X)
         throw(NullException())
     else
         return convert(Array{S, N}, X.values)
@@ -339,3 +323,6 @@ function Base.float(X::NullableArray) # -> NullableArray{T, N}
     isbits(eltype(X)) || error()
     return NullableArray(float(X.values), copy(X.isnull))
 end
+
+Base.any(::typeof(isnull), X::NullableArray) = Base.any(X.isnull)
+Base.all(::typeof(isnull), X::NullableArray) = Base.all(X.isnull)

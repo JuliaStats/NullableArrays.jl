@@ -217,53 +217,54 @@ module TestPrimitives
     @test !any(x -> isa(x, Nullable), dropnull!(Y))
     @test any(x -> isa(x, Nullable), Y)
 
-# ----- test anynull ---------------------------------------------------------#
+# ----- test any(isnull, X) --------------------------------------------------#
 
-    # anynull(X::NullableArray)
+    # any(isnull, X::NullableArray)
     z = NullableArray([1, 2, 3, 'a', 5, 'b', 7, 'c'], Int, Char)
-    @test anynull(z) == true
-    @test anynull(dropnull(z)) == false
+    @test any(isnull, z) == true
+    @test any(isnull, dropnull(z)) == false
     z = NullableArray(Int, 10)
-    @test anynull(z) == true
+    @test any(isnull, z) == true
 
-    # anynull(A::AbstractArray)
+    # any(isnull, A::AbstractArray)
     A2 = [Nullable(1), Nullable(2), Nullable(3)]
-    @test anynull(A2) == false
+    @test any(isnull, A2) == false
     push!(A2, Nullable{Int}())
-    @test anynull(A2) == true
+    @test any(isnull, A2) == true
 
-    # anynull(xs::NTuple)
-    @test anynull((Nullable(1), Nullable(2))) == false
-    @test anynull((Nullable{Int}(), Nullable(1), 3, 6)) == true
+    # any(isnull, xs::NTuple)
+    @test any(isnull, (Nullable(1), Nullable(2))) == false
+    @test any(isnull, (Nullable{Int}(), Nullable(1), 3, 6)) == true
 
-    # anynull{T, N, U<:NullableArray}(S::SubArray{T, N, U})
+    # any(isnull, S::SubArray{T, N, U<:NullableArray})
     A = rand(10, 3, 3)
     M = rand(Bool, 10, 3, 3)
     X = NullableArray(A, M)
     i, j = rand(1:3), rand(1:3)
     S = view(X, :, i, j)
 
-    @test anynull(S) == anynull(X[:, i, j])
+    @test any(isnull, S) == any(isnull, X[:, i, j])
     X = NullableArray(A)
     S = view(X, :, i, j)
-    @test anynull(S) == false
+    @test any(isnull, S) == false
 
 
-# ----- test allnull ---------------------------------------------------------#
+# ----- test all(isnull, X) --------------------------------------------------#
 
-    # allnull(X::NullableArray)
-    @test allnull(z) == true
+    # all(isnull, X::NullableArray)
+    z = NullableArray(Int, 10)
+    @test all(isnull, z) == true
     z[1] = 10
-    @test allnull(z) == false
+    @test all(isnull, z) == false
 
-    # anynull(X::AbstractArray{<:Nullable})
-    @test allnull(Nullable{Int}[Nullable(), Nullable()]) == true
-    @test allnull(Nullable{Int}[Nullable(1), Nullable()]) == false
+    # all(isnull, X::AbstractArray{<:Nullable})
+    @test all(isnull, Nullable{Int}[Nullable(), Nullable()]) == true
+    @test all(isnull, Nullable{Int}[Nullable(1), Nullable()]) == false
 
-    # anynull(X::Any)
-    @test allnull(Any[Nullable(), Nullable()]) == true
-    @test allnull([1, 2]) == false
-    @test allnull(1:3) == false
+    # all(isnull, X::Any)
+    @test all(isnull, Any[Nullable(), Nullable()]) == true
+    @test all(isnull, [1, 2]) == false
+    @test all(isnull, 1:3) == false
 
 # ----- test Base.isnan ------------------------------------------------------#
 

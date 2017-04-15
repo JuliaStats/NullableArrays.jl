@@ -38,7 +38,7 @@ function mapreduce_pairwise_impl_skipnull{T}(f, op, X::NullableArray{T},
                                             blksize::Int)
     if ifirst + blksize > ilast
         # fall back to Base implementation if no nulls in block
-        # if anynull(slice(X, ifirst:ilast))
+        # if any(isnull, slice(X, ifirst:ilast))
             return mapreduce_seq_impl_skipnull(f, op, X, ifirst, ilast)
         # else
             # Nullable(Base.mapreduce_seq_impl(f, op, X.values, ifirst, ilast))
@@ -90,7 +90,7 @@ end
 # to fix ambiguity warnings
 function Base.mapreduce(f, op::Union{typeof(@functorize(&)), typeof(@functorize(|))},
                         X::NullableArray, skipnull::Bool = false)
-    missingdata = anynull(X)
+    missingdata = any(isnull, X)
     if skipnull
         return _mapreduce_skipnull(f, op, X, missingdata)
     else
@@ -117,7 +117,7 @@ Note that, in general, mapreducing over a `NullableArray` will return a
 """
 function Base.mapreduce(f, op::Function, X::NullableArray;
                         skipnull::Bool = false)
-    missingdata = anynull(X)
+    missingdata = any(isnull, X)
     if skipnull
         return _mapreduce_skipnull(f, specialized_binary(op),
                                    X, missingdata)
@@ -127,7 +127,7 @@ function Base.mapreduce(f, op::Function, X::NullableArray;
 end
 
 function Base.mapreduce(f, op, X::NullableArray; skipnull::Bool = false)
-    missingdata = anynull(X)
+    missingdata = any(isnull, X)
     if skipnull
         return _mapreduce_skipnull(f, op, X, missingdata)
     else

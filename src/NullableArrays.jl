@@ -16,8 +16,6 @@ export NullableArray,
        # Methods
        dropnull,
        dropnull!,
-       anynull,
-       allnull,
        nullify!,
        padnull!,
        padnull
@@ -34,5 +32,6 @@ include("broadcast.jl")
 include("reduce.jl")
 include("show.jl")
 include("subarray.jl")
+include("deprecated.jl")
 
 end
