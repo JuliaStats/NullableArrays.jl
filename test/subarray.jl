@@ -19,7 +19,7 @@ for i in 1:nd
 
     @test values(S, _H...) == X.values[H...]
     @test isnull(S, _H...) == X.isnull[H...]
-    @test anynull(S) == anynull(X[J...])
+    @test any(isnull, S) == any(isnull, X[J...])
 end
 
 end # module TestSubArray

@@ -206,7 +206,7 @@ module TestNullableVector
                   NullableArray(Array{Int, 1}[[5, 6], [3, 4], [1, 2]]))
 
     # Base.reverse!(X::NullableVector, s=1, n=length(X))
-    # check for case where isbits(eltype(X)) = false & anynull(X) = true
+    # check for case where isbits(eltype(X)) = false & any(isnull, X) = true
     A = fill([1,2], 20)
     Z = NullableArray(Array{Int, 1}, 20)
     i = rand(2:7)

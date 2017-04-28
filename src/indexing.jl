@@ -37,7 +37,7 @@ any component of the index `I` is null.
 """
 @inline function Base.getindex{T, N}(X::NullableArray{T, N},
                                      I::Nullable{Int}...)
-    anynull(I) && throw(NullException())
+    any(isnull, I) && throw(NullException())
     values = [ get(i) for i in I ]
     return getindex(X, values...)
 end
@@ -90,12 +90,12 @@ if VERSION >= v"0.5.0-dev+4697"
     end
 
     function Base.checkindex{N}(::Type{Bool}, inds::AbstractUnitRange, I::NullableArray{Bool, N})
-        anynull(I) && throw(NullException())
+        any(isnull, I) && throw(NullException())
         checkindex(Bool, inds, I.values)
     end
 
     function Base.checkindex{T<:Real}(::Type{Bool}, inds::AbstractUnitRange, I::NullableArray{T})
-        anynull(I) && throw(NullException())
+        any(isnull, I) && throw(NullException())
         b = true
         for i in 1:length(I)
             @inbounds v = unsafe_getvalue_notnull(I, i)
@@ -109,13 +109,13 @@ else
      end
 
     function Base.checkbounds(::Type{Bool}, sz::Int, I::NullableVector{Bool})
-         anynull(I) && throw(NullException())
+         any(isnull, I) && throw(NullException())
         length(I) == sz
      end
 
     function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
         inbounds = true
-         anynull(I) && throw(NullException())
+         any(isnull, I) && throw(NullException())
          for i in 1:length(I)
              @inbounds v = unsafe_getvalue_notnull(I, i)
             inbounds &= checkbounds(Bool, sz, v)
@@ -125,7 +125,7 @@ else
 end
 
 function Base.to_index(X::NullableArray)
-    anynull(X) && throw(NullException())
+    any(isnull, X) && throw(NullException())
     Base.to_index(X.values)
 end
 

@@ -267,7 +267,7 @@ Modify `X` by reversing the first `n` elements starting at index `s`
 respectively.
 """
 function Base.reverse!(X::NullableVector, s=1, n=length(X))
-    if isbits(eltype(X)) || !anynull(X)
+    if isbits(eltype(X)) || !any(isnull, X)
         reverse!(X.values, s, n)
         reverse!(X.isnull, s, n)
     else
