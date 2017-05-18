@@ -1,3 +1,5 @@
+import Base: vcat, hcat, typed_vcat, typed_hcat, promote_eltype
+
 """
     push!{T, V}(X::NullableVector{T}, v::V)
 
@@ -310,4 +312,21 @@ function Base.empty!(X::NullableVector)
     empty!(X.values)
     empty!(X.isnull)
     return X
+end
+
+function vcat(A::AbstractVector, B::NullableVector)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+end
+
+function vcat(A::AbstractMatrix, B::NullableMatrix)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+end
+
+function vcat(A::AbstractArray, B::NullableArray)
+    typed_vcat(promote_eltype(A, B), NullableArray(A), B)
+end
+
+NullableVecOrMat = Union{NullableVector, NullableMatrix}
+function hcat(A::AbstractVecOrMat, B::NullableVecOrMat)
+    typed_hcat(promote_eltype(A, B), NullableArray(A), B)
 end
