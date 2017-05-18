@@ -17,6 +17,7 @@ my_tests = [
     "operators.jl",
     "subarray.jl",
     "show.jl",
+    "utils.jl"
 ]
 
 println("Running tests:")

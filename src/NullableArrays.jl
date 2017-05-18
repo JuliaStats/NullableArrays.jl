@@ -5,6 +5,7 @@ module NullableArrays
 using Compat
 using Compat.view
 using Reexport
+using StatsBase
 @reexport using Base.Cartesian
 
 export NullableArray,
@@ -33,5 +34,6 @@ include("reduce.jl")
 include("show.jl")
 include("subarray.jl")
 include("deprecated.jl")
+include("utils.jl")
 
 end
