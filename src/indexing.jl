@@ -76,12 +76,20 @@ to store `v` at `I`.
     return v
 end
 
-function unsafe_getindex_notnull(X::NullableArray, I::Int...)
+# return the value of non-null X element wrapped in Nullable
+@inline function unsafe_getindex_notnull(X::NullableArray, I::Int...)
     return Nullable(getindex(X.values, I...))
 end
+@inline function unsafe_getindex_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+    return getindex(X, I...)
+end
 
-function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
+# return the value of non-null X element
+@inline function unsafe_getvalue_notnull(X::NullableArray, I::Int...)
     return getindex(X.values, I...)
+end
+@inline function unsafe_getvalue_notnull{T}(X::AbstractArray{Nullable{T}}, I::Int...)
+    return get(getindex(X, I...))
 end
 
 if VERSION >= v"0.5.0-dev+4697"
@@ -109,17 +117,17 @@ else
      end
 
     function Base.checkbounds(::Type{Bool}, sz::Int, I::NullableVector{Bool})
-         any(isnull, I) && throw(NullException())
+        any(isnull, I) && throw(NullException())
         length(I) == sz
-     end
+    end
 
     function Base.checkbounds{T<:Real}(::Type{Bool}, sz::Int, I::NullableArray{T})
         inbounds = true
-         any(isnull, I) && throw(NullException())
-         for i in 1:length(I)
+        any(isnull, I) && throw(NullException())
+        for i in 1:length(I)
              @inbounds v = unsafe_getvalue_notnull(I, i)
             inbounds &= checkbounds(Bool, sz, v)
-         end
+        end
         return inbounds
      end
 end
@@ -134,6 +142,6 @@ end
 
 This is a convenience method to set the entry of `X` at index `I` to be null
 """
-function nullify!(X::NullableArray, I...)
+@inline function nullify!(X::NullableArray, I...)
     setindex!(X, Nullable{eltype(X)}(), I...)
 end
