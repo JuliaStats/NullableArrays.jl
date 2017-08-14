@@ -2,7 +2,7 @@
 
 importall Base.Operators
 import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
-using Compat: @compat, @functorize
+using Compat: @compat
 
 if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
     _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, hasvalue)
@@ -55,7 +55,7 @@ null_safe_op(f::Any, ::Type...) = false
 # nor cbrt (for which there is no functor on Julia 0.4)
 for op in (:+, :-, :abs, :abs2)
     @eval begin
-        null_safe_op{T<:SafeTypes}(::typeof(@functorize($op)), ::Type{T}) = true
+        null_safe_op{T<:SafeTypes}(::typeof($op), ::Type{T}) = true
     end
 end
 
@@ -73,7 +73,7 @@ for op in (:+, :-, :!, :~, :abs, :abs2, :sqrt, :cbrt)
     @eval begin
         @inline function $op{S}(x::Nullable{S})
             R = promote_op($op, S)
-            if null_safe_op(@functorize($op), S)
+            if null_safe_op($op, S)
                 _Nullable(R, $op(x.value), !isnull(x))
             else
                 isnull(x) ? Nullable{R}() :
@@ -111,11 +111,11 @@ else # No functors for all methods on 0.4: use the slow path for missing ones
         @eval begin
             # to fix ambiguities
             null_safe_op{S<:SafeFloats,
-                         T<:SafeFloats}(::typeof(@functorize($op)), ::Type{S}, ::Type{T}) = true
+                         T<:SafeFloats}(::typeof($op), ::Type{S}, ::Type{T}) = true
             null_safe_op{S<:SafeSigned,
-                         T<:SafeSigned}(::typeof(@functorize($op)), ::Type{S}, ::Type{T}) = true
+                         T<:SafeSigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
             null_safe_op{S<:SafeUnsigned,
-                         T<:SafeUnsigned}(::typeof(@functorize($op)), ::Type{S}, ::Type{T}) = true
+                         T<:SafeUnsigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
         end
     end
 end
@@ -125,8 +125,8 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
            :scalarmin, :scalarmax)
     @eval begin
         @inline function $op{S,T}(x::Nullable{S}, y::Nullable{T})
-            R = promote_op(@functorize($op), S, T)
-            if null_safe_op(@functorize($op), S, T)
+            R = promote_op($op, S, T)
+            if null_safe_op($op, S, T)
                 _Nullable(R, $op(x.value, y.value), !(isnull(x) | isnull(y)))
             else
                 (isnull(x) | isnull(y)) ? Nullable{R}() :
@@ -142,7 +142,7 @@ end
 if !method_exists(isless, Tuple{Nullable{Int}, Nullable{Int}})
     function isless{S,T}(x::Nullable{S}, y::Nullable{T})
         # NULL values are sorted last
-        if null_safe_op(@functorize(isless), S, T)
+        if null_safe_op(isless, S, T)
             (!isnull(x) & isnull(y)) |
             (!isnull(x) & !isnull(y) & isless(x.value, y.value))
         else
