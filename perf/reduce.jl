@@ -1,6 +1,5 @@
 using NullableArrays
 using DataArrays
-import Compat: @functorize
 
 srand(1)
 A = rand(5_000_000)
@@ -231,65 +230,65 @@ function profile_skip(skip::Bool)
     println("f := identity, op := +")
     println("mapreduce(f, op, X; skipnull/skipNA=$skip) (0 missing entries)")
 
-    mapreduce(@functorize(identity), @functorize(+), X, skipnull=skip)
+    mapreduce(identity, +, X, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(mapreduce(@functorize(identity), @functorize(+), X, skipnull=skip))
+    @time(mapreduce(identity, +, X, skipnull=skip))
 
-    mapreduce(@functorize(identity), @functorize(+), D, skipna=skip)
+    mapreduce(identity, +, D, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(mapreduce(@functorize(identity), @functorize(+), D, skipna=skip))
+    @time(mapreduce(identity, +, D, skipna=skip))
 
     println()
     println("reduce(op, X; skipnull/skipNA=$skip) (0 missing entries)")
-    reduce(@functorize(+), X, skipnull=skip)
+    reduce(+, X, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(reduce(@functorize(+), X, skipnull=skip))
+    @time(reduce(+, X, skipnull=skip))
 
-    reduce(@functorize(+), D, skipna=skip)
+    reduce(+, D, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(reduce(@functorize(+), D, skipna=skip))
+    @time(reduce(+, D, skipna=skip))
 
     println()
     println("mapreduce(f, op, X; skipnull/skipNA=$skip) (~half missing entries)")
-    mapreduce(@functorize(identity), @functorize(+), Y, skipnull=skip)
+    mapreduce(identity, +, Y, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(mapreduce(@functorize(identity), @functorize(+), Y, skipnull=skip))
+    @time(mapreduce(identity, +, Y, skipnull=skip))
 
-    mapreduce(@functorize(identity), @functorize(+), E, skipna=skip)
+    mapreduce(identity, +, E, skipna=skip)
     print("  for DataArray{Float64}:      ")
-    @time(mapreduce(@functorize(identity), @functorize(+), E, skipna=skip))
+    @time(mapreduce(identity, +, E, skipna=skip))
 
     println()
     println("reduce(op, X; skipnull/skipNA=$skip) (~half missing entries)")
-    reduce(@functorize(+), Y, skipnull=skip)
+    reduce(+, Y, skipnull=skip)
     print("  for NullableArray{Float64}:  ")
-    @time(reduce(@functorize(+), Y, skipnull=skip))
+    @time(reduce(+, Y, skipnull=skip))
 
-    reduce(@functorize(+), E, skipna=true)
+    reduce(+, E, skipna=true)
     print("  for DataArray{Float64}:      ")
-    @time(reduce(@functorize(+), E, skipna=true))
+    @time(reduce(+, E, skipna=true))
     nothing
 end
 
 function profile_skip_impl()
     println("Comparison of internal skip methods:")
     println("mapreduce_impl_skipnull(f, op, X) (0 missing entries)")
-    NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), X)
+    NullableArrays.mapreduce_impl_skipnull(identity, +, X)
     print("  for NullableArray{Float64}:  ")
-    @time(NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), X))
+    @time(NullableArrays.mapreduce_impl_skipnull(identity, +, X))
 
-    DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), D)
+    DataArrays.mapreduce_impl_skipna(identity, +, D)
     print("  for DataArray{Float64}:      ")
-    @time(DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), D))
+    @time(DataArrays.mapreduce_impl_skipna(identity, +, D))
 
     println()
     println("mapreduce_impl_skipnull(f, op, X) (~half missing entries)")
-    NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), Y)
+    NullableArrays.mapreduce_impl_skipnull(identity, +, Y)
     print("  for NullableArray{Float64}:  ")
-    @time(NullableArrays.mapreduce_impl_skipnull(@functorize(identity), @functorize(+), Y))
+    @time(NullableArrays.mapreduce_impl_skipnull(identity, +, Y))
 
-    DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), E)
+    DataArrays.mapreduce_impl_skipna(identity, +, E)
     print("  for DataArray{Float64}:      ")
-    @time(DataArrays.mapreduce_impl_skipna(@functorize(identity), @functorize(+), E))
+    @time(DataArrays.mapreduce_impl_skipna(identity, +, E))
     nothing
 end
