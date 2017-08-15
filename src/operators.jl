@@ -1,22 +1,12 @@
 ## Lifted operators
 
-importall Base.Operators
-import Base: promote_op, abs, abs2, sqrt, cbrt, scalarmin, scalarmax, isless
-using Compat: @compat
+import Base: promote_op, scalarmin, scalarmax
+using Compat
 
 if isdefined(Base, :fieldname) && Base.fieldname(Nullable, 1) == :hasvalue # Julia 0.6
     _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, hasvalue)
 else
     _Nullable(R, x, hasvalue::Bool) = Nullable{R}(x, !hasvalue)
-end
-
-# Methods adapted from Base Julia 0.5
-if VERSION < v"0.5.0-dev+5096"
-    promote_op(::Any, T) = T
-    promote_op{T}(::Type{T}, ::Any) = T
-
-    promote_op{R<:Number}(op, ::Type{R}) = typeof(op(one(R)))
-    promote_op{R<:Number,S<:Number}(op, ::Type{R}, ::Type{S}) = typeof(op(one(R), one(S)))
 end
 
 """
@@ -59,19 +49,16 @@ for op in (:+, :-, :abs, :abs2)
     end
 end
 
-# No functors for these methods on 0.4: use the slow path
-if VERSION >= v"0.5.0-dev"
-    null_safe_op{T<:SafeInts}(::typeof(~), ::Type{T}) = true
-    null_safe_op{T<:SafeTypes}(::typeof(cbrt), ::Type{T}) = true
-    null_safe_op(::typeof(!), ::Type{Bool}) = true
+null_safe_op{T<:SafeInts}(::typeof(~), ::Type{T}) = true
+null_safe_op{T<:SafeTypes}(::typeof(cbrt), ::Type{T}) = true
+null_safe_op(::typeof(!), ::Type{Bool}) = true
 
-    # Temporary workaround until JuliaLang/julia#18803
-    null_safe_op(::typeof(cbrt), ::Type{Float16}) = false
-end
+# Temporary workaround until JuliaLang/julia#18803
+null_safe_op(::typeof(cbrt), ::Type{Float16}) = false
 
 for op in (:+, :-, :!, :~, :abs, :abs2, :sqrt, :cbrt)
     @eval begin
-        @inline function $op{S}(x::Nullable{S})
+        @inline function Base.$op{S}(x::Nullable{S})
             R = promote_op($op, S)
             if null_safe_op($op, S)
                 _Nullable(R, $op(x.value), !isnull(x))
@@ -80,7 +67,7 @@ for op in (:+, :-, :!, :~, :abs, :abs2, :sqrt, :cbrt)
                             Nullable{R}($op(x.value))
             end
         end
-        $op(x::Nullable{Union{}}) = Nullable()
+        Base.$op(x::Nullable{Union{}}) = Nullable()
     end
 end
 
@@ -89,34 +76,18 @@ end
 # Note this list does not include ^, ÷ and %
 # Operations between signed and unsigned types are not safe: promotion to unsigned
 # gives an InexactError for negative numbers
-if VERSION >= v"0.5.0-dev"
-    for op in (:+, :-, :*, :/, :&, :|, :<<, :>>, :(>>>),
-               :(==), :<, :>, :<=, :>=,
-               :scalarmin, :scalarmax,
-               :isless)
-        @eval begin
-            # to fix ambiguities
-            null_safe_op{S<:SafeFloats,
-                         T<:SafeFloats}(::typeof($op), ::Type{S}, ::Type{T}) = true
-            null_safe_op{S<:SafeSigned,
-                         T<:SafeSigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
-            null_safe_op{S<:SafeUnsigned,
-                         T<:SafeUnsigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
-        end
-    end
-else # No functors for all methods on 0.4: use the slow path for missing ones
-    for op in (:+, :-, :*, :/, :&, :|,
-               :<, :>,
-               :scalarmin, :scalarmax)
-        @eval begin
-            # to fix ambiguities
-            null_safe_op{S<:SafeFloats,
-                         T<:SafeFloats}(::typeof($op), ::Type{S}, ::Type{T}) = true
-            null_safe_op{S<:SafeSigned,
-                         T<:SafeSigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
-            null_safe_op{S<:SafeUnsigned,
-                         T<:SafeUnsigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
-        end
+for op in (:+, :-, :*, :/, :&, :|, :<<, :>>, :(>>>),
+           :(==), :<, :>, :<=, :>=,
+           :scalarmin, :scalarmax,
+           :isless)
+    @eval begin
+        # to fix ambiguities
+        null_safe_op{S<:SafeFloats,
+                     T<:SafeFloats}(::typeof($op), ::Type{S}, ::Type{T}) = true
+        null_safe_op{S<:SafeSigned,
+                     T<:SafeSigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
+        null_safe_op{S<:SafeUnsigned,
+                     T<:SafeUnsigned}(::typeof($op), ::Type{S}, ::Type{T}) = true
     end
 end
 
@@ -124,23 +95,23 @@ for op in (:+, :-, :*, :/, :%, :÷, :&, :|, :^, :<<, :>>, :(>>>),
            :(==), :<, :>, :<=, :>=,
            :scalarmin, :scalarmax)
     @eval begin
-        @inline function $op{S,T}(x::Nullable{S}, y::Nullable{T})
-            R = promote_op($op, S, T)
-            if null_safe_op($op, S, T)
-                _Nullable(R, $op(x.value, y.value), !(isnull(x) | isnull(y)))
+        @inline function Base.$op{S,T}(x::Nullable{S}, y::Nullable{T})
+            R = promote_op(Base.$op, S, T)
+            if null_safe_op(Base.$op, S, T)
+                _Nullable(R, Base.$op(x.value, y.value), !(isnull(x) | isnull(y)))
             else
                 (isnull(x) | isnull(y)) ? Nullable{R}() :
-                                          Nullable{R}($op(x.value, y.value))
+                                          Nullable{R}(Base.$op(x.value, y.value))
             end
         end
-        $op(x::Nullable{Union{}}, y::Nullable{Union{}}) = Nullable()
-        $op{S}(x::Nullable{Union{}}, y::Nullable{S}) = Nullable{S}()
-        $op{S}(x::Nullable{S}, y::Nullable{Union{}}) = Nullable{S}()
+        Base.$op(x::Nullable{Union{}}, y::Nullable{Union{}}) = Nullable()
+        Base.$op{S}(x::Nullable{Union{}}, y::Nullable{S}) = Nullable{S}()
+        Base.$op{S}(x::Nullable{S}, y::Nullable{Union{}}) = Nullable{S}()
     end
 end
 
 if !method_exists(isless, Tuple{Nullable{Int}, Nullable{Int}})
-    function isless{S,T}(x::Nullable{S}, y::Nullable{T})
+    function Base.isless{S,T}(x::Nullable{S}, y::Nullable{T})
         # NULL values are sorted last
         if null_safe_op(isless, S, T)
             (!isnull(x) & isnull(y)) |
@@ -155,7 +126,7 @@ if !method_exists(isless, Tuple{Nullable{Int}, Nullable{Int}})
             end
         end
     end
-    isless(x::Nullable{Union{}}, y::Nullable{Union{}}) = false
-    isless(x::Nullable{Union{}}, y::Nullable) = false
-    isless(x::Nullable, y::Nullable{Union{}}) = !isnull(x)
+    Base.isless(x::Nullable{Union{}}, y::Nullable{Union{}}) = false
+    Base.isless(x::Nullable{Union{}}, y::Nullable) = false
+    Base.isless(x::Nullable, y::Nullable{Union{}}) = !isnull(x)
 end
