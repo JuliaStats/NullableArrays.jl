@@ -50,6 +50,13 @@ module TestPrimitives
     @test isequal(copy(x), x)
     @test isequal(copy!(y, x), x)
 
+    # ensure that the parent field is copied as well
+    str = "something"
+    x = NullableArray{Ptr{UInt8}, 1}([pointer(str)], [false], Vector{UInt8}(str))
+    y = copy(x)
+    @test isequal(y, x)
+    @test isequal(String(y.parent), str)
+    @test isequal(y.parent, x.parent)
 
     # copy!
     function nonbits(dv)
