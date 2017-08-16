@@ -17,7 +17,7 @@ size `dims`. If unspecified, `T` and `dims` default to the element type and size
 equal to that of `X`.
 """
 function Base.similar{T}(X::NullableArray, ::Type{T}, dims::Dims)
-    T<:Nullable ? NullableArray(eltype(T), dims) : NullableArray(T, dims)
+    T<:Nullable ? NullableArray(eltype(T), dims, X.parent) : NullableArray(T, dims, X.parent)
 end
 
 """
@@ -26,9 +26,7 @@ end
 Return a shallow copy of `X`; the outer structure of `X` will be copied, but
 all elements will be identical to those of `X`.
 """
-function Base.copy{T, N}(X::NullableArray{T, N})
-    return NullableArray{T, N}(copy(X.values), copy(X.isnull), X.parent)
-end
+Base.copy{T}(X::NullableArray{T}) = Base.copy!(similar(X, T), X)
 
 """
     copy!(dest::NullableArray, src::NullableArray)
@@ -39,8 +37,6 @@ this method nullifies the respective entry in `dest`.
 """
 function Base.copy!(dest::NullableArray,
                     src::NullableArray) # -> NullableArray{T, N}
-    # note that this method is not capable of copying the parent field, which
-    # is a reference
     if isbits(eltype(dest)) && isbits(eltype(src))
         copy!(dest.values, src.values)
     else

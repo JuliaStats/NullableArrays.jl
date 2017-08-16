@@ -52,7 +52,7 @@ module TestPrimitives
 
     # ensure that the parent field is copied as well
     str = "something"
-    x = NullableArray{Ptr{UInt8}, 1}([pointer(str)], [false], Vector{UInt8}(str))
+    x = NullableArray([pointer(str), pointer(str, 5)], [false, false], Vector{UInt8}(str))
     y = copy(x)
     @test isequal(y, x)
     @test isequal(String(y.parent), str)
