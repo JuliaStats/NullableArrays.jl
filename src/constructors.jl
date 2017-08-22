@@ -5,8 +5,9 @@
 # that of the inner constructor provided in typedefs.jl: constructs a NullableArray
 # from an AbstractArray of values and an AbstractArray{Bool} mask.
 function NullableArray{T, N}(A::AbstractArray{T, N},
-                             m::AbstractArray{Bool, N}) # -> NullableArray{T, N}
-    return NullableArray{T, N}(A, m)
+                             m::AbstractArray{Bool, N},
+                             parent::Vector{UInt8}=Vector{UInt8}()) # -> NullableArray{T, N}
+    return NullableArray{T, N}(A, m, parent)
 end
 
 # TODO: Uncomment this doc entry when Base Julia can parse it correctly.
@@ -21,8 +22,8 @@ end
 # will be initialized to `true` everywhere, making every entry of a new
 # `NullableArray` a null value by default.
 # """
-function NullableArray{T}(::Type{T}, dims::Dims) # -> NullableArray{T, N}
-    return NullableArray(Array{T}(dims), fill(true, dims))
+function NullableArray{T}(::Type{T}, dims::Dims, parent::Vector{UInt8}=Vector{UInt8}()) # -> NullableArray{T, N}
+    return NullableArray(Array{T}(dims), fill(true, dims), parent)
 end
 
 # Constructs an empty NullableArray of type parameter T and number of dimensions

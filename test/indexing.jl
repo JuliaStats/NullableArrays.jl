@@ -57,6 +57,12 @@ module TestIndexing
         end
     end
 
+    # ensure that the NullableArray returned by getindex maintains its parent field
+    str = "something"
+    x = NullableArray([pointer(str), pointer(str, 5)], [false, false], Vector{UInt8}(str))
+    @test x[1:2].parent === x.parent
+    @test x[:].parent === x.parent
+
     # getindex with AbstractVectors
     rg = 2:9
     v = X[rg]

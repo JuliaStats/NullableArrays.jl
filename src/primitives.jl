@@ -17,7 +17,7 @@ size `dims`. If unspecified, `T` and `dims` default to the element type and size
 equal to that of `X`.
 """
 function Base.similar{T}(X::NullableArray, ::Type{T}, dims::Dims)
-    T<:Nullable ? NullableArray(eltype(T), dims) : NullableArray(T, dims)
+    T<:Nullable ? NullableArray(eltype(T), dims, X.parent) : NullableArray(T, dims, X.parent)
 end
 
 """
