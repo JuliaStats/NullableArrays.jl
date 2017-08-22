@@ -56,7 +56,7 @@ module TestPrimitives
     y = copy(x)
     @test isequal(y, x)
     @test isequal(String(y.parent), str)
-    @test isequal(y.parent, x.parent)
+    @test y.parent === x.parent
 
     # copy!
     function nonbits(dv)
