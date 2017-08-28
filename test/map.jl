@@ -113,4 +113,13 @@ module TestMap
     if VERSION >= v"0.6.0-dev.2544" # Commit known to work
         @test isa(Z2, NullableArray{Int})
     end
+
+    # test map with isnull()
+    A = NullableArray(1:3, [true, false, true])
+    M = @inferred map(isnull, A)
+    @test M == [true, false, true]
+    fill!(M, false)
+    map!(isnull, M, A)
+    @test M == [true, false, true]
+
 end # module TestMap

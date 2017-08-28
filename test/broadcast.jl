@@ -121,4 +121,11 @@ module TestBroadcast
     @test isa(SurvEvent.(t, c), NullableVector{SurvEvent})
     @inferred NullableArrays.lift(SurvEvent, (1, true))
 
+    # test broadcasting with isnull()
+    A = NullableArray(1:3, [true, false, true])
+    M = @inferred broadcast(isnull, A)
+    @test M == [true, false, true]
+    broadcast!(isnull, M, A)
+    @test M == [true, false, true]
+
 end # module

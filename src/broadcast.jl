@@ -1,14 +1,13 @@
 using Compat
 
 if VERSION >= v"0.6.0-dev.693"
-    using Base.Broadcast: check_broadcast_indices, broadcast_indices
+    using Base.Broadcast: broadcast_indices
 else
-    using Base.Broadcast: check_broadcast_shape, broadcast_shape
-    const check_broadcast_indices = check_broadcast_shape
+    using Base.Broadcast: broadcast_shape
     const broadcast_indices = broadcast_shape
 end
 
-if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
+if VERSION < v"0.6.0-dev.2544" # Old approach needed for inference to work
     using Base: _default_eltype
 
     ftype(f, A) = typeof(f)
@@ -26,7 +25,7 @@ if VERSION < v"0.6.0-dev" # Old approach needed for inference to work
     @inline ziptype(A, B, C, D...) = Zip{Tuple{eltype(A)}, ziptype(B, C, D...)}
 
     nullable_broadcast_eltype(f, As...) =
-        _default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)})
+        Nullable{_default_eltype(Base.Generator{ziptype(As...), ftype(f, As...)})}
 else
     Base.@pure nullable_eltypestuple(a) = Tuple{eltype(eltype(a))}
     Base.@pure nullable_eltypestuple(T::Type) = Tuple{Type{eltype(T)}}
@@ -35,7 +34,7 @@ else
 
     Base.@pure function nullable_broadcast_eltype(f, As...)
         T = Core.Inference.return_type(f, nullable_eltypestuple(As...))
-        T === Union{} ? Any : T
+        T === Union{} ? Nullable{Any} : Nullable{T}
     end
 end
 
@@ -66,7 +65,11 @@ function Base.broadcast{F}(f::F, As::NullableArray...)
     @inline f2(x...) = lift(f, x)
 
     T = nullable_broadcast_eltype(f, As...)
-    dest = similar(NullableArray{T}, broadcast_indices(As...))
+    if T <: Nullable
+       dest = similar(NullableArray{eltype(T)}, broadcast_indices(As...))
+    else
+       dest = similar(Array{T}, broadcast_indices(As...))
+    end
     invoke_broadcast!(f2, dest, As...)
 end
 
